@@ -34,7 +34,13 @@
   --shadow:0 1px 2px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.04);--shadow-h:0 3px 10px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.08);--shadow-l:0 12px 32px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.06);
   --n-default:#24272e;--n-yellow:#3a341c;--n-green:#1e3328;--n-blue:#1f2b44;--n-pink:#3a2130;--n-purple:#2c2742;--n-orange:#3b2a1d;--n-grey:#2d3038;}
 *{box-sizing:border-box}
-html,body{height:100%;margin:0}
+html,body{height:100%;margin:0;overflow:hidden;overscroll-behavior:none}
+body{touch-action:pan-x pan-y}
+.scroll,.col-list,.side,.ed-body,.ab,.pal-list,.tbl-wrap{overscroll-behavior:contain}
+/* Desktop-App: Bedienelemente wie in einem Programm (nicht markierbar, nicht ziehbar) */
+.desktop .side,.desktop .head,.desktop .tabs,.desktop .fbar,.desktop .col-h,.desktop .add-inline,.desktop .addcol,.desktop .btn,.desktop .tab,.desktop .stab,.desktop .nav-item,.desktop .banner,.desktop .ed-top,.desktop .ed-foot,.desktop .seg,.desktop .sec-title,.desktop .kpi{user-select:none;-webkit-user-select:none}
+.desktop img{-webkit-user-drag:none}
+.desktop{cursor:default}
 body{background:var(--bg);color:var(--text);font:14px/1.45 var(--font)}
 body.is-dragging{user-select:none;cursor:grabbing}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -654,6 +660,15 @@ async function tauriOpenFile(){const p=await TAURI.dialog.open({multiple:false,d
   try{if(!(await tauriLoad()))await tauriWrite();render();toast('Geöffnet: '+tv.path)}catch(e){await tInvoke('set_data_path',{path:tv.isDefault?null:old});await tauriInfo();toast('Öffnen fehlgeschlagen: '+e.message)}}
 async function tauriResetPath(){const r=await ask({title:'Standard-Speicherort verwenden?',text:'Die App speichert danach wieder unter <b>Dokumente\\Kanban Notizen</b>. Liegt dort schon eine Datei, wird sie geladen.',ok:'Zurücksetzen'});if(!r)return;
   await tInvoke('set_data_path',{path:null});if(!(await tauriLoad()))await tauriWrite();render();toast('Standard-Speicherort aktiv')}
+/* Desktop-Verhalten: kein Browser-Kontextmenü, kein Neuladen/Zoomen, keine gezogenen Bilder/Links */
+if(tv.on){document.documentElement.classList.add('desktop');
+  const editable=t=>t&&t.closest&&t.closest('input,textarea,select,[contenteditable="true"]');
+  document.addEventListener('contextmenu',e=>{if(editable(e.target))return;const sel=String(window.getSelection()||'');if(sel.trim())return;e.preventDefault()});
+  document.addEventListener('keydown',e=>{const k=e.key.toLowerCase(),c=e.ctrlKey||e.metaKey;
+    if(e.key==='F5'||(c&&k==='r')||(c&&['+','-','=','0'].includes(e.key))||(e.altKey&&(e.key==='ArrowLeft'||e.key==='ArrowRight'))||e.key==='BrowserBack'||e.key==='BrowserForward'){e.preventDefault()}},true);
+  window.addEventListener('wheel',e=>{if(e.ctrlKey)e.preventDefault()},{passive:false});
+  document.addEventListener('dragstart',e=>{const t=e.target;if(t&&(t.tagName==='IMG'||t.tagName==='A'))e.preventDefault()});
+  document.addEventListener('auxclick',e=>{if(e.button===1&&e.target.closest('a'))e.preventDefault()})}
 /* Updates (nur Desktop-App): prüft beim Start und alle 6 Stunden */
 window.addEventListener('focus',()=>{if(tv.on&&upd.state!=='available'&&Date.now()-(upd.lastCheck||0)>36e5)checkUpdate(false)});
 const upd={lastCheck:0,state:'',version:'',current:'',update:null,progress:0,dismissed:false,notes:''};
