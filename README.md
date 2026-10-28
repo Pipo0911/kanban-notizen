@@ -1,104 +1,87 @@
 # Kanban Notizen
 
-Notizen in Spalten organisieren – mit Spaces und Kategorien, Prioritäten, Labels, Checklisten, Terminen mit Erinnerung, Wiederholungen, Zeiterfassung, Vorlagen, Screenshots und Drucken/PDF. Läuft komplett offline.
+Desktop-App für Windows, die Notizen auf Boards organisiert. Dazu gehören Spaces und Kategorien, Wiki-Links mit Rückverweisen, eine Tagesnotiz, Favoriten, ein Papierkorb und ein Versionsverlauf. Ausserdem: Prioritäten, Labels, Checklisten, Termine mit Erinnerung, Wiederholungen, Zeiterfassung, Vorlagen, Screenshots und Drucken/PDF.
 
-Das Projekt liefert die App in zwei Formen:
+Die App läuft komplett offline und speichert in eine JSON-Datei auf deinem PC. Updates installiert sie selbst.
 
-| Variante | Was | Braucht |
-|---|---|---|
-| **Desktop-App** (Tauri) | eigenes Programm mit Installer, speichert direkt in eine Datei, tägliche Backups | nichts lokal – GitHub baut den Installer |
-| **HTML-Variante** (Inno Setup) | installiert die HTML-Datei und startet sie in Edge im App-Modus | Inno Setup auf dem PC |
+## Funktionen
 
-Die Datei `src/index.html` läuft ausserdem direkt per Doppelklick im Browser.
+| Bereich | Was |
+|---|---|
+| Boards | Spaces mit eigenen Spalten, verschachtelte Kategorien, Ziehen & Ablegen, Filter, Sortierung |
+| Notizen | Markdown, Checklisten, Farben, Prioritäten, Labels, Bilder per `Strg`+`V`, Vorlagen |
+| Verknüpfen | `[[Titel]]` oder `[[Titel\|Text]]` mit Vorschlägen beim Tippen. Fehlende Notizen entstehen per Klick. Jede Notiz zeigt ihre Rückverweise. Beim Umbenennen werden die Links angepasst. |
+| Tagesnotiz | Taste `D`. Eine Notiz pro Tag mit Vorlage, im Editor Vor- und Folgetag. Verlinken mit `[[2026-10-28]]`. |
+| Favoriten | Stern im Editor. Favoriten stehen oben in der Seitenleiste und in der Suche. |
+| Sicherheit | Papierkorb (30 Tage), Versionsverlauf (20 Stände pro Notiz), tägliche Backups, Rückgängig |
+| Planung | Heute & Termine, Erinnerungen, Wiederholungen, Zeiterfassung mit CSV-Export |
 
 ## Ordnerstruktur
 
 ```
 kanban-notizen/
-├─ src/index.html                  Die App (HTML, CSS, JavaScript in einer Datei)
+├─ src/                            Oberfläche
+│  ├─ index.html                   Grundgerüst, lädt CSS und Module
+│  ├─ css/app.css                  Gestaltung (hell/dunkel)
+│  └─ js/                          Module, in dieser Reihenfolge geladen:
+│     ├─ core.js                   Hilfsfunktionen, Konstanten, Symbole
+│     ├─ model.js                  Datenmodell, Normalisierung, Übernahme alter Versionen
+│     ├─ storage.js                Speichern in die Datei, Desktop-Verhalten, Updates
+│     ├─ helpers.js                Toast, Dialoge, Export, Markdown
+│     ├─ tasks.js                  Wiederholungen, Zeiterfassung, Erinnerungen
+│     ├─ layout.js                 Seitenleiste, Kopfzeile, Filter, Kategorien
+│     ├─ board.js / views.js       Karten, Board, Alle Notizen, Archiv, Heute
+│     ├─ editor.js                 Notiz-Editor
+│     ├─ spaces.js                 Spalten und Spaces
+│     ├─ reports.js                Zeitbericht, Drucken, Markdown-Export
+│     ├─ settings.js               Einstellungen, Import
+│     ├─ palette.js                Suche und Befehle (Strg+K)
+│     ├─ links.js                  Wiki-Links, Rückverweise, Tagesnotiz, Favoriten
+│     ├─ trash.js                  Papierkorb, Versionsverlauf
+│     └─ main.js                   Tastatur, Klicks, Start
 ├─ src-tauri/                      Desktop-Hülle (Rust)
-│  ├─ src/lib.rs                   Speichern in Datei, Tages-Backups
-│  ├─ tauri.conf.json              Name, Version, Fenster, Installer-Einstellungen
+│  ├─ src/lib.rs                   Datei lesen/schreiben, Tages-Backups, Exporte
+│  ├─ tauri.conf.json              Name, Version, Fenster, Installer, Updater
 │  ├─ capabilities/default.json    Rechte des Fensters
 │  └─ icons/                       App-Icons
-├─ installer/kanban-notizen.iss    Inno-Setup-Skript (HTML-Variante)
-├─ .github/workflows/              Automatischer Build des Windows-Installers
+├─ .github/workflows/              Build und Release auf GitHub
+├─ CHANGELOG.md
 └─ package.json                    Tauri-CLI
 ```
 
-## 1. Git-Repo anlegen und hochladen
+Die Module sind klassische Skripte ohne Build-Schritt. Sie teilen sich den globalen Gültigkeitsbereich, deshalb ist die Reihenfolge in `index.html` wichtig.
 
-Im Ordner `kanban-notizen` eine Eingabeaufforderung oder PowerShell öffnen:
+## Neue Version veröffentlichen
 
-```powershell
-git init -b main
-git add .
-git commit -m "Erste Version Kanban Notizen"
-```
-
-Auf github.com ein **neues, leeres Repository** `kanban-notizen` erstellen (ohne README), dann:
+1. Die Version in **allen drei** Dateien gleich erhöhen: `src-tauri/tauri.conf.json`, `package.json`, `src-tauri/Cargo.toml`.
+2. Einen Eintrag in `CHANGELOG.md` schreiben.
+3. Committen und auf `main` pushen:
 
 ```powershell
-git remote add origin https://github.com/DEIN-NAME/kanban-notizen.git
-git push -u origin main
-```
-
-## 2. Installer bauen lassen
-
-Nach dem Push startet unter **Actions** automatisch „Windows-Installer bauen“ (ca. 10–15 Minuten beim ersten Mal).
-Danach den Lauf öffnen → unten bei **Artifacts** → `KanbanNotizen-Windows` herunterladen. Darin:
-
-- `Kanban Notizen_1.0.0_x64-setup.exe` – **empfohlen**, installiert ohne Adminrechte ins Benutzerprofil
-- `Kanban Notizen_1.0.0_x64_de-DE.msi` – MSI, z. B. für Verteilung über Intune
-
-## 3. Neue Version veröffentlichen (manuell)
-
-1. Version erhöhen in `src-tauri/tauri.conf.json` (und gleich in `package.json` und `src-tauri/Cargo.toml`)
-2. Committen, dann ein Tag setzen und pushen:
-
-```powershell
-git commit -am "Version 1.1.0"
-git tag v1.1.0
-git push --follow-tags
-```
-
-GitHub erstellt dann ein **Release** mit den Installern zum Download.
-Beim Installieren einer neuen Version wird die alte automatisch ersetzt – die Notizen bleiben erhalten.
-
-## Automatische Updates
-
-Die Desktop-App sucht beim Start und alle 6 Stunden nach einer neuen Version und bietet sie per Klick an.
-So veröffentlichst du ein Update:
-
-1. Version erhöhen in `src-tauri/tauri.conf.json`, `package.json` und `src-tauri/Cargo.toml` (z. B. `1.2.0`)
-2. Committen und pushen:
-
-```powershell
-git commit -am "Version 1.2.0"
+git commit -am "Version 1.5.0"
 git push
 ```
 
-Sobald auf `main` eine Version ankommt, für die es noch kein Release gibt, baut GitHub automatisch ein Release mit signierten Update-Dateien und `latest.json`.
-Voraussetzungen: Das Repo ist **öffentlich**, und die Secrets `TAURI_SIGNING_PRIVATE_KEY` und `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` sind eingetragen.
-Den privaten Schlüssel sicher aufbewahren – ohne ihn lassen sich keine Updates mehr signieren.
+GitHub Actions merkt die neue Version und erstellt das Release `v1.5.0` mit Installern und `latest.json`. Installierte Apps melden das Update dann selbst. Ein Push ohne Versionsänderung baut nur einen Test-Installer (unter **Actions → Artifacts**).
+
+Für die Update-Signatur braucht das Repo die Secrets `TAURI_SIGNING_PRIVATE_KEY` und `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`.
 
 ## Wo liegen die Notizen?
 
 - Standard: `Dokumente\Kanban Notizen\kanban-notizen.json`
-- Tägliche Sicherungen: `Dokumente\Kanban Notizen\Backups\` (die letzten 30 Tage)
+- Tägliche Sicherungen: im Unterordner `Backups\` (die letzten 30 Tage)
 - Ändern unter **Einstellungen → Speicherort**, z. B. in einen OneDrive-Ordner
 - Deinstallieren löscht die Notizen **nicht**
 
-Bestehende Notizen aus der HTML-Version übernimmst du dort über **Einstellungen → Backup & Import → Backup herunterladen** und in der Desktop-App über **Backup wiederherstellen**.
+## Lokal entwickeln
 
-## Lokal entwickeln (optional)
+Die Oberfläche lässt sich zum schnellen Testen direkt im Browser öffnen (`src/index.html`). Sie läuft dann im **Entwicklungsmodus**: Es gibt Beispieldaten, gespeichert wird aber nichts.
 
-Nur nötig, wenn du die Desktop-App auf deinem PC selbst bauen oder testen willst:
+Für die echte App:
 
-1. [Node.js LTS](https://nodejs.org) installieren
-2. [Rust](https://rustup.rs) installieren (Standardoptionen)
-3. „Visual Studio Build Tools“ mit **Desktopentwicklung mit C++** installieren
-4. Im Projektordner:
+1. [Node.js LTS](https://nodejs.org) und [Rust](https://rustup.rs) installieren
+2. „Visual Studio Build Tools“ mit **Desktopentwicklung mit C++** installieren
+3. Im Projektordner:
 
 ```powershell
 npm install
@@ -106,14 +89,6 @@ npm run dev      # App im Entwicklungsmodus starten
 npm run build    # Installer bauen → src-tauri\target\release\bundle\
 ```
 
-Änderungen an der App selbst machst du in `src/index.html`.
-
-## HTML-Variante mit Inno Setup
-
-1. [Inno Setup](https://jrsoftware.org/isinfo.php) installieren
-2. `installer/kanban-notizen.iss` öffnen → **Build → Compile** (F9)
-3. Ergebnis: `installer/output/KanbanNotizen-HTML-Setup-1.0.0.exe`
-
 ## Hinweis zur Signatur
 
-Die Installer sind nicht signiert. Windows SmartScreen zeigt beim ersten Start „Der Computer wurde durch Windows geschützt“ – über **Weitere Informationen → Trotzdem ausführen** geht es weiter. Für eine Verteilung an andere braucht es ein Code-Signing-Zertifikat.
+Die Installer haben keine Code-Signatur. Beim ersten Start zeigt Windows SmartScreen deshalb „Der Computer wurde durch Windows geschützt“. Über **Weitere Informationen → Trotzdem ausführen** geht es weiter. Updates sind trotzdem mit einem eigenen Schlüssel signiert und werden vor der Installation geprüft.
