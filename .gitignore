@@ -1,0 +1,12 @@
+# Abhängigkeiten und Build-Ergebnisse
+node_modules/
+src-tauri/target/
+src-tauri/gen/schemas/
+
+# Inno-Setup-Ausgabe
+installer/output/
+
+# System
+.DS_Store
+Thumbs.db
+*.log
