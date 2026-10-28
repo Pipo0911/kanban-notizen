@@ -71,15 +71,14 @@ Die Desktop-App sucht beim Start und alle 6 Stunden nach einer neuen Version und
 So veröffentlichst du ein Update:
 
 1. Version erhöhen in `src-tauri/tauri.conf.json`, `package.json` und `src-tauri/Cargo.toml` (z. B. `1.2.0`)
-2. Committen, Tag setzen, pushen:
+2. Committen und pushen:
 
 ```powershell
 git commit -am "Version 1.2.0"
-git tag v1.2.0
-git push --follow-tags
+git push
 ```
 
-GitHub baut daraufhin ein Release mit signierten Update-Dateien und `latest.json`.
+Sobald auf `main` eine Version ankommt, für die es noch kein Release gibt, baut GitHub automatisch ein Release mit signierten Update-Dateien und `latest.json`.
 Voraussetzungen: Das Repo ist **öffentlich**, und die Secrets `TAURI_SIGNING_PRIVATE_KEY` und `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` sind eingetragen.
 Den privaten Schlüssel sicher aufbewahren – ohne ihn lassen sich keine Updates mehr signieren.
 

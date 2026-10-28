@@ -1,6 +1,8 @@
 # Baut den Windows-Installer automatisch auf einem Windows-Server von GitHub.
-#  - Push auf main: Testbuild, Installer unter "Actions" → Lauf → "Artifacts"
-#  - Tag wie v1.2.0: Release mit Installern + latest.json für das automatische Update
+#  - Push auf main mit NEUER Version in src-tauri/tauri.conf.json:
+#      Release vX.Y.Z mit Installern + latest.json (automatisches Update)
+#  - Push auf main ohne Versionsänderung: nur Testbuild unter "Actions" → "Artifacts"
+#  - Tag wie v1.2.0 funktioniert ebenfalls
 #
 # Benötigte Secrets (Settings → Secrets and variables → Actions):
 #   TAURI_SIGNING_PRIVATE_KEY, TAURI_SIGNING_PRIVATE_KEY_PASSWORD
@@ -38,6 +40,22 @@ jobs:
         with:
           node-version: 22
 
+      - name: Version prüfen – Release nötig?
+        id: ver
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          elif gh release view "v$V" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "release=false" >> "$GITHUB_OUTPUT"; echo "Release v$V existiert schon – nur Testbuild."
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"; echo "Neue Version v$V – erstelle Release."
+          fi
+
       - name: Rust einrichten
         uses: dtolnay/rust-toolchain@stable
 
@@ -51,11 +69,11 @@ jobs:
 
       # --- Testbuild (Push auf main) ---
       - name: App und Installer bauen
-        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        if: steps.ver.outputs.release != 'true'
         run: npx tauri build
 
       - name: Installer als Artefakt hochladen
-        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        if: steps.ver.outputs.release != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: KanbanNotizen-Windows
@@ -64,15 +82,16 @@ jobs:
             src-tauri/target/release/bundle/msi/*.msi
           if-no-files-found: error
 
-      # --- Release (Tag v*) ---
+      # --- Release (neue Version oder Tag) ---
       - name: Release mit Update-Dateien erstellen
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        if: steps.ver.outputs.release == 'true'
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: Kanban Notizen ${{ github.ref_name }}
+          tagName: v${{ steps.ver.outputs.version }}
+          releaseName: Kanban Notizen v${{ steps.ver.outputs.version }}
+          releaseCommitish: ${{ github.sha }}
           releaseBody: |
             Installer: **Kanban Notizen_…_x64-setup.exe** herunterladen und ausführen.
             Bereits installiert? Die App meldet sich beim nächsten Start selbst mit dem Update.
