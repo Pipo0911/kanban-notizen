@@ -166,6 +166,16 @@ fn set_data_path(app: AppHandle, path: Option<String>) -> Result<DataInfo, Strin
     info(&app)
 }
 
+/// Schreibt einen Export (Backup, CSV, Markdown) an den im Speichern-Dialog gewählten Ort.
+#[tauri::command]
+fn write_text_file(path: String, contents: String) -> Result<(), String> {
+    let p = PathBuf::from(&path);
+    if let Some(dir) = p.parent() {
+        fs::create_dir_all(dir).map_err(err)?;
+    }
+    fs::write(&p, contents.as_bytes()).map_err(err)
+}
+
 /// Öffnet den Ordner mit der Datendatei im Explorer.
 #[tauri::command]
 fn reveal_data(app: AppHandle) -> Result<(), String> {
@@ -207,7 +217,8 @@ pub fn run() {
             load_data,
             save_data,
             set_data_path,
-            reveal_data
+            reveal_data,
+            write_text_file
         ])
         .run(tauri::generate_context!())
         .expect("Kanban Notizen konnte nicht gestartet werden");

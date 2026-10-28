@@ -1,6 +1,6 @@
 [package]
 name = "kanban-notizen"
-version = "1.3.0"
+version = "1.4.0"
 description = "Kanban Notizen – Notizen, Termine und Zeiterfassung als Desktop-App"
 authors = ["Philipp Seewer"]
 edition = "2021"

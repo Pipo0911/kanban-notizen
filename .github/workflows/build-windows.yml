@@ -2,7 +2,7 @@
 #  - Push auf main mit NEUER Version in src-tauri/tauri.conf.json:
 #      Release vX.Y.Z mit Installern + latest.json (automatisches Update)
 #  - Push auf main ohne Versionsänderung: nur Testbuild unter "Actions" → "Artifacts"
-#  - Tag wie v1.2.0 funktioniert ebenfalls
+#  - Tag wie v1.4.0 funktioniert ebenfalls
 #
 # Benötigte Secrets (Settings → Secrets and variables → Actions):
 #   TAURI_SIGNING_PRIVATE_KEY, TAURI_SIGNING_PRIVATE_KEY_PASSWORD
