@@ -1,7 +1,7 @@
 {
   "name": "kanban-notizen",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Kanban Notizen als Desktop-App (Tauri)",
   "scripts": {
     "tauri": "tauri",
