@@ -630,6 +630,8 @@ async function tauriInfo(){const i=await tInvoke('data_info');tv.path=i.path;tv.
 async function tauriLoad(){const i=await tauriInfo();const txt=await tInvoke('load_data');
   if(txt&&txt.trim()){const d=JSON.parse(txt);if(!Array.isArray(d.spaces))throw new Error('Die Datei enthält keine Kanban-Notizen');applyFileData(d);tv.mtime=i.mtime;return true}return false}
 async function tauriInit(){
+  try{upd.current=await TAURI.app.getVersion()}catch(e){}
+  setTimeout(()=>checkUpdate(false),4000);setInterval(()=>checkUpdate(false),6*3600e3);
   try{if(await tauriLoad())setStatus('Geladen · '+hhmm());else{await tauriWrite();toast('Deine Notizen werden hier gespeichert: '+tv.path)}}
   catch(e){console.warn(e);setStatus('Datei konnte nicht gelesen werden: '+e,true)}}
 function tauriSchedule(){tv.dirty=true;clearTimeout(tv.timer);tv.timer=setTimeout(tauriWrite,400)}
@@ -647,7 +649,30 @@ async function tauriOpenFile(){const p=await TAURI.dialog.open({multiple:false,d
   try{if(!(await tauriLoad()))await tauriWrite();render();toast('Geöffnet: '+tv.path)}catch(e){await tInvoke('set_data_path',{path:tv.isDefault?null:old});await tauriInfo();toast('Öffnen fehlgeschlagen: '+e.message)}}
 async function tauriResetPath(){const r=await ask({title:'Standard-Speicherort verwenden?',text:'Die App speichert danach wieder unter <b>Dokumente\\Kanban Notizen</b>. Liegt dort schon eine Datei, wird sie geladen.',ok:'Zurücksetzen'});if(!r)return;
   await tInvoke('set_data_path',{path:null});if(!(await tauriLoad()))await tauriWrite();render();toast('Standard-Speicherort aktiv')}
-function tauriStoreHTML(){return`<div class="panel"><h3>Speicherort</h3>
+/* Updates (nur Desktop-App): prüft beim Start und alle 6 Stunden */
+const upd={state:'',version:'',current:'',update:null,progress:0,dismissed:false,notes:''};
+async function checkUpdate(manual){
+  if(!tv.on||!TAURI.updater){if(manual)toast('Updates gibt es nur in der installierten Desktop-App.');return}
+  if(upd.state==='downloading'||upd.state==='installing')return;
+  upd.state='checking';refreshUpdateUI();
+  try{const u=await TAURI.updater.check();
+    if(u){upd.update=u;upd.version=u.version;upd.notes=u.body||'';upd.state='available';if(manual)upd.dismissed=false}
+    else{upd.state='none';if(manual)toast(`Du hast die neueste Version (${upd.current||'?'}).`)}}
+  catch(e){console.warn(e);upd.state='error';if(manual)toast('Update-Prüfung fehlgeschlagen. Bist du online?')}
+  refreshUpdateUI()}
+async function installUpdate(){const u=upd.update;if(!u)return;
+  clearTimeout(tv.timer);if(tv.dirty)await tauriWrite();
+  upd.state='downloading';upd.progress=0;refreshUpdateUI();let total=0,got=0;
+  try{await u.downloadAndInstall(ev=>{if(ev.event==='Started')total=(ev.data&&ev.data.contentLength)||0;
+      else if(ev.event==='Progress'){got+=(ev.data&&ev.data.chunkLength)||0;upd.progress=total?Math.min(100,Math.round(got/total*100)):0;const el=$('#updProg');if(el)el.textContent=upd.progress+' %'}
+      else if(ev.event==='Finished'){upd.state='installing';refreshUpdateUI()}});
+    await TAURI.process.relaunch()}
+  catch(e){console.warn(e);upd.state='available';refreshUpdateUI();toast('Update fehlgeschlagen: '+e)}}
+function refreshUpdateUI(){renderBanner();if(DB.ui.view==='settings'&&ui.gtab==='general'&&!busy())renderContent()}
+function updateLine(){const v=upd.current?`Version ${esc(upd.current)}`:'Version unbekannt';
+  const st={checking:'Suche nach Updates …',none:'Neueste Version installiert',error:'Prüfung fehlgeschlagen',available:`Version ${esc(upd.version)} verfügbar`,downloading:'Lade Update …',installing:'Installiere …'}[upd.state]||'';
+  return`<div class="panel"><h3>Updates</h3><div class="row-btns"><span><b>${v}</b>${st?` · <span class="muted">${st}</span>`:''}</span><span class="spacer"></span>${upd.state==='available'?'<button class="btn primary" id="uInstall">Jetzt aktualisieren</button>':''}<button class="btn" id="uCheck"${upd.state==='checking'||upd.state==='downloading'?' disabled':''}>Nach Updates suchen</button></div><small>Die App sucht beim Start und alle 6 Stunden automatisch nach neuen Versionen. Deine Notizen bleiben beim Update erhalten.</small></div>`}
+function tauriStoreHTML(){return updateLine()+`<div class="panel"><h3>Speicherort</h3>
     <div class="store-state"><span class="dotst ok"></span><div><b>${tv.isDefault?'Standard-Speicherort':'Eigener Speicherort'}</b><div class="muted sm" style="word-break:break-all">${esc(tv.path)}</div></div></div>
     <p>Die Desktop-App speichert jede Änderung sofort in diese Datei und legt im Unterordner <b>Backups</b> jeden Tag automatisch eine Sicherung an (die letzten 30 Tage). Liegt die Datei in <b>OneDrive</b>, hast du auf einem zweiten PC mit derselben Datei dieselben Notizen.</p>
     <div class="row-btns"><button class="btn" id="tReveal">Ordner öffnen</button><button class="btn" id="tNew">Neuen Speicherort wählen …</button><button class="btn" id="tOpen">Bestehende Datei öffnen …</button>${tv.isDefault?'':'<button class="btn ghost" id="tReset">Standard verwenden</button>'}</div></div>`}
@@ -834,6 +859,11 @@ function applyTheme(){const t=DB.settings.theme;if(t==='system')delete document.
 function render(){renderSide();renderHead();renderFbar();renderContent();renderBanner()}
 function countToday(){let n=0;for(const x of allNotes()){const st=dueState(x.s,x.n);if(st==='late'||(x.n.due===today()&&!isDone(x.s,x.n)))n++}return n}
 function renderBanner(){const b=$('#banner');
+  if(tv.on&&['available','downloading','installing'].includes(upd.state)&&!(upd.state==='available'&&upd.dismissed)){b.hidden=false;
+    if(upd.state==='available'){b.innerHTML=`<span>Neue Version <b>${esc(upd.version)}</b> ist verfügbar${upd.current?` (installiert: ${esc(upd.current)})`:''}.</span><button class="btn sm primary" id="updGo">Jetzt aktualisieren</button><button class="btn sm ghost" id="updLater">Später</button>`;
+      $('#updGo').onclick=installUpdate;$('#updLater').onclick=()=>{upd.dismissed=true;renderBanner()}}
+    else b.innerHTML=upd.state==='downloading'?'<span>Update wird heruntergeladen … <b id="updProg">'+upd.progress+' %</b></span>':'<span>Update wird installiert – die App startet gleich neu.</span>';
+    return}
   if(store.handle&&store.needPerm){b.hidden=false;b.innerHTML=`<span>Die Speicherdatei <b>${esc(store.name)}</b> ist verbunden. Der Browser braucht deine Erlaubnis, um sie zu lesen und zu speichern.</span><button class="btn sm primary" id="grantBtn">Zugriff erlauben</button>`;$('#grantBtn').onclick=grantFile}
   else if(DB._migrated){b.hidden=false;b.innerHTML='<span>Deine Daten aus der früheren Board-Version wurden übernommen.</span><button class="btn sm" id="migOk">OK</button>';$('#migOk').onclick=()=>{delete DB._migrated;renderBanner()}}
   else b.hidden=true}
@@ -1339,7 +1369,7 @@ function renderSettings(el){const S=DB.settings,tab=ui.gtab;let body='';
   el.innerHTML=`<div class="scroll" id="bw"><div class="page"><nav class="subtabs">${[['general','Allgemein'],['labels','Labels'],['tpl','Vorlagen'],['data','Backup & Import']].map(([k,n])=>`<button class="stab${tab===k?' on':''}" data-gtab="${k}">${n}</button>`).join('')}</nav>${body}</div></div>`;
   $$('[data-gtab]',el).forEach(b=>b.onclick=()=>{ui.gtab=b.dataset.gtab;renderContent()});
   const on=(id,f)=>{const x=$('#'+id,el);if(x)x.onclick=f};
-  if(tab==='general'){on('tReveal',()=>tInvoke('reveal_data').catch(e=>toast('Ordner konnte nicht geöffnet werden: '+e)));on('tNew',tauriNewFile);on('tOpen',tauriOpenFile);on('tReset',tauriResetPath);on('sNew',pickNewFile);on('sOpen',pickExistingFile);on('sDisc',disconnectFile);on('sGrant',grantFile);
+  if(tab==='general'){on('uCheck',()=>checkUpdate(true));on('uInstall',installUpdate);on('tReveal',()=>tInvoke('reveal_data').catch(e=>toast('Ordner konnte nicht geöffnet werden: '+e)));on('tNew',tauriNewFile);on('tOpen',tauriOpenFile);on('tReset',tauriResetPath);on('sNew',pickNewFile);on('sOpen',pickExistingFile);on('sDisc',disconnectFile);on('sGrant',grantFile);
     $$('[data-theme]',el).forEach(b=>b.onclick=()=>{S.theme=b.dataset.theme;applyTheme();save(true);renderContent()});
     $('#sNotify',el).onchange=async e=>{if(e.target.checked&&'Notification' in window){let p=Notification.permission;if(p==='default')p=await Notification.requestPermission();if(p!=='granted'){e.target.checked=false;toast('Benachrichtigungen wurden nicht erlaubt');return}}S.notify=e.target.checked;save(true);toast(S.notify?'Benachrichtigungen aktiviert':'Benachrichtigungen aus')};
     $('#sRound',el).onchange=e=>{S.round=+e.target.value;save(true);toast('Gespeichert')};

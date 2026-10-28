@@ -51,7 +51,7 @@ Danach den Lauf öffnen → unten bei **Artifacts** → `KanbanNotizen-Windows` 
 - `Kanban Notizen_1.0.0_x64-setup.exe` – **empfohlen**, installiert ohne Adminrechte ins Benutzerprofil
 - `Kanban Notizen_1.0.0_x64_de-DE.msi` – MSI, z. B. für Verteilung über Intune
 
-## 3. Neue Version veröffentlichen
+## 3. Neue Version veröffentlichen (manuell)
 
 1. Version erhöhen in `src-tauri/tauri.conf.json` (und gleich in `package.json` und `src-tauri/Cargo.toml`)
 2. Committen, dann ein Tag setzen und pushen:
@@ -64,6 +64,24 @@ git push --follow-tags
 
 GitHub erstellt dann ein **Release** mit den Installern zum Download.
 Beim Installieren einer neuen Version wird die alte automatisch ersetzt – die Notizen bleiben erhalten.
+
+## Automatische Updates
+
+Die Desktop-App sucht beim Start und alle 6 Stunden nach einer neuen Version und bietet sie per Klick an.
+So veröffentlichst du ein Update:
+
+1. Version erhöhen in `src-tauri/tauri.conf.json`, `package.json` und `src-tauri/Cargo.toml` (z. B. `1.2.0`)
+2. Committen, Tag setzen, pushen:
+
+```powershell
+git commit -am "Version 1.2.0"
+git tag v1.2.0
+git push --follow-tags
+```
+
+GitHub baut daraufhin ein Release mit signierten Update-Dateien und `latest.json`.
+Voraussetzungen: Das Repo ist **öffentlich**, und die Secrets `TAURI_SIGNING_PRIVATE_KEY` und `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` sind eingetragen.
+Den privaten Schlüssel sicher aufbewahren – ohne ihn lassen sich keine Updates mehr signieren.
 
 ## Wo liegen die Notizen?
 
