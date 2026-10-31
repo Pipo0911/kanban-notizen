@@ -1,10 +1,13 @@
 /* Kanban Notizen · Speichern in die Datendatei, Desktop-Verhalten, Updates */
 'use strict';
 /* ============ Speichern (Desktop-App) ============ */
-/* Die Notizen liegen als JSON-Datei auf der Festplatte (Rust-Seite: src-tauri/src/lib.rs).
-   Wird die Oberfläche im Browser geöffnet, läuft sie im Entwicklungsmodus ohne Speichern. */
+/* Desktop-App: Die Notizen liegen als JSON-Datei auf der Festplatte (Rust-Seite: src-tauri/src/lib.rs).
+   Web-App (iPhone, Browser): Die Notizen liegen im Speicher des Geräts (localStorage). */
 const TAURI=window.__TAURI__&&window.__TAURI__.core?window.__TAURI__:null;
-const DEV=!TAURI;
+const DEV=!TAURI,WEB=!TAURI;
+const WEBKEY='kanban-notizen-web-v5';
+const IOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const STANDALONE=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 const tv={on:!DEV,path:'',mtime:0,dirty:false,writing:false,timer:0,isDefault:true,loaded:false};
 const UIKEY='kanban-notizen-ui';
 const tInvoke=(c,a)=>TAURI.core.invoke(c,a);
@@ -18,7 +21,7 @@ async function tauriLoad(){const i=await tauriInfo();const txt=await tInvoke('lo
 /* Einmalige Übernahme aus Version 1.0 (damals lagen die Notizen im Speicher des Fensters) */
 function legacyLocal(){try{const r=localStorage.getItem('kanban-notizen-office-v1');return r?JSON.parse(r):null}catch(e){return null}}
 async function tauriInit(){
-  if(DEV){tv.loaded=true;setStatus('Entwicklungsmodus – Änderungen werden nicht gespeichert',true);render();return}
+  if(WEB){webInit();return}
   try{upd.current=await TAURI.app.getVersion()}catch(e){}
   setTimeout(()=>checkUpdate(false),4000);setInterval(()=>checkUpdate(false),6*3600e3);
   try{
@@ -31,7 +34,7 @@ function tauriSchedule(){tv.dirty=true;clearTimeout(tv.timer);tv.timer=setTimeou
 async function tauriWrite(){if(DEV||!tv.loaded)return;if(tv.writing){tauriSchedule();return}tv.writing=true;
   try{tv.mtime=await tInvoke('save_data',{json:JSON.stringify(payload()),day:today()});tv.dirty=false;setStatus('Gespeichert · '+hhmm())}
   catch(e){setStatus('Speichern fehlgeschlagen: '+e,true)}finally{tv.writing=false}}
-function save(quiet){saveUi();if(DEV){if(!quiet)setStatus('Entwicklungsmodus – nicht gespeichert',true);return}if(!tv.loaded)return;tauriSchedule()}
+function save(quiet){saveUi();if(WEB){webWrite();return}if(!tv.loaded)return;tauriSchedule()}
 /* Änderungen von einem anderen PC (z. B. über OneDrive) übernehmen, sobald das Fenster aktiv wird */
 let pendingExternal=false;
 async function checkFileChanged(){if(DEV||!tv.loaded||tv.dirty||tv.writing)return;
@@ -91,3 +94,31 @@ function tauriStoreHTML(){return updateLine()+`<div class="panel"><h3>Speicheror
     <div class="store-state"><span class="dotst ok"></span><div><b>${tv.isDefault?'Standard-Speicherort':'Eigener Speicherort'}</b><div class="muted sm" style="word-break:break-all">${esc(tv.path)}</div></div></div>
     <p>Die Desktop-App speichert jede Änderung sofort in diese Datei und legt im Unterordner <b>Backups</b> jeden Tag automatisch eine Sicherung an (die letzten 30 Tage). Liegt die Datei in <b>OneDrive</b>, hast du auf einem zweiten PC mit derselben Datei dieselben Notizen.</p>
     <div class="row-btns"><button class="btn" id="tReveal">Ordner öffnen</button><button class="btn" id="tNew">Neuen Speicherort wählen …</button><button class="btn" id="tOpen">Bestehende Datei öffnen …</button>${tv.isDefault?'':'<button class="btn ghost" id="tReset">Standard verwenden</button>'}</div></div>`}
+
+/* ============ Web-App (iPhone / Browser) ============ */
+function webInit(){
+  try{const r=localStorage.getItem(WEBKEY)||localStorage.getItem('kanban-notizen-html-v5')||localStorage.getItem('kanban-notizen-office-v1');
+    if(r){const d=JSON.parse(r);if(Array.isArray(d.spaces))applyFileData(d)}}catch(e){console.warn(e)}
+  tv.loaded=true;purgeTrash();webWrite();
+  if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+  setStatus('Auf diesem Gerät gespeichert');render();webSW()}
+let webT=0;
+function webWrite(){clearTimeout(webT);webT=setTimeout(()=>{if(!tv.loaded)return;
+  try{localStorage.setItem(WEBKEY,JSON.stringify(payload()));setStatus('Gespeichert · '+hhmm())}
+  catch(e){setStatus('Speicher voll – bitte Backup speichern und Bilder entfernen',true);toast('Der Speicher auf diesem Gerät ist voll. Entferne grosse Bilder oder speichere ein Backup.')}},250)}
+window.addEventListener('pagehide',()=>{if(WEB&&tv.loaded){clearTimeout(webT);try{localStorage.setItem(WEBKEY,JSON.stringify(payload()))}catch(e){}}});
+document.addEventListener('visibilitychange',()=>{if(WEB&&document.visibilityState==='hidden'&&tv.loaded){clearTimeout(webT);try{localStorage.setItem(WEBKEY,JSON.stringify(payload()))}catch(e){}}});
+/* Offline-Fähigkeit und Updates über den Service Worker */
+let webUpdate=false;
+function webSW(){if(!('serviceWorker' in navigator)||location.protocol!=='https:')return;
+  navigator.serviceWorker.register('sw.js').then(reg=>{
+    const watch=w=>w&&w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller){webUpdate=true;renderBanner()}});
+    watch(reg.installing);reg.addEventListener('updatefound',()=>watch(reg.installing));
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')reg.update().catch(()=>{})})}).catch(e=>console.warn(e));
+  let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloaded)return;reloaded=true;location.reload()})}
+function webApplyUpdate(){navigator.serviceWorker.getRegistration().then(r=>{if(r&&r.waiting)r.waiting.postMessage('skipWaiting');else location.reload()})}
+function webStoreHTML(){let kb=0;try{kb=Math.round((localStorage.getItem(WEBKEY)||'').length*2/1024)}catch(e){}
+  return`<div class="panel"><h3>Speicherort</h3>
+    <div class="store-state"><span class="dotst ok"></span><div><b>Auf diesem Gerät</b><div class="muted sm">${STANDALONE?'Als App vom Home-Bildschirm':'Im Browser'} · ca. ${kb>1024?(kb/1024).toFixed(1)+' MB':kb+' KB'} belegt</div></div></div>
+    <p>Die Notizen bleiben auf diesem Gerät und werden nicht automatisch mit dem PC abgeglichen. Mit <b>Backup speichern</b> und <b>Backup wiederherstellen</b> (unter „Backup &amp; Import“) überträgst du sie zwischen iPhone und PC.</p>
+    ${IOS&&!STANDALONE?'<p class="warn-box"><b>Tipp:</b> Tippe in Safari auf <b>Teilen</b> und dann auf <b>Zum Home-Bildschirm</b>. So läuft Kanban Notizen wie eine App, auch offline, und iOS löscht die Notizen nicht nach längerer Pause.</p>':''}</div>`}

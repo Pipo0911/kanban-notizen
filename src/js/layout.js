@@ -4,7 +4,13 @@
 function setView(v){DB.ui.view=v;$('.app').classList.remove('menu-open');save(true);render()}
 function goSpace(id){DB.active=id;const gs=spaceById(id);if(gs)expandTo(gs.folder);if(!SPACE_VIEWS.includes(DB.ui.view))DB.ui.view='board';ui.filters=blankF();$('.app').classList.remove('menu-open');save(true);render()}
 function applyTheme(){const t=DB.settings.theme;if(t==='system')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=t}
-function render(){renderSide();renderHead();renderFbar();renderContent();renderBanner()}
+function render(){renderSide();renderHead();renderFbar();renderContent();renderBanner();renderTabbar()}
+/* Untere Leiste auf dem Handy */
+function renderTabbar(){const el=$('#tabbar');if(!el)return;const v=DB.ui.view,isSp=SPACE_VIEWS.includes(v),ct=countToday();
+  const it=(act,icon,label,on,extra='')=>`<button class="tb-it${on?' on':''}" data-act="${act}"${extra}>${icon}<span>${label}</span></button>`;
+  el.innerHTML=it('view',SVG.board,'Board',isSp,' data-v="board"')+it('view',SVG.today,'Heute',v==='today',' data-v="today"').replace('</span></button>',`</span>${ct?`<i class="tb-badge">${ct}</i>`:''}</button>`)
+    +`<button class="tb-new" data-act="create" aria-label="Neue Notiz">+</button>`
+    +it('daily',SVG.daily,'Tag',false)+it('palette',SVG.search.replace(/14/g,'18'),'Suchen',false)}
 function countToday(){let n=0;for(const x of allNotes()){const st=dueState(x.s,x.n);if(st==='late'||(x.n.due===today()&&!isDone(x.s,x.n)))n++}return n}
 function renderBanner(){const b=$('#banner');
   if(tv.on&&['available','downloading','installing'].includes(upd.state)&&!(upd.state==='available'&&upd.dismissed)){b.hidden=false;
@@ -12,7 +18,7 @@ function renderBanner(){const b=$('#banner');
       $('#updGo').onclick=installUpdate;$('#updLater').onclick=()=>{upd.dismissed=true;renderBanner()}}
     else b.innerHTML=upd.state==='downloading'?'<span>Update wird heruntergeladen … <b id="updProg">'+upd.progress+' %</b></span>':'<span>Update wird installiert – die App startet gleich neu.</span>';
     return}
-  if(DEV){b.hidden=false;b.innerHTML='<span>Entwicklungsmodus: Die Oberfläche läuft im Browser – Änderungen werden nicht gespeichert.</span>'}
+  if(WEB&&webUpdate){b.hidden=false;b.innerHTML='<span>Eine neue Version ist bereit.</span><button class="btn sm primary" id="webUpd">Jetzt neu laden</button>';$('#webUpd').onclick=webApplyUpdate}
   else b.hidden=true}
 function renderSide(){const v=DB.ui.view,g=GLOBAL_VIEWS.includes(v),ct=countToday();
   $('#side').innerHTML=`<div class="brand"><span class="logo">${SVG.logo}</span><span>Notizen</span></div>
@@ -120,7 +126,9 @@ function renderHead(){const v=DB.ui.view,h=$('#head');
   <nav class="tabs">${[['board','Board'],['wall','Alle Notizen'],['archive','Archiv'+(na?`<span class="cnt">${na}</span>`:'')],['spacecfg','Einstellungen']].map(([k,n])=>`<button class="tab${v===k?' on':''}" data-act="view" data-v="${k}">${n}</button>`).join('')}</nav>`}
 function renderFbar(){const v=DB.ui.view,el=$('#fbar');if(v!=='board'&&v!=='wall'){el.innerHTML='';return}
   const s=sp(),f=ui.filters,tags=tagsOf(s);
-  el.innerHTML=`<div class="search">${SVG.search}<input id="q" type="search" placeholder="In diesem Space suchen ( / )" value="${esc(f.q)}" autocomplete="off" aria-label="Suchen"></div>
+  const nAct=['tag','prio','color','due'].filter(k=>f[k]).length+(f.pinned?1:0);
+  el.classList.toggle('open',!!ui.fOpen);
+  el.innerHTML=`<button class="fbar-toggle${nAct?' act':''}" id="fTog" aria-expanded="${!!ui.fOpen}">Filter${nAct?` · ${nAct}`:''}</button><div class="search">${SVG.search}<input id="q" type="search" placeholder="In diesem Space suchen ( / )" value="${esc(f.q)}" autocomplete="off" aria-label="Suchen"></div>
   <select class="f${f.tag?' act':''}" id="fTag" aria-label="Tag"><option value="">Alle Labels</option>${tags.map(t=>`<option value="${esc(t)}"${f.tag===t?' selected':''}>${esc(t)}</option>`).join('')}</select>
   <select class="f${f.prio?' act':''}" id="fPrio" aria-label="Priorität"><option value="">Alle Prioritäten</option>${PRIOS.map(p=>`<option value="${p.id}"${f.prio===p.id?' selected':''}>${p.n}</option>`).join('')}<option value="none"${f.prio==='none'?' selected':''}>Ohne Priorität</option></select>
   <select class="f${f.color?' act':''}" id="fCol" aria-label="Farbe"><option value="">Alle Farben</option>${NCOL.map(c=>`<option value="${c.id}"${f.color===c.id?' selected':''}>${c.n}</option>`).join('')}</select>
@@ -132,6 +140,7 @@ function renderFbar(){const v=DB.ui.view,el=$('#fbar');if(v!=='board'&&v!=='wall
   $('#q').addEventListener('keydown',e=>{if(e.key==='Escape'){e.target.value='';f.q='';e.target.blur();upd()}});
   for(const[id,k]of[['fTag','tag'],['fPrio','prio'],['fCol','color'],['fDue','due']])$('#'+id).onchange=e=>{f[k]=e.target.value;e.target.classList.toggle('act',!!f[k]);upd()};
   $('#fPin').onchange=e=>{f.pinned=e.target.checked;upd()};
+  $('#fTog').onclick=()=>{ui.fOpen=!ui.fOpen;renderFbar()};
   const so=$('#fSort');if(so)so.onchange=e=>{s.sort=e.target.value;save(true);renderContent()}}
 function renderContent(){const c=$('#content'),old=$('#bw'),v=DB.ui.view,key=v+(v==='spacecfg'?ui.stab:'')+(v==='settings'?ui.gtab:'')+(SPACE_VIEWS.includes(v)?DB.active:'');
   const sc=old&&old.dataset.k===key?{l:old.scrollLeft,t:old.scrollTop,cols:$$('.col-list',old).map(x=>x.scrollTop)}:null;

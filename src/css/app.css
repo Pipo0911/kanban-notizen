@@ -431,6 +431,66 @@ ul.pck li.done{color:var(--muted);text-decoration:line-through}
 ul.pck li.done::before{content:"☑ "}
 @media (max-width:700px){.hist{grid-template-columns:1fr}.hist-list{border-right:0;border-bottom:1px solid var(--border);max-height:160px}}
 
+/* ---------- Handy / iPhone (Web-App) ---------- */
+html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+.card{-webkit-touch-callout:none}
+.tabbar,.fbar-toggle{display:none}
+@media (pointer:coarse){
+  input,select,textarea{font-size:16px}
+  .row-tools{display:flex}
+  .play{opacity:.85}
+  [data-act="help"],.searchbtn kbd,.pal-foot,.inline-form .hint{display:none}
+}
+@media (max-width:700px){
+  .side{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+  .head{padding-top:calc(10px + env(safe-area-inset-top))}
+  .head-row{gap:8px}
+  .head h1{font-size:19px}
+  .head .crumb{font-size:11px}
+  .head-row>.btn.primary[data-act="create"]{display:none}
+  .sav.lg{width:30px;height:30px}
+  .tabs{margin-top:8px}
+  .tab{padding:8px 10px}
+  .fbar{padding-top:10px;padding-bottom:8px;gap:6px}
+  .fbar-toggle{display:inline-flex;border:1.5px solid var(--border);background:var(--surface);border-radius:6px;padding:6px 10px;font-weight:600;color:var(--text2)}
+  .fbar-toggle.act{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+  .fbar .search{flex:1;min-width:0}
+  .fbar .search input{width:100%}
+  .fbar:not(.open)>:not(.search):not(.fbar-toggle){display:none}
+  .fbar.open>select,.fbar.open>label{flex:1 1 45%}
+  .board-wrap{scroll-snap-type:x mandatory;scroll-padding-left:16px}
+  .col{width:calc(100vw - 44px);scroll-snap-align:start}
+  .board-wrap,.wall-wrap,.page{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+  .addcol{scroll-snap-align:start}
+  .wall{columns:1}
+  .tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:50;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--border);padding:4px 6px env(safe-area-inset-bottom);align-items:center;justify-content:space-around}
+  .tb-it{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:none;color:var(--muted);font-size:10.5px;font-weight:600;padding:6px 0 4px}
+  .tb-it svg{width:22px;height:22px}
+  .tb-it.on{color:var(--accent)}
+  .tb-badge{position:absolute;top:2px;left:calc(50% + 6px);font-style:normal;font-size:10px;font-weight:700;background:var(--danger);color:#fff;border-radius:8px;padding:0 5px;line-height:15px}
+  .tb-new{flex:none;width:48px;height:48px;border-radius:50%;border:0;background:var(--accent);color:var(--on-accent);font-size:28px;line-height:1;display:grid;place-items:center;margin:0 4px;box-shadow:0 4px 12px color-mix(in srgb,var(--accent) 40%,transparent)}
+  #toast{bottom:calc(76px + env(safe-area-inset-bottom));max-width:calc(100vw - 24px)}
+  /* Editor im Vollbild */
+  dialog#dlg{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border-radius:0}
+  #dlg .ed{height:100dvh;max-height:100dvh}
+  #dlg .ed-nav,#dlg .ed:not(:has(.ed-nav)) .ed-top{padding-top:calc(8px + env(safe-area-inset-top))}
+  #dlg .ed-body{padding-left:16px;padding-right:16px}
+  #dlg .seg .hint{display:none}
+  #dlg .ed-foot{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+  #dlg .ed-foot .spacer{min-width:8px}
+  #dlg .ed-foot .btn{flex:none}
+  #dlg .ed-grid{grid-template-columns:1fr 1fr}
+  #dlg .ed-text{min-height:180px}
+  #dlg .ed-top{flex-wrap:nowrap;gap:2px;padding-left:12px;padding-right:8px}
+  #dlg .ed-top .dots{gap:3px;overflow-x:auto;scrollbar-width:none;flex:0 1 auto;min-width:0}
+  #dlg .ed-top .dot{flex:none}
+  #dlg .ed-loc{display:none}
+  #dlg .ed-top .icon-btn{flex:none;width:36px;height:36px}
+  #dlg [data-close].icon-btn{font-size:18px}
+  #pal{margin-top:calc(8px + env(safe-area-inset-top));width:calc(100vw - 16px)}
+  dialog.small,#dlg2{max-height:calc(100dvh - 24px - env(safe-area-inset-top))}
+}
+
 @media print{
   @page{margin:16mm}
   body{background:#fff;color:#000;height:auto}

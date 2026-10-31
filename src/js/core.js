@@ -76,6 +76,7 @@ const SVG={
   trash:'<svg width="16" height="16" viewBox="0 0 16 16"><path d="M2.5 4h11M6 4V2.5h4V4M4 4l.7 9.3c0 .7.6 1.2 1.3 1.2h4c.7 0 1.3-.5 1.3-1.2L12 4M6.6 6.8v5M9.4 6.8v5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   daily:'<svg width="16" height="16" viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3M5 9h6M5 11.5h4" stroke="currentColor" stroke-width="1.4"/></svg>',
   hist:'<svg width="14" height="14" viewBox="0 0 16 16"><path d="M2.5 8a5.5 5.5 0 1 0 1.6-3.9M2.5 2.5v2.6h2.6M8 5v3.2l2.2 1.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  board:'<svg width="18" height="18" viewBox="0 0 16 16"><rect x="1.5" y="2" width="3.6" height="12" rx="1" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="6.2" y="2" width="3.6" height="8" rx="1" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="10.9" y="2" width="3.6" height="10" rx="1" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>',
   key:'<svg width="16" height="16" viewBox="0 0 16 16"><rect x="1.5" y="4" width="13" height="8.5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4 7h1M7 7h1M10 7h2M4.5 9.8h7" stroke="currentColor" stroke-width="1.5"/></svg>'
 };
 

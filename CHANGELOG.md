@@ -1,5 +1,15 @@
 # Änderungen
 
+## Web-App fürs iPhone
+- Die App läuft als Web-App auf GitHub Pages und lässt sich über Safari auf den Home-Bildschirm legen. Sie läuft auch offline.
+- Für das Handy angepasst:
+  - untere Leiste mit Board, Heute, Neu, Tag und Suchen;
+  - einklappbare Filter;
+  - Editor im Vollbild;
+  - Rücksicht auf Notch und Home-Balken;
+  - kein Zoomen beim Tippen.
+- Exporte öffnen auf dem iPhone das Teilen-Menü, z. B. zum Ablegen in „Dateien“.
+
 ## 1.4.0
 
 **Neu**
