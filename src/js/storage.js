@@ -74,7 +74,7 @@ async function checkUpdate(manual){
   try{const u=await TAURI.updater.check();
     if(u){const isNew=upd.version!==u.version;upd.update=u;upd.version=u.version;upd.notes=u.body||'';upd.state='available';if(manual)upd.dismissed=false;
       if(isNew){toast(`Neue Version ${u.version} ist verfügbar`,{open:installUpdate,openLabel:'Jetzt installieren'});
-        if(DB.settings.notify&&'Notification' in window&&Notification.permission==='granted'){try{const no=new Notification('Kanban Notizen '+u.version+' ist verfügbar',{body:'Klicke in der App auf „Jetzt aktualisieren“.',tag:'kn-update'});no.onclick=()=>window.focus()}catch(e){}}}}
+        notify('Kanban Notizen '+u.version+' ist verfügbar','Klicke in der App auf „Jetzt aktualisieren“.','kn-update')}}
     else{upd.state='none';upd.update=null;if(manual)toast(`Du hast die neueste Version (${upd.current||'?'}).`)}}
   catch(e){console.warn(e);upd.state='error';if(manual)toast('Update-Prüfung fehlgeschlagen. Bist du online?')}
   refreshUpdateUI()}
@@ -106,18 +106,44 @@ let webT=0;
 function webWrite(){clearTimeout(webT);webT=setTimeout(()=>{if(!tv.loaded)return;
   try{localStorage.setItem(WEBKEY,JSON.stringify(payload()));setStatus('Gespeichert · '+hhmm())}
   catch(e){setStatus('Speicher voll – bitte Backup speichern und Bilder entfernen',true);toast('Der Speicher auf diesem Gerät ist voll. Entferne grosse Bilder oder speichere ein Backup.')}},250)}
-window.addEventListener('pagehide',()=>{if(WEB&&tv.loaded){clearTimeout(webT);try{localStorage.setItem(WEBKEY,JSON.stringify(payload()))}catch(e){}}});
-document.addEventListener('visibilitychange',()=>{if(WEB&&document.visibilityState==='hidden'&&tv.loaded){clearTimeout(webT);try{localStorage.setItem(WEBKEY,JSON.stringify(payload()))}catch(e){}}});
-/* Offline-Fähigkeit und Updates über den Service Worker */
+window.addEventListener('pagehide',()=>webFlush());
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')webFlush()});
+/* Offline-Fähigkeit und Updates über den Service Worker.
+   Ablauf: Beim Start, beim Zurückholen der App und stündlich wird sw.js neu geprüft. Hat es sich geändert,
+   lädt der Service Worker die neue Version im Hintergrund. Danach erscheint „Jetzt aktualisieren“. */
+const wu={reg:null,state:'',latest:null,lastCheck:0};
+const verLabel=(v,iso)=>`${esc(v||'?')}${iso?` <span class="muted sm">· Stand ${esc(fmtTime(iso))}</span>`:''}`;
+const newLabel=()=>wu.latest&&wu.latest.built&&wu.latest.built!==APP_BUILT?`${esc(wu.latest.version)} vom ${esc(fmtTime(wu.latest.built))}`:'';
 let webUpdate=false;
-function webSW(){if(!('serviceWorker' in navigator)||location.protocol!=='https:')return;
-  navigator.serviceWorker.register('sw.js').then(reg=>{
-    const watch=w=>w&&w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller){webUpdate=true;renderBanner()}});
-    watch(reg.installing);reg.addEventListener('updatefound',()=>watch(reg.installing));
-    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')reg.update().catch(()=>{})})}).catch(e=>console.warn(e));
-  let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloaded)return;reloaded=true;location.reload()})}
-function webApplyUpdate(){navigator.serviceWorker.getRegistration().then(r=>{if(r&&r.waiting)r.waiting.postMessage('skipWaiting');else location.reload()})}
-function webStoreHTML(){let kb=0;try{kb=Math.round((localStorage.getItem(WEBKEY)||'').length*2/1024)}catch(e){}
+function webFlush(){if(WEB&&tv.loaded){clearTimeout(webT);try{localStorage.setItem(WEBKEY,JSON.stringify(payload()))}catch(e){}}}
+const SECURE=location.protocol==='https:'||location.hostname==='localhost';
+function webSW(){if(!('serviceWorker' in navigator)||!SECURE)return;
+  navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{wu.reg=reg;
+    const ready=()=>{webUpdate=true;wu.state='ready';fetchLatest();renderBanner();refreshWebUpd()};
+    const watch=w=>w&&w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller)ready()});
+    if(reg.waiting&&navigator.serviceWorker.controller)ready();
+    watch(reg.installing);reg.addEventListener('updatefound',()=>{wu.state='downloading';refreshWebUpd();watch(reg.installing)});
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Date.now()-wu.lastCheck>6e4)webCheckUpdate(false)});
+    setInterval(()=>webCheckUpdate(false),36e5)}).catch(e=>console.warn(e));
+  let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloaded)return;reloaded=true;webFlush();location.reload()});
+  fetchLatest()}
+/* Infos zur neuesten Version (Nummer, Datum, Neuerungen) */
+async function fetchLatest(){try{const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});if(r.ok){wu.latest=await r.json();refreshWebUpd()}}catch(e){}}
+async function webCheckUpdate(manual){wu.lastCheck=Date.now();
+  if(!wu.reg){if(manual)toast(SECURE?'Updates werden gerade eingerichtet – bitte gleich nochmals versuchen.':'Updates gibt es nur in der installierten Web-App.');return}
+  if(webUpdate){if(manual)webApplyUpdate();return}
+  if(manual){wu.state='checking';refreshWebUpd()}
+  try{await wu.reg.update();await fetchLatest()}catch(e){if(manual){wu.state='error';refreshWebUpd();toast('Keine Verbindung – Update-Prüfung nicht möglich');return}}
+  if(manual)setTimeout(()=>{if(!webUpdate&&wu.state!=='downloading'){wu.state='none';refreshWebUpd();toast('Du hast die neueste Version.')}},1500)}
+function webApplyUpdate(){webFlush();const r=wu.reg;if(r&&r.waiting){wu.state='installing';refreshWebUpd();r.waiting.postMessage('skipWaiting')}else location.reload()}
+function refreshWebUpd(){if(DB.ui.view==='settings'&&ui.gtab==='general'&&!busy())renderContent();renderSide()}
+function webUpdHTML(){const L=wu.latest,st={checking:'Suche nach Updates …',downloading:'Lade neue Version …',ready:'Neue Version bereit',installing:'Aktualisiere …',none:'Neueste Version installiert',error:'Prüfung fehlgeschlagen'}[webUpdate?'ready':wu.state]||'';
+  const notes=L&&Array.isArray(L.notes)&&L.notes.length?`<details class="upd-notes"${webUpdate?' open':''}><summary>Was ist neu</summary><ul>${L.notes.slice(0,12).map(x=>`<li>${inl(x)}</li>`).join('')}</ul></details>`:'';
+  return`<div class="panel"><h3>Updates</h3><div class="row-btns"><span><b>Version ${verLabel(APP_VERSION,APP_BUILT)}</b>${st?`<br><span class="muted">${st}${webUpdate&&newLabel()?': '+newLabel():''}</span>`:''}</span><span class="spacer"></span>
+    ${webUpdate?'<button class="btn primary" id="wuGo">Jetzt aktualisieren</button>':`<button class="btn" id="wuCheck"${wu.state==='checking'||wu.state==='downloading'?' disabled':''}>Nach Updates suchen</button>`}</div>
+    <small>Die App sucht beim Öffnen und stündlich nach neuen Versionen und lädt sie im Hintergrund. Deine Notizen bleiben beim Aktualisieren erhalten.</small>${notes}</div>`}
+function webStoreHTML(){return webUpdHTML()+webStoreOnly()}
+function webStoreOnly(){let kb=0;try{kb=Math.round((localStorage.getItem(WEBKEY)||'').length*2/1024)}catch(e){}
   return`<div class="panel"><h3>Speicherort</h3>
     <div class="store-state"><span class="dotst ok"></span><div><b>Auf diesem Gerät</b><div class="muted sm">${STANDALONE?'Als App vom Home-Bildschirm':'Im Browser'} · ca. ${kb>1024?(kb/1024).toFixed(1)+' MB':kb+' KB'} belegt</div></div></div>
     <p>Die Notizen bleiben auf diesem Gerät und werden nicht automatisch mit dem PC abgeglichen. Mit <b>Backup speichern</b> und <b>Backup wiederherstellen</b> (unter „Backup &amp; Import“) überträgst du sie zwischen iPhone und PC.</p>

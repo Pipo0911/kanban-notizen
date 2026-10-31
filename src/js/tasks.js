@@ -34,6 +34,6 @@ function checkReminders(){const nw=new Date();let changed=false;
     const at=new Date(n.due+'T'+n.dueTime);if(nw<at)continue;
     n.remindedFor=key;changed=true;
     if(nw-at<36e5*12){toast('Erinnerung: '+noteLabel(n),{open:()=>openNote(s.id,n.id)});
-      if(DB.settings.notify&&'Notification' in window&&Notification.permission==='granted'){try{const no=new Notification('Erinnerung · '+noteLabel(n),{body:(n.dueTime?n.dueTime+' · ':'')+s.name,tag:n.id});no.onclick=()=>{window.focus();openNote(s.id,n.id)}}catch(e){}}}}
+      notify('Erinnerung · '+noteLabel(n),(n.dueTime?n.dueTime+' · ':'')+s.name,n.id,{sid:s.id,nid:n.id})}}
   if(changed){save(true);render()}}
 setInterval(checkReminders,30000);

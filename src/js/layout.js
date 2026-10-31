@@ -4,7 +4,7 @@
 function setView(v){DB.ui.view=v;$('.app').classList.remove('menu-open');save(true);render()}
 function goSpace(id){DB.active=id;const gs=spaceById(id);if(gs)expandTo(gs.folder);if(!SPACE_VIEWS.includes(DB.ui.view))DB.ui.view='board';ui.filters=blankF();$('.app').classList.remove('menu-open');save(true);render()}
 function applyTheme(){const t=DB.settings.theme;if(t==='system')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=t}
-function render(){renderSide();renderHead();renderFbar();renderContent();renderBanner();renderTabbar()}
+function render(){renderSide();renderHead();renderFbar();renderContent();renderBanner();renderTabbar();updateBadge()}
 /* Untere Leiste auf dem Handy */
 function renderTabbar(){const el=$('#tabbar');if(!el)return;const v=DB.ui.view,isSp=SPACE_VIEWS.includes(v),ct=countToday();
   const it=(act,icon,label,on,extra='')=>`<button class="tb-it${on?' on':''}" data-act="${act}"${extra}>${icon}<span>${label}</span></button>`;
@@ -18,7 +18,8 @@ function renderBanner(){const b=$('#banner');
       $('#updGo').onclick=installUpdate;$('#updLater').onclick=()=>{upd.dismissed=true;renderBanner()}}
     else b.innerHTML=upd.state==='downloading'?'<span>Update wird heruntergeladen … <b id="updProg">'+upd.progress+' %</b></span>':'<span>Update wird installiert – die App startet gleich neu.</span>';
     return}
-  if(WEB&&webUpdate){b.hidden=false;b.innerHTML='<span>Eine neue Version ist bereit.</span><button class="btn sm primary" id="webUpd">Jetzt neu laden</button>';$('#webUpd').onclick=webApplyUpdate}
+  if(WEB&&webUpdate){b.hidden=false;b.innerHTML=`<span>Eine neue Version ist bereit.</span><button class="btn sm primary" id="webUpd">Jetzt aktualisieren</button>`;$('#webUpd').onclick=webApplyUpdate}
+  else if(showInstallHint()){b.hidden=false;b.innerHTML=installHintHTML();bindInstallHint()}
   else b.hidden=true}
 function renderSide(){const v=DB.ui.view,g=GLOBAL_VIEWS.includes(v),ct=countToday();
   $('#side').innerHTML=`<div class="brand"><span class="logo">${SVG.logo}</span><span>Notizen</span></div>
@@ -110,7 +111,7 @@ function bindTree(){const side=$('#side');
     else if(e.key==='ContextMenu'||(e.shiftKey&&e.key==='F10')){e.preventDefault();const[x,y]=menuAt(el);el.dataset.folder?folderMenu(folderById(el.dataset.folder),x,y):el.dataset.space&&spaceMenu(spaceById(el.dataset.space),x,y)}
     else if(el.dataset.folder&&(e.key==='ArrowRight'||e.key==='ArrowLeft')){const f=folderById(el.dataset.folder);if((e.key==='ArrowRight')===!!f.collapsed){e.preventDefault();toggleFolder(f.id);$(`[data-folder="${f.id}"]`)?.focus()}}}));
   side.oncontextmenu=e=>{const fo=e.target.closest('[data-folder]'),spc=e.target.closest('[data-space]');if(fo){e.preventDefault();folderMenu(folderById(fo.dataset.folder),e.clientX,e.clientY)}else if(spc){e.preventDefault();spaceMenu(spaceById(spc.dataset.space),e.clientX,e.clientY)}}}
-function updNav(){if(!tv.on)return'';const st=upd.state;
+function updNav(){if(WEB)return webUpdate?`<button class="nav-item upd-go" id="webUpdNav" onclick="webApplyUpdate()">${SVG.upd}<span class="sp-n">Update installieren</span></button>`:'';if(!tv.on)return'';const st=upd.state;
   if(st==='available')return`<button class="nav-item upd-go" data-act="installUpdate" title="Version ${esc(upd.version)} herunterladen und installieren">${SVG.upd}<span class="sp-n">Update installieren</span><span class="badge">${esc(upd.version)}</span></button>`;
   if(st==='downloading')return`<div class="nav-item upd-go" aria-live="polite">${SVG.upd}<span class="sp-n">Lade Update … ${upd.progress} %</span></div>`;
   if(st==='installing')return`<div class="nav-item upd-go">${SVG.upd}<span class="sp-n">Installiere …</span></div>`;

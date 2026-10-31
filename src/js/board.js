@@ -27,12 +27,12 @@ function bindCards(el,opt={}){
 /* ============ Board ============ */
 function renderBoard(el){
   const s=sp(),notes=live(s).filter(n=>matches(s,n));
-  el.innerHTML=`<div class="scroll board-wrap" id="bw"><div class="board">${s.columns.map(c=>{const cn=notes.filter(n=>n.colId===c.id).sort(colSort(s)),all=live(s).filter(n=>n.colId===c.id).length;
+  el.innerHTML=`${s.columns.length>1?colChipsHTML(s,notes):''}<div class="scroll board-wrap" id="bw"><div class="board">${s.columns.map(c=>{const cn=notes.filter(n=>n.colId===c.id).sort(colSort(s)),all=live(s).filter(n=>n.colId===c.id).length;
     return`<section class="col" data-col="${c.id}"><header class="col-h"><span class="col-dot" style="background:${NC[c.color].d}"></span><span class="col-n" data-ren="${c.id}" title="Doppelklick zum Umbenennen">${esc(c.name)}</span><span class="col-c">${cn.length!==all?cn.length+'/':''}${all}</span>${c.done?'<span class="col-done" title="Notizen hier gelten als erledigt">✓</span>':''}<span class="spacer"></span><button class="icon-btn sm" data-addto="${c.id}" title="Notiz in „${esc(c.name)}“ erstellen" aria-label="Notiz hinzufügen">+</button></header>
     <div class="col-list" data-col="${c.id}">${cn.map(n=>cardHTML(s,n)).join('')||`<div class="col-empty">${all?'Keine Treffer':'Noch keine Notizen'}</div>`}</div>
     <button class="add-inline" data-inline="${c.id}">+ Schnelle Notiz</button></section>`}).join('')}
     <button class="addcol" data-act="addCol">+ Spalte hinzufügen</button></div></div>`;
-  bindCards(el,{drag:true});
+  bindCards(el,{drag:true});bindColChips(el);
   $$('[data-addto]',el).forEach(b=>b.onclick=()=>createNote(s.id,b.dataset.addto));
   $$('[data-inline]',el).forEach(b=>b.onclick=()=>inlineAdd(b));
   $$('[data-ren]',el).forEach(x=>x.ondblclick=()=>renameCol(s,s.columns.find(c=>c.id===x.dataset.ren)))}

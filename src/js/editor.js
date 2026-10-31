@@ -53,10 +53,11 @@ function openNote(sid,id,opt={}){
   const ed=$('#ed',dlg),tw=$('#edTextWrap',dlg);
   const info=()=>{$('#edInfo',dlg).textContent=`Erstellt ${fmtTime(n.created)} · Geändert ${rel(n.updated)}`};info();
   const drawText=()=>{$$('[data-tab]',dlg).forEach(b=>b.classList.toggle('on',b.dataset.tab===ui.edTab));
-    if(ui.edTab==='write'){tw.innerHTML=`<textarea class="ed-text" id="edBody" placeholder="Notiz schreiben …" aria-label="Text">${esc(n.body)}</textarea>`;const ta=$('#edBody',dlg);
+    if(ui.edTab==='write'){tw.innerHTML=`<textarea class="ed-text" id="edBody" placeholder="Notiz schreiben …" aria-label="Text">${esc(n.body)}</textarea>${mdBarHTML()}`;const ta=$('#edBody',dlg);
       const grow=()=>{ta.style.height='auto';ta.style.height=Math.min(Math.max(ta.scrollHeight+4,150),560)+'px'};requestAnimationFrame(grow);
       ta.addEventListener('input',()=>{n.body=ta.value;grow();touch()});
       const ac=linkAC(ta,n,s.id,()=>{n.body=ta.value;grow();touch()});curAC=ac;
+      bindMdBar($('.md-bar',tw),ta,()=>{n.body=ta.value;grow();touch()});
       ta.addEventListener('keydown',e=>{if(ac.key(e))return;if(e.key==='Tab'){e.preventDefault();const p=ta.selectionStart;ta.setRangeText('  ',p,ta.selectionEnd,'end');n.body=ta.value;touch()}
         else if(e.key==='Enter'&&!e.shiftKey){const p=ta.selectionStart,ls=ta.value.lastIndexOf('\n',p-1)+1,line=ta.value.slice(ls,p),m=line.match(/^(\s*)([-*] \[[ xX]\] |[-*•] |(\d+)[.)] )(.*)$/);
           if(m){e.preventDefault();if(!m[4].trim()){ta.setRangeText('',ls,p,'end')}else{const nx=m[3]?`${+m[3]+1}${m[2].trim().slice(-1)} `:m[2].replace(/\[[xX]\]/,'[ ]');ta.setRangeText('\n'+m[1]+nx,p,ta.selectionEnd,'end')}n.body=ta.value;touch();grow()}}})}

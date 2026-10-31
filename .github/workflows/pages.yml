@@ -6,7 +6,7 @@ name: Web-App veröffentlichen
 on:
   push:
     branches: [main]
-    paths: ["src/**", ".github/workflows/pages.yml"]
+    paths: ["src/**", "CHANGELOG.md", "tools/web-version.mjs", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
@@ -28,12 +28,10 @@ jobs:
       - name: Code holen
         uses: actions/checkout@v5
 
-      - name: Version in den Service Worker schreiben
+      - name: Version, Datum und Neuerungen eintragen
         run: |
-          V=$(node -p "require('./src-tauri/tauri.conf.json').version")
           mkdir -p site && cp -r src/. site/
-          sed -i "s/const VERSION='dev';/const VERSION='$V-${GITHUB_SHA::7}';/" site/sw.js
-          grep -q "$V-" site/sw.js
+          node tools/web-version.mjs site "${GITHUB_SHA::7}"
           touch site/.nojekyll
 
       - uses: actions/configure-pages@v5

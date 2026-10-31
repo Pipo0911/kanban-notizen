@@ -1,5 +1,17 @@
 # Änderungen
 
+## iPhone-App: Updates und Feinschliff
+- **Updates:** Die App sucht beim Öffnen und stündlich nach neuen Versionen und lädt sie im Hintergrund. Mit „Jetzt aktualisieren“ wird die neue Version übernommen.
+- Unter Einstellungen findest du die Version, „Nach Updates suchen“ und „Was ist neu“.
+- Eine Leiste mit den Spalten über dem Board zeigt die Anzahl Notizen und springt auf Antippen zur Spalte.
+- Über der Tastatur gibt es eine Format-Leiste mit Fett, Kursiv, Überschrift, Liste, Aufgabe, [[Link]] und Code.
+- Bei offener Tastatur passt sich der Editor an. Fusszeile und untere Leiste machen Platz.
+- Vom linken Rand wischen öffnet das Menü, nach links wischen schliesst es.
+- Das App-Icon zeigt als Zahl, wie viele Notizen heute fällig oder überfällig sind (ab iOS 16.4, wenn Mitteilungen erlaubt sind).
+- Erinnerungen kommen als iPhone-Mitteilung, solange die App offen ist.
+- Grössere Touch-Flächen, keine Textauswahl beim langen Drücken auf Karten.
+- In Safari erscheint ein Hinweis, wie du die App auf den Home-Bildschirm legst.
+
 ## Web-App fürs iPhone
 - Die App läuft als Web-App auf GitHub Pages und lässt sich über Safari auf den Home-Bildschirm legen. Sie läuft auch offline.
 - Für das Handy angepasst:
