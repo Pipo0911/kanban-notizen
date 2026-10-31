@@ -526,6 +526,17 @@ button,.card,.sp-item{touch-action:manipulation}
   .banner{padding-top:8px;padding-bottom:8px;font-size:13px}
 }
 
+/* ---------- Synchronisation ---------- */
+.dotst.err{background:var(--danger)}
+.sync-code{font:600 22px/1.3 var(--mono);letter-spacing:.06em;text-align:center;padding:14px 10px;margin:12px 0;border:1.5px dashed var(--accent);border-radius:10px;background:var(--accent-soft);color:var(--accent);word-break:break-all;-webkit-user-select:all;user-select:all}
+.sync-nav{font-size:13px}
+.sync-nav .sync-dot{width:9px;height:9px;border-radius:50%;background:var(--ok);flex:none;margin:0 4px 0 3px}
+.sync-nav.run .sync-dot{background:var(--accent);animation:sypulse 1s ease-in-out infinite}
+.sync-nav.err .sync-dot{background:var(--danger)}.sync-nav.err{color:var(--danger)}
+.sync-nav.offline .sync-dot{background:var(--warn)}
+@keyframes sypulse{50%{opacity:.3}}
+.btn.ghost.danger{color:var(--danger)}
+
 @media print{
   @page{margin:16mm}
   body{background:#fff;color:#000;height:auto}

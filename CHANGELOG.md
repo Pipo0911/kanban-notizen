@@ -1,5 +1,14 @@
 # Änderungen
 
+## 1.5.0
+- **Synchronisation zwischen PC und iPhone:**
+  - Neue und geänderte Notizen erscheinen nach wenigen Sekunden auf dem anderen Gerät, solange die App dort offen ist.
+  - Die Notizen werden auf dem Gerät mit deinem Sync-Passwort verschlüsselt. In der Cloud liegt nur unlesbarer Datensalat.
+  - Einrichten unter Einstellungen → Synchronisation: auf dem ersten Gerät „Sync einrichten“, auf dem iPhone „Mit bestehendem Sync verbinden“ mit Sync-Code und Passwort.
+  - Ändern beide Geräte dieselbe Notiz, gewinnt die neuere Fassung. Die andere landet im Versionsverlauf.
+  - Ohne Internet wird später automatisch abgeglichen.
+- Der Sync-Status steht in der Seitenleiste. Antippen gleicht sofort ab.
+
 ## iPhone-App: Updates und Feinschliff
 - **Updates:** Die App sucht beim Öffnen und stündlich nach neuen Versionen und lädt sie im Hintergrund. Mit „Jetzt aktualisieren“ wird die neue Version übernommen.
 - Unter Einstellungen findest du die Version, „Nach Updates suchen“ und „Was ist neu“.

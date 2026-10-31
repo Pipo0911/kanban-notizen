@@ -66,6 +66,25 @@ Gut zu wissen:
 - Jeder Push auf `main`, der etwas unter `src/` ändert, veröffentlicht die Web-App neu (`.github/workflows/pages.yml`). Die App meldet eine neue Version mit „Jetzt neu laden“.
 - Einmalig muss im Repo unter **Settings → Pages** die Quelle **GitHub Actions** eingestellt sein.
 
+## Synchronisation (PC ↔ iPhone)
+
+Die Notizen gleichen sich über ein eigenes Supabase-Projekt (`kanban-notizen-sync`, Frankfurt) zwischen allen Geräten ab.
+
+- **Einrichten:**
+  1. Auf dem PC unter **Einstellungen → Synchronisation → Sync einrichten** ein Sync-Passwort wählen.
+  2. Die App zeigt einen **Sync-Code** (`XXXX-XXXX-XXXX-XXXX-XXXX`).
+  3. Auf dem iPhone unter **Mit bestehendem Sync verbinden** Code und Passwort eingeben.
+- **Verschlüsselung:**
+  - Der Schlüssel entsteht aus dem Passwort (PBKDF2, 310 000 Runden). Jedes Element wird mit AES-GCM verschlüsselt.
+  - Auf dem Server liegen nur Ciphertext und der SHA-256-Hash des Codes.
+  - Ohne Passwort lassen sich die Cloud-Daten nicht entschlüsseln.
+- **Ablauf:**
+  - Abgeglichen wird pro Element: Notiz, Space, Kategorien, Einstellungen, Papierkorb, Verlauf.
+  - Änderungen gehen nach rund 1,5 Sekunden hoch. Alle 8 Sekunden fragt die App, ob es Neues gibt.
+  - Bei gleichzeitigen Änderungen an derselben Notiz gewinnt die neuere. Die andere kommt in den Versionsverlauf.
+- **Server:** Tabellen `kn_vault` und `kn_item` sind nicht direkt lesbar (RLS ohne Policies). Zugriff gibt es nur über die Funktionen `kn_create`, `kn_meta`, `kn_head`, `kn_pull`, `kn_push` und `kn_delete_vault`, die jeweils den Sync-Code prüfen.
+- **Pausieren:** Supabase pausiert Gratis-Projekte nach längerer Inaktivität. Bei regelmässiger Nutzung passiert das nicht. Sonst lässt sich das Projekt im Supabase-Dashboard wieder starten.
+
 ## Neue Version veröffentlichen
 
 1. Die Version in **allen drei** Dateien gleich erhöhen: `src-tauri/tauri.conf.json`, `package.json`, `src-tauri/Cargo.toml`.

@@ -3,7 +3,7 @@
 const VERSION='dev';
 const CACHE='kanban-notizen-'+VERSION;
 const FILES=['./','index.html','manifest.webmanifest','css/app.css',
-  ...['version','core','model','storage','helpers','tasks','layout','board','views','editor','spaces','reports','settings','palette','links','trash','mobile','main'].map(m=>`js/${m}.js`),
+  ...['version','core','model','storage','helpers','tasks','layout','board','views','editor','spaces','reports','settings','palette','links','trash','sync','mobile','main'].map(m=>`js/${m}.js`),
   'icons/apple-touch-icon.png','icons/icon-192.png','icons/icon-512.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==CACHE).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});

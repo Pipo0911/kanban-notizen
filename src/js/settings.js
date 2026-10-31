@@ -4,7 +4,7 @@
 async function backupAll(){if(await download(`kanban-notizen-backup-${today()}.json`,JSON.stringify(payload(),null,1))){DB.settings.lastBackup=now();save(true)}}
 function renderSettings(el){const S=DB.settings,tab=ui.gtab;let body='';
   if(tab==='general'){
-    body=`${WEB?webStoreHTML():tauriStoreHTML()}
+    body=`${WEB?webStoreHTML():tauriStoreHTML()}${syncPanelHTML()}
     <div class="panel"><h3>Darstellung</h3><div class="row-btns">${[['system',WEB?'Wie System':'Wie Windows'],['light','Hell'],['dark','Dunkel']].map(([k,n])=>`<button class="stab${S.theme===k?' on':''}" data-theme="${k}">${n}</button>`).join('')}</div></div>
     <div class="panel"><h3>Tagesnotiz</h3><p>Mit der Taste <kbd>D</kbd> oder „Tagesnotiz“ in der Seitenleiste öffnest du die Notiz für heute. Im Editor blätterst du zum Vor- oder Folgetag. Verlinken kannst du einen Tag mit <code>[[2026-10-28]]</code>.</p>
       <div class="fld" style="max-width:420px"><label for="sDailySp">Space für Tagesnotizen</label><select id="sDailySp"><option value="">Automatisch: Space „Tagesnotizen“</option>${DB.spaces.map(x=>`<option value="${x.id}"${S.daily.space===x.id?' selected':''}>${esc(spaceLabel(x))}</option>`).join('')}</select></div>
@@ -40,7 +40,7 @@ function renderSettings(el){const S=DB.settings,tab=ui.gtab;let body='';
   el.innerHTML=`<div class="scroll" id="bw"><div class="page"><nav class="subtabs">${[['general','Allgemein'],['labels','Labels'],['tpl','Vorlagen'],['data','Backup & Import']].map(([k,n])=>`<button class="stab${tab===k?' on':''}" data-gtab="${k}">${n}</button>`).join('')}</nav>${body}</div></div>`;
   $$('[data-gtab]',el).forEach(b=>b.onclick=()=>{ui.gtab=b.dataset.gtab;renderContent()});
   const on=(id,f)=>{const x=$('#'+id,el);if(x)x.onclick=f};
-  if(tab==='general'){on('wuCheck',()=>webCheckUpdate(true));on('wuGo',webApplyUpdate);on('uCheck',()=>checkUpdate(true));on('uInstall',installUpdate);on('tReveal',()=>tInvoke('reveal_data').catch(e=>toast('Ordner konnte nicht geöffnet werden: '+e)));on('tNew',tauriNewFile);on('tOpen',tauriOpenFile);on('tReset',tauriResetPath);
+  if(tab==='general'){bindSyncPanel(el);on('wuCheck',()=>webCheckUpdate(true));on('wuGo',webApplyUpdate);on('uCheck',()=>checkUpdate(true));on('uInstall',installUpdate);on('tReveal',()=>tInvoke('reveal_data').catch(e=>toast('Ordner konnte nicht geöffnet werden: '+e)));on('tNew',tauriNewFile);on('tOpen',tauriOpenFile);on('tReset',tauriResetPath);
     $$('[data-theme]',el).forEach(b=>b.onclick=()=>{S.theme=b.dataset.theme;applyTheme();save(true);renderContent()});
     $('#sNotify',el).onchange=async e=>{if(e.target.checked&&'Notification' in window){let p=Notification.permission;if(p==='default')p=await Notification.requestPermission();if(p!=='granted'){e.target.checked=false;toast('Benachrichtigungen wurden nicht erlaubt');return}}S.notify=e.target.checked;save(true);toast(S.notify?'Benachrichtigungen aktiviert':'Benachrichtigungen aus')};
     $('#sDailySp',el).onchange=e=>{S.daily.space=e.target.value;save(true);toast('Gespeichert')};

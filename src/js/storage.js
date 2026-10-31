@@ -34,7 +34,7 @@ function tauriSchedule(){tv.dirty=true;clearTimeout(tv.timer);tv.timer=setTimeou
 async function tauriWrite(){if(DEV||!tv.loaded)return;if(tv.writing){tauriSchedule();return}tv.writing=true;
   try{tv.mtime=await tInvoke('save_data',{json:JSON.stringify(payload()),day:today()});tv.dirty=false;setStatus('Gespeichert · '+hhmm())}
   catch(e){setStatus('Speichern fehlgeschlagen: '+e,true)}finally{tv.writing=false}}
-function save(quiet){saveUi();if(WEB){webWrite();return}if(!tv.loaded)return;tauriSchedule()}
+function save(quiet){saveUi();syncSchedule();if(WEB){webWrite();return}if(!tv.loaded)return;tauriSchedule()}
 /* Änderungen von einem anderen PC (z. B. über OneDrive) übernehmen, sobald das Fenster aktiv wird */
 let pendingExternal=false;
 async function checkFileChanged(){if(DEV||!tv.loaded||tv.dirty||tv.writing)return;

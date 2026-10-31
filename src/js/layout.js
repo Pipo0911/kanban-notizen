@@ -32,7 +32,7 @@ function renderSide(){const v=DB.ui.view,g=GLOBAL_VIEWS.includes(v),ct=countToda
   <div class="sp-item add" data-act="newSpace" role="button" tabindex="0"><span class="sav dashed">+</span><span class="sp-n">Space erstellen</span></div>
   <div class="sp-item add" data-act="newFolder" role="button" tabindex="0"><span class="sav dashed" style="border-radius:50%">${SVG.folder}</span><span class="sp-n">Kategorie erstellen</span></div></nav>
   <div class="side-foot">
-  ${updNav()}
+  ${syncNavHTML()}${updNav()}
   <button class="nav-item${v==='trash'?' on':''}" data-act="view" data-v="trash">${SVG.trash}<span class="sp-n">Papierkorb</span>${DB.trash.length?`<span class="sp-c">${DB.trash.length}</span>`:''}</button>
   <button class="nav-item${v==='settings'?' on':''}" data-act="view" data-v="settings">${SVG.gear}<span>Einstellungen</span></button>
   <button class="nav-item" data-act="help">${SVG.key}<span>Tastenkürzel</span></button></div>`;bindTree()}

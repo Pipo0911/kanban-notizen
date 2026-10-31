@@ -4,7 +4,7 @@
 const ACTIONS={newSpace:()=>createSpace(''),newFolder:()=>createFolder(''),addMenu:a=>{const[x,y]=menuAt(a);addMenu(x,y,'')},view:a=>setView(a.dataset.v),create:()=>createNote(sp().id),menu:()=>$('.app').classList.toggle('menu-open'),
   clearF:()=>{ui.filters=blankF();renderFbar();renderContent()},addCol:()=>addCol(),palette:()=>openPalette(),help:()=>showHelp(),
   checkUpdate:()=>checkUpdate(true),installUpdate:()=>installUpdate(),
-  backupNow:()=>backupAll(),daily:()=>openDaily(today()),openNote:a=>openNote(a.dataset.nsid,a.dataset.nid),
+  backupNow:()=>backupAll(),syncNow:()=>syncNow(true),daily:()=>openDaily(today()),openNote:a=>openNote(a.dataset.nsid,a.dataset.nid),
   openRun:()=>{const r=runningTimer();if(r)openNote(r.s.id,r.n.id)},stopRun:()=>{const r=runningTimer();if(r)stopTimer(r.s,r.n)}};
 document.addEventListener('click',e=>{if(e.target.closest('dialog'))return;
   const tl=e.target.closest('[data-fadd],[data-fmenu],[data-smenu]');
@@ -28,4 +28,4 @@ document.addEventListener('keydown',e=>{
 /* ============ Start ============ */
 {const u=loadUi();DB=normDB({ui:u.ui,active:u.active})}
 applyTheme();render();setStatus('Lade Notizen …');if(WEB)document.documentElement.classList.add('web');if(STANDALONE)document.documentElement.classList.add('standalone');
-tauriInit().then(checkReminders);
+tauriInit().then(()=>{checkReminders();syncStart()});
