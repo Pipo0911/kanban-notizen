@@ -1,0 +1,17 @@
+{
+  "name": "Kanban Notizen",
+  "short_name": "Notizen",
+  "description": "Notizen auf Boards – mit Tagesnotiz, Wiki-Links, Checklisten und Zeiterfassung.",
+  "lang": "de",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fbfaf8",
+  "theme_color": "#2f5bd3",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

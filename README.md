@@ -20,7 +20,8 @@ Die App läuft komplett offline und speichert in eine JSON-Datei auf deinem PC. 
 
 ```
 kanban-notizen/
-├─ src/                            Oberfläche
+├─ src/                            Oberfläche (Desktop-App und Web-App)
+│  ├─ manifest.webmanifest, sw.js  Web-App: Name, Icons, Offline-Betrieb
 │  ├─ index.html                   Grundgerüst, lädt CSS und Module
 │  ├─ css/app.css                  Gestaltung (hell/dunkel)
 │  └─ js/                          Module, in dieser Reihenfolge geladen:
@@ -51,6 +52,20 @@ kanban-notizen/
 
 Die Module sind klassische Skripte ohne Build-Schritt. Sie teilen sich den globalen Gültigkeitsbereich, deshalb ist die Reihenfolge in `index.html` wichtig.
 
+## iPhone (Web-App)
+
+Dieselbe Oberfläche läuft auch als Web-App auf GitHub Pages: **https://pipo0911.github.io/kanban-notizen/**
+
+1. Die Adresse auf dem iPhone in **Safari** öffnen.
+2. Auf **Teilen** tippen, dann auf **Zum Home-Bildschirm**.
+3. Die App startet jetzt im Vollbild und funktioniert auch offline.
+
+Gut zu wissen:
+- Die Notizen bleiben auf dem iPhone. Sie werden nicht automatisch mit dem PC abgeglichen.
+- Zum Übertragen in eine Richtung dient **Einstellungen → Backup & Import**: auf dem einen Gerät „Backup speichern“, auf dem anderen „Backup wiederherstellen“.
+- Jeder Push auf `main`, der etwas unter `src/` ändert, veröffentlicht die Web-App neu (`.github/workflows/pages.yml`). Die App meldet eine neue Version mit „Jetzt neu laden“.
+- Einmalig muss im Repo unter **Settings → Pages** die Quelle **GitHub Actions** eingestellt sein.
+
 ## Neue Version veröffentlichen
 
 1. Die Version in **allen drei** Dateien gleich erhöhen: `src-tauri/tauri.conf.json`, `package.json`, `src-tauri/Cargo.toml`.
@@ -75,7 +90,7 @@ Für die Update-Signatur braucht das Repo die Secrets `TAURI_SIGNING_PRIVATE_KEY
 
 ## Lokal entwickeln
 
-Die Oberfläche lässt sich zum schnellen Testen direkt im Browser öffnen (`src/index.html`). Sie läuft dann im **Entwicklungsmodus**: Es gibt Beispieldaten, gespeichert wird aber nichts.
+Die Oberfläche lässt sich zum schnellen Testen direkt im Browser öffnen (`src/index.html`). Sie speichert dann im Browser, wie die Web-App.
 
 Für die echte App:
 

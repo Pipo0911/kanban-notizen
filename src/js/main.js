@@ -27,5 +27,5 @@ document.addEventListener('keydown',e=>{
   else if(['1','2','3','4'].includes(e.key))setView(SPACE_VIEWS[+e.key-1])});
 /* ============ Start ============ */
 {const u=loadUi();DB=normDB({ui:u.ui,active:u.active})}
-applyTheme();render();setStatus(DEV?'Entwicklungsmodus':'Lade Notizen …',DEV);
+applyTheme();render();setStatus('Lade Notizen …');if(WEB)document.documentElement.classList.add('web');if(STANDALONE)document.documentElement.classList.add('standalone');
 tauriInit().then(checkReminders);

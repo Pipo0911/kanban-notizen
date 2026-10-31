@@ -11,7 +11,9 @@ async function download(name,text,type){
   if(TAURI&&TAURI.dialog){const ext=(name.split('.').pop()||'txt').toLowerCase();
     const p=await TAURI.dialog.save({defaultPath:name,filters:[{name:ext.toUpperCase()+'-Datei',extensions:[ext]}]});if(!p)return false;
     try{await tInvoke('write_text_file',{path:p,contents:text});toast('Gespeichert: '+p);return true}catch(e){toast('Speichern fehlgeschlagen: '+e);return false}}
-  const b=new Blob([text],{type:type||'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),3000);return true}
+  const b=new Blob([text],{type:type||'application/json'});
+  if(IOS&&navigator.canShare){try{const f=new File([b],name,{type:b.type});if(navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return true}}catch(e){if(e&&e.name==='AbortError')return false}}
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),3000);return true}
 async function copyText(t){try{await navigator.clipboard.writeText(t);return true}catch(e){const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}ta.remove();return ok}}
 function moveArr(a,x,d){const k=a.indexOf(x),j=k+d;if(k<0||j<0||j>=a.length)return;a.splice(k,1);a.splice(j,0,x)}
 const safeName=s=>String(s).replace(/[^\wäöüÄÖÜ -]/g,'').trim().replace(/\s+/g,'-')||'notizen';

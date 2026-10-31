@@ -1,0 +1,47 @@
+# Veröffentlicht die Web-App (iPhone / Browser) auf GitHub Pages.
+# Adresse: https://pipo0911.github.io/kanban-notizen/
+# Einmalig nötig: Settings → Pages → Source: "GitHub Actions"
+name: Web-App veröffentlichen
+
+on:
+  push:
+    branches: [main]
+    paths: ["src/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Code holen
+        uses: actions/checkout@v5
+
+      - name: Version in den Service Worker schreiben
+        run: |
+          V=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          mkdir -p site && cp -r src/. site/
+          sed -i "s/const VERSION='dev';/const VERSION='$V-${GITHUB_SHA::7}';/" site/sw.js
+          grep -q "$V-" site/sw.js
+          touch site/.nojekyll
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Veröffentlichen
+        id: deploy
+        uses: actions/deploy-pages@v4
