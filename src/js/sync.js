@@ -212,7 +212,7 @@ async function scanPairQR(){
     if(v.readyState>=2&&v.videoWidth){const k=Math.min(1,640/Math.max(v.videoWidth,v.videoHeight));c.width=Math.round(v.videoWidth*k);c.height=Math.round(v.videoHeight*k);
       g.drawImage(v,0,0,c.width,c.height);const img=g.getImageData(0,0,c.width,c.height),res=jsQR(img.data,img.width,img.height,{inversionAttempts:'dontInvert'});
       if(res&&res.data){const p=parsePair(res.data);
-        if(p){stop();$('#scanMsg',d).textContent='Erkannt – verbinde …';d.close();await pairWith(p);return}
+        if(p){stop();$('#scanMsg',d).textContent='Erkannt – verbinde …';d.onclose=null;d.style.width='';d.close();await new Promise(r=>setTimeout(r,80));await pairWith(p);return}
         if(++wrong%30===1)$('#scanMsg',d).textContent='Das ist kein QR-Code von Kanban Notizen.'}}
     raf=requestAnimationFrame(tick)};
   tick()}

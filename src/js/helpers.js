@@ -36,7 +36,7 @@ function ask({title,text='',fields=[],ok='OK',cancel='Abbrechen',danger=false,in
     const f=$('#af',d);let done=false;
     const fin=v=>{if(done)return;done=true;if(d.open)d.close();res(v)};
     f.onsubmit=e=>{e.preventDefault();if(!f.checkValidity()){f.reportValidity();return}const o={};fields.forEach(x=>o[x.name]=f.elements[x.name].value);fin(o)};
-    const bx=$('[data-x]',d);if(bx)bx.onclick=()=>fin(null);d.onclose=()=>{fin(null);applyExternal()};
+    const bx=$('[data-x]',d);if(bx)bx.onclick=()=>fin(null);d.onclose=()=>{if(d.open)return;fin(null);applyExternal()};
     if(init)init(f);d.showModal();
     const first=$('input,select,textarea',f);(first||$('.btn:last-child',f)).focus()})}
 function inl(t){
