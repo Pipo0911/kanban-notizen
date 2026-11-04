@@ -1,7 +1,8 @@
 # Änderungen
 
 ## 1.5.1 · Korrektur iPhone-App
-- QR-Code-Verbindung: Waren auf dem iPhone schon eigene Notizen, schloss sich nach dem Scan die Kamera, und es passierte nichts. Jetzt erscheint die Frage „Zusammenführen oder ersetzen?“, und die Verbindung klappt.
+- QR-Code-Verbindung: Nach dem Scan bleibt das Fenster offen. Darin erscheinen die Auswahl „Zusammenführen / Ersetzen“, der Fortschritt und am Ende „✓ Verbunden“ oder eine verständliche Fehlermeldung. Vorher schloss sich die Kamera, und es passierte nichts.
+- Beim Zusammenführen werden die Beispiel-Notizen des neuen Geräts weggelassen, damit sie nicht doppelt erscheinen.
 
 ## 1.5.1
 - **iPhone per QR-Code verbinden:** Der PC zeigt unter Einstellungen → Synchronisation → „QR-Code für weiteres Gerät“ einen QR-Code. Auf dem iPhone in der App „Mit QR-Code verbinden“ tippen und scannen. Kein Code-Abtippen, kein Passwort nötig.

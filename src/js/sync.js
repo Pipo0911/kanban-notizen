@@ -69,11 +69,11 @@ function keepAsVersion(L,noteId,v){if(!v)return;const id='hist:'+noteId,cur=L.ge
 
 /* ---------- Abgleich ---------- */
 function syncSchedule(){if(!sy.cfg||!sy.key||!tv.loaded)return;clearTimeout(sy.timer);sy.timer=setTimeout(syncNow,1500)}
-async function syncNow(manual){if(!sy.cfg||!sy.key||!tv.loaded)return;if(sy.busy){sy.again=true;return}
+async function syncNow(manual,force){if(!sy.cfg||!sy.key||!tv.loaded)return;if(sy.busy){sy.again=true;return}
   sy.busy=true;sy.state='run';syncUI();let pulled=0;
   try{const st=sy.cfg.state||(sy.cfg.state={});
     /* 1. Holen – nicht, während eine Notiz offen ist, damit nichts unter den Fingern wechselt */
-    if(!busy()){let since=sy.cfg.lastRev||0;const L=sy.replace?new Map():syncItems(),applied=new Set();let any=sy.replace;
+    if(force||!busy()){let since=sy.cfg.lastRev||0;const L=sy.replace?new Map():syncItems(),applied=new Set();let any=sy.replace;
       for(;;){const rows=await rpc('kn_pull',{p_token:sy.cfg.token,p_since:since,p_limit:300});
         for(const r of rows){since=Math.max(since,+r.rev);const cur=L.get(r.id),base=st[r.id];
           if(r.deleted){if(cur&&cur.h===base){L.delete(r.id);any=true;pulled++}if(!cur||cur.h===base)delete st[r.id];continue}
@@ -138,7 +138,9 @@ async function connectWith(code,raw,meta,mode,badMsg){const key=await aesKey(raw
   try{const ok=await dec(meta.check_blob,key);if(!ok||ok.ok!=='kanban-notizen')throw 0}catch(e){toast(badMsg);return false}
   sy.cfg={token:code,keyB64:b64e(raw),lastRev:0,state:{},since:now()};sy.key=key;sySave();
   sy.replace=mode!=='merge';
-  await syncNow(true);if(DB.ui.view==='settings')renderContent();render();toast('Verbunden – Notizen werden ab jetzt automatisch abgeglichen');return true}
+  /* Beim Zusammenführen die Beispiel-Notizen dieses Geräts weglassen – das andere Gerät hat eigene */
+  if(!sy.replace)DB.spaces.forEach(x=>{x.notes=x.notes.filter(n=>!n.tags.includes('beispiel'))});
+  await syncNow(true,true);if(DB.ui.view==='settings')renderContent();render();toast('Verbunden – Notizen werden ab jetzt automatisch abgeglichen');return true}
 async function syncDisconnect(){const r=await ask({title:'Synchronisation trennen?',text:'Dieses Gerät gleicht danach nicht mehr ab. Deine Notizen bleiben hier und in der Cloud erhalten. Zum erneuten Verbinden scannst du den QR-Code eines verbundenen Geräts oder gibst Sync-Code und Passwort ein.',ok:'Trennen',danger:true});
   if(!r)return;sy.cfg=null;sy.key=null;sy.state='';sySave();renderContent();toast('Synchronisation getrennt')}
 async function syncDeleteCloud(){const r=await ask({title:'Cloud-Daten löschen?',text:'Löscht alle synchronisierten Notizen <b>in der Cloud</b>. Die Notizen auf diesem Gerät bleiben erhalten. Andere Geräte gleichen danach nicht mehr ab und müssen neu verbunden werden.',
@@ -212,10 +214,27 @@ async function scanPairQR(){
     if(v.readyState>=2&&v.videoWidth){const k=Math.min(1,640/Math.max(v.videoWidth,v.videoHeight));c.width=Math.round(v.videoWidth*k);c.height=Math.round(v.videoHeight*k);
       g.drawImage(v,0,0,c.width,c.height);const img=g.getImageData(0,0,c.width,c.height),res=jsQR(img.data,img.width,img.height,{inversionAttempts:'dontInvert'});
       if(res&&res.data){const p=parsePair(res.data);
-        if(p){stop();$('#scanMsg',d).textContent='Erkannt – verbinde …';d.onclose=null;d.style.width='';d.close();await new Promise(r=>setTimeout(r,80));await pairWith(p);return}
+        if(p){stop();pairInDialog(d,p);return}
         if(++wrong%30===1)$('#scanMsg',d).textContent='Das ist kein QR-Code von Kanban Notizen.'}}
     raf=requestAnimationFrame(tick)};
   tick()}
+/* Nach dem Scan im selben Fenster weitermachen – kein Schliessen und neu Öffnen (auf iOS unzuverlässig) */
+async function pairInDialog(d,p){const ab=$('.ab',d),df=$('.df',d);
+  const show=(html,btns)=>{ab.innerHTML=html;df.innerHTML='<span class="spacer"></span>'+btns;const x=$('[data-x]',df);if(x)x.onclick=()=>d.close()};
+  if(sy.cfg&&sy.cfg.token===p.code){show('<p class="atext"><b>✓ Dieses Gerät ist bereits mit diesem Sync verbunden.</b></p>','<button type="button" class="btn primary" data-x>OK</button>');return}
+  const go=async mode=>{show('<p class="atext"><b>QR-Code erkannt.</b></p><p class="muted">Verbinde und hole deine Notizen …</p>','');
+    try{const meta=(await rpc('kn_meta',{p_token:p.code}))[0];
+      if(!meta){show('<p class="atext">Dieser Sync existiert nicht mehr. Erzeuge am PC einen neuen QR-Code.</p>','<button type="button" class="btn primary" data-x>Schliessen</button>');return}
+      const ok=await connectWith(p.code,p.raw,meta,mode,'Der QR-Code passt nicht zu diesem Sync.');
+      if(ok){show(`<p class="atext"><b>✓ Verbunden.</b></p><p class="muted">${allNotes().length} Notizen auf diesem Gerät. Änderungen werden ab jetzt automatisch abgeglichen.</p>`,'<button type="button" class="btn primary" data-x>Fertig</button>')}
+      else show('<p class="atext">Der QR-Code passt nicht zu diesem Sync. Öffne am PC den QR-Code erneut.</p>','<button type="button" class="btn primary" data-x>Schliessen</button>')}
+    catch(e){show(`<p class="atext">Verbinden fehlgeschlagen:</p><p class="muted">${esc(e.message||String(e))}</p>`,'<button type="button" class="btn ghost" data-x>Schliessen</button><button type="button" class="btn primary" id="pairRetry">Nochmals</button>');
+      $('#pairRetry',df).onclick=()=>go(mode)}};
+  const hasLocal=allNotes().some(x=>!x.n.tags.includes('beispiel'));
+  if(!hasLocal){go('replace');return}
+  show('<p class="atext"><b>QR-Code erkannt.</b> Auf diesem Gerät sind schon eigene Notizen. Was soll mit ihnen passieren?</p>',
+    '<button type="button" class="btn ghost" data-x>Abbrechen</button><button type="button" class="btn" id="pairRepl">Ersetzen</button><button type="button" class="btn primary" id="pairMerge">Zusammenführen</button>');
+  $('#pairMerge',df).onclick=()=>go('merge');$('#pairRepl',df).onclick=()=>go('replace')}
 async function pairWith(p){
   if(sy.cfg&&sy.cfg.token===p.code){toast('Dieses Gerät ist bereits verbunden.');return}
   const hasLocal=allNotes().some(x=>!x.n.tags.includes('beispiel'));let mode='replace';
