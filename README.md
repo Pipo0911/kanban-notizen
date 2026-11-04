@@ -72,8 +72,9 @@ Die Notizen gleichen sich über ein eigenes Supabase-Projekt (`kanban-notizen-sy
 
 - **Einrichten:**
   1. Auf dem PC unter **Einstellungen → Synchronisation → Sync einrichten** ein Sync-Passwort wählen.
-  2. Die App zeigt einen **Sync-Code** (`XXXX-XXXX-XXXX-XXXX-XXXX`).
-  3. Auf dem iPhone unter **Mit bestehendem Sync verbinden** Code und Passwort eingeben.
+  2. Auf dem iPhone in der App **Mit QR-Code verbinden** tippen und den QR-Code vom PC scannen (am PC unter „QR-Code für weiteres Gerät“).
+  3. Alternativ: **Mit Code und Passwort verbinden** mit dem Sync-Code `XXXX-XXXX-XXXX-XXXX-XXXX` und dem Passwort.
+- **QR-Code:** Er enthält Sync-Code und Schlüssel im `#`-Teil eines Links. Dieser Teil wird nie an einen Server geschickt. Bibliotheken dafür: `src/vendor/qrcode.js` (qrcode-generator, MIT) und `src/vendor/jsqr.js` (jsQR, Apache-2.0).
 - **Verschlüsselung:**
   - Der Schlüssel entsteht aus dem Passwort (PBKDF2, 310 000 Runden). Jedes Element wird mit AES-GCM verschlüsselt.
   - Auf dem Server liegen nur Ciphertext und der SHA-256-Hash des Codes.

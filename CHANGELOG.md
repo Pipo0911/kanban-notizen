@@ -1,5 +1,10 @@
 # Änderungen
 
+## 1.5.1
+- **iPhone per QR-Code verbinden:** Der PC zeigt unter Einstellungen → Synchronisation → „QR-Code für weiteres Gerät“ einen QR-Code. Auf dem iPhone in der App „Mit QR-Code verbinden“ tippen und scannen. Kein Code-Abtippen, kein Passwort nötig.
+- Der QR-Code verschwindet aus Sicherheitsgründen nach 2 Minuten.
+- Wird der QR-Code versehentlich mit der Kamera-App gescannt, erklärt die Seite in Safari, wie es richtig geht.
+
 ## 1.5.0
 - **Synchronisation zwischen PC und iPhone:**
   - Neue und geänderte Notizen erscheinen nach wenigen Sekunden auf dem anderen Gerät, solange die App dort offen ist.

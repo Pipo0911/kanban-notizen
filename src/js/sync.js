@@ -38,7 +38,7 @@ async function rpc(fn,args){let r;
 /* ---------- Lokale Einstellungen dieses Geräts ---------- */
 function syLoad(){try{sy.cfg=JSON.parse(localStorage.getItem(SYNCKEY)||'null')}catch(e){sy.cfg=null}}
 function sySave(){try{sy.cfg?localStorage.setItem(SYNCKEY,JSON.stringify(sy.cfg)):localStorage.removeItem(SYNCKEY)}catch(e){}}
-async function syncStart(){syLoad();if(!sy.cfg)return;
+async function syncStart(){syLoad();handlePairLink();if(!sy.cfg)return;
   try{sy.key=await aesKey(b64d(sy.cfg.keyB64))}catch(e){sy.cfg=null;sySave();return}
   syncNow()}
 
@@ -119,7 +119,7 @@ async function syncSetupNew(){
   try{const code=newCode(),salt=b64e(crypto.getRandomValues(new Uint8Array(16))),raw=await deriveRaw(r.pw,salt),key=await aesKey(raw);
     await rpc('kn_create',{p_token:code,p_salt:salt,p_check:await enc({ok:'kanban-notizen'},key)});
     sy.cfg={token:code,keyB64:b64e(raw),lastRev:0,state:{},since:now()};sy.key=key;sySave();
-    await syncNow(true);renderContent();showSyncCode(true)}
+    await syncNow(true);renderContent();showPairQR(true)}
   catch(e){toast('Einrichten fehlgeschlagen: '+(e.message||e))}}
 async function syncJoin(){
   const hasLocal=allNotes().some(x=>!x.n.tags.includes('beispiel'));
@@ -130,13 +130,16 @@ async function syncJoin(){
   if(!r)return;const code=normCode(r.code);if(code.length!==20){toast('Der Sync-Code hat 20 Zeichen.');return}
   toast('Verbinde …');
   try{const meta=(await rpc('kn_meta',{p_token:code}))[0];if(!meta){toast('Diesen Sync-Code gibt es nicht. Bitte prüfen.');return}
-    const raw=await deriveRaw(r.pw,meta.salt),key=await aesKey(raw);
-    try{const ok=await dec(meta.check_blob,key);if(!ok||ok.ok!=='kanban-notizen')throw 0}catch(e){toast('Falsches Sync-Passwort.');return}
-    sy.cfg={token:code,keyB64:b64e(raw),lastRev:0,state:{},since:now()};sy.key=key;sySave();
-    sy.replace=!hasLocal||r.mode==='replace';
-    await syncNow(true);renderContent();toast('Verbunden – Notizen werden ab jetzt automatisch abgeglichen')}
+    const raw=await deriveRaw(r.pw,meta.salt);
+    await connectWith(code,raw,meta,hasLocal?r.mode:'replace','Falsches Sync-Passwort.')}
   catch(e){toast('Verbinden fehlgeschlagen: '+(e.message||e))}}
-async function syncDisconnect(){const r=await ask({title:'Synchronisation trennen?',text:'Dieses Gerät gleicht danach nicht mehr ab. Deine Notizen bleiben hier und in der Cloud erhalten. Zum erneuten Verbinden brauchst du Sync-Code und Passwort.',ok:'Trennen',danger:true});
+/* Gemeinsamer Abschluss für Passwort und QR-Code: Schlüssel prüfen, speichern, ersten Abgleich starten */
+async function connectWith(code,raw,meta,mode,badMsg){const key=await aesKey(raw);
+  try{const ok=await dec(meta.check_blob,key);if(!ok||ok.ok!=='kanban-notizen')throw 0}catch(e){toast(badMsg);return false}
+  sy.cfg={token:code,keyB64:b64e(raw),lastRev:0,state:{},since:now()};sy.key=key;sySave();
+  sy.replace=mode!=='merge';
+  await syncNow(true);if(DB.ui.view==='settings')renderContent();render();toast('Verbunden – Notizen werden ab jetzt automatisch abgeglichen');return true}
+async function syncDisconnect(){const r=await ask({title:'Synchronisation trennen?',text:'Dieses Gerät gleicht danach nicht mehr ab. Deine Notizen bleiben hier und in der Cloud erhalten. Zum erneuten Verbinden scannst du den QR-Code eines verbundenen Geräts oder gibst Sync-Code und Passwort ein.',ok:'Trennen',danger:true});
   if(!r)return;sy.cfg=null;sy.key=null;sy.state='';sySave();renderContent();toast('Synchronisation getrennt')}
 async function syncDeleteCloud(){const r=await ask({title:'Cloud-Daten löschen?',text:'Löscht alle synchronisierten Notizen <b>in der Cloud</b>. Die Notizen auf diesem Gerät bleiben erhalten. Andere Geräte gleichen danach nicht mehr ab und müssen neu verbunden werden.',
     fields:[{name:'k',label:'Zur Bestätigung LÖSCHEN eingeben',required:true}],ok:'Endgültig löschen',danger:true,init:f=>{const k=f.elements.k;const c=()=>k.setCustomValidity(k.value.trim().toUpperCase()==='LÖSCHEN'?'':'Bitte LÖSCHEN eingeben');k.addEventListener('input',c);c()}});
@@ -158,10 +161,75 @@ function syncNavHTML(){if(!sy.cfg)return'<span id="syncNav" hidden></span>';cons
   return`<button class="nav-item sync-nav ${s||'ok'}" id="syncNav" data-act="syncNow" title="${sy.cfg.lastSync?'Zuletzt '+esc(fmtTime(sy.cfg.lastSync)):''}"><span class="sync-dot"></span><span class="sp-n">${lbl}</span>${sy.cfg.lastSync&&s!=='run'?`<span class="sp-c">${esc(new Date(sy.cfg.lastSync).toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit'}))}</span>`:''}</button>`}
 function syncPanelHTML(){
   if(!sy.cfg)return`<div class="panel"><h3>Synchronisation</h3><p>Gleicht deine Notizen automatisch zwischen PC und iPhone ab, sobald sich etwas ändert. Die Notizen werden auf dem Gerät mit deinem Sync-Passwort <b>verschlüsselt</b> – in der Cloud liegt nur unlesbarer Datensalat.</p>
-    <div class="row-btns"><button class="btn primary" id="syNew">Sync einrichten …</button><button class="btn" id="syJoin">Mit bestehendem Sync verbinden …</button></div>
-    <small>Auf dem ersten Gerät „Sync einrichten“, auf allen weiteren „Mit bestehendem Sync verbinden“.</small></div>`;
+    <div class="row-btns">${CAN_SCAN?'<button class="btn primary" id="syScan">Mit QR-Code verbinden …</button>':''}<button class="btn${CAN_SCAN?'':' primary'}" id="syNew">Sync einrichten …</button><button class="btn" id="syJoin">Mit Code und Passwort verbinden …</button></div>
+    <small>Auf dem ersten Gerät (z. B. dem PC) „Sync einrichten“. Weitere Geräte verbindest du am einfachsten mit dem QR-Code, den das erste Gerät unter Synchronisation anzeigt.</small></div>`;
   return`<div class="panel"><h3>Synchronisation</h3>${syncStatHTML()}
     <p>Änderungen werden nach wenigen Sekunden hochgeladen; neue Notizen vom anderen Gerät erscheinen hier automatisch, solange die App offen ist. Sync-Code: <code>${esc(sy.cfg.token.slice(0,4))}-••••-••••-••••-${esc(sy.cfg.token.slice(-4))}</code></p>
-    <div class="row-btns"><button class="btn primary" id="syNow">Jetzt synchronisieren</button><button class="btn" id="syCode">Sync-Code anzeigen</button><span class="spacer"></span><button class="btn ghost" id="syOff">Trennen</button><button class="btn ghost danger" id="syDel">Cloud-Daten löschen …</button></div></div>`}
+    <div class="row-btns"><button class="btn primary" id="syNow">Jetzt synchronisieren</button><button class="btn" id="syQR">QR-Code für weiteres Gerät</button><button class="btn" id="syCode">Sync-Code anzeigen</button><span class="spacer"></span><button class="btn ghost" id="syOff">Trennen</button><button class="btn ghost danger" id="syDel">Cloud-Daten löschen …</button></div></div>`}
 function bindSyncPanel(el){const on=(id,f)=>{const x=$('#'+id,el);if(x)x.onclick=f};
-  on('syNew',syncSetupNew);on('syJoin',syncJoin);on('syNow',()=>syncNow(true));on('syCode',()=>showSyncCode(false));on('syOff',syncDisconnect);on('syDel',syncDeleteCloud)}
+  on('syNew',syncSetupNew);on('syScan',scanPairQR);on('syQR',()=>showPairQR(false));on('syJoin',syncJoin);on('syNow',()=>syncNow(true));on('syCode',()=>showSyncCode(false));on('syOff',syncDisconnect);on('syDel',syncDeleteCloud)}
+
+/* ---------- Koppeln per QR-Code ----------
+   Der QR-Code enthält einen Link mit Sync-Code und Schlüssel im #-Teil (wird nie an einen Server geschickt).
+   Die iPhone-App scannt ihn mit der eingebauten Kamera; die Kamera-App würde ihn in Safari öffnen,
+   das auf dem iPhone einen eigenen Speicher hat. */
+const PAIR_URL='https://pipo0911.github.io/kanban-notizen/';
+const CAN_SCAN=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)&&(WEB||IOS)&&matchMedia('(pointer:coarse)').matches;
+const b64url=s=>s.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const unb64url=s=>{s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return s};
+const pairLink=()=>`${PAIR_URL}#kn-pair=${sy.cfg.token}.${b64url(sy.cfg.keyB64)}`;
+function parsePair(t){const m=String(t||'').match(/kn-pair=([A-Z0-9]{20})\.([A-Za-z0-9_-]{40,60})/);if(!m)return null;
+  try{const raw=b64d(unb64url(m[2]));return raw.length===32?{code:m[1],raw}:null}catch(e){return null}}
+const vendorLoaded={};
+function loadVendor(name){return vendorLoaded[name]||(vendorLoaded[name]=new Promise((res,rej)=>{const s=document.createElement('script');s.src='vendor/'+name+'.js';s.onload=res;s.onerror=()=>{delete vendorLoaded[name];rej(new Error('Baustein „'+name+'“ konnte nicht geladen werden'))};document.head.appendChild(s)}))}
+async function showPairQR(fresh){if(!sy.cfg)return;
+  try{await loadVendor('qrcode')}catch(e){toast(e.message);return}
+  const q=qrcode(0,'M');q.addData(pairLink());q.make();
+  const svg=q.createSvgTag({cellSize:6,margin:3,scalable:true});let left=120,t=0;
+  await ask({title:fresh?'Synchronisation ist eingerichtet':'Weiteres Gerät verbinden',cancel:null,ok:'Fertig',wide:true,
+    text:`${fresh?'<p>Deine Notizen liegen jetzt verschlüsselt in der Cloud.</p>':''}<p>Öffne auf dem iPhone die <b>App Kanban Notizen</b> (vom Home-Bildschirm), dann <b>Einstellungen → Synchronisation → Mit QR-Code verbinden</b> und halte die Kamera auf diesen Code:</p>
+      <div class="pair-qr" id="pairQR">${svg}</div><p class="muted sm" style="text-align:center" id="pairLeft">Wird nach 2:00 Minuten ausgeblendet</p>
+      <p class="muted sm"><b>Nicht mit der Kamera-App scannen</b> – die öffnet Safari statt der App. Der QR-Code ist ein Schlüssel zu deinen Notizen: Zeige ihn niemandem und mach keinen Screenshot davon.</p>`,
+    init:()=>{t=setInterval(()=>{left--;const el=$('#pairLeft');if(el)el.textContent=`Wird nach ${Math.floor(left/60)}:${String(left%60).padStart(2,'0')} Minuten ausgeblendet`;
+      if(left<=0){clearInterval(t);const q=$('#pairQR');if(q)q.innerHTML='<div class="muted" style="padding:40px 10px;text-align:center">Aus Sicherheitsgründen ausgeblendet.<br>Öffne den QR-Code bei Bedarf erneut.</div>'}},1000)}});
+  clearInterval(t)}
+async function scanPairQR(){
+  if(!CAN_SCAN&&!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)){toast('Dieses Gerät hat keine Kamera für den QR-Code.');return}
+  try{await loadVendor('jsqr')}catch(e){toast(e.message);return}
+  const d=$('#dlg2');d.style.width='min(480px,calc(100vw - 24px))';let stream=null,raf=0,done=false;
+  d.innerHTML=`<div class="dh">QR-Code scannen</div><div class="ab"><p class="atext">Halte die Kamera auf den QR-Code am PC (Einstellungen → Synchronisation → QR-Code für weiteres Gerät).</p>
+    <div class="scan-box"><video id="scanV" playsinline muted autoplay></video><div class="scan-frame"></div></div><p class="muted sm" id="scanMsg">Kamera wird gestartet …</p></div>
+    <div class="df"><span class="spacer"></span><button type="button" class="btn ghost" data-x>Abbrechen</button></div>`;
+  const stop=()=>{done=true;cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());stream=null};
+  d.onclose=()=>{stop();d.style.width=''};$('[data-x]',d).onclick=()=>d.close();d.showModal();
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false})}
+  catch(e){$('#scanMsg',d).textContent=e&&e.name==='NotAllowedError'?'Kein Zugriff auf die Kamera. Erlaube ihn in den iPhone-Einstellungen bei Safari → Kamera bzw. beim Öffnen der Abfrage.':'Kamera konnte nicht gestartet werden: '+(e.message||e);return}
+  if(done){stop();return}
+  const v=$('#scanV',d);v.srcObject=stream;try{await v.play()}catch(e){}
+  $('#scanMsg',d).textContent='Suche QR-Code …';
+  const c=document.createElement('canvas'),g=c.getContext('2d',{willReadFrequently:true});let wrong=0;
+  const tick=async()=>{if(done)return;
+    if(v.readyState>=2&&v.videoWidth){const k=Math.min(1,640/Math.max(v.videoWidth,v.videoHeight));c.width=Math.round(v.videoWidth*k);c.height=Math.round(v.videoHeight*k);
+      g.drawImage(v,0,0,c.width,c.height);const img=g.getImageData(0,0,c.width,c.height),res=jsQR(img.data,img.width,img.height,{inversionAttempts:'dontInvert'});
+      if(res&&res.data){const p=parsePair(res.data);
+        if(p){stop();$('#scanMsg',d).textContent='Erkannt – verbinde …';d.close();await pairWith(p);return}
+        if(++wrong%30===1)$('#scanMsg',d).textContent='Das ist kein QR-Code von Kanban Notizen.'}}
+    raf=requestAnimationFrame(tick)};
+  tick()}
+async function pairWith(p){
+  if(sy.cfg&&sy.cfg.token===p.code){toast('Dieses Gerät ist bereits verbunden.');return}
+  const hasLocal=allNotes().some(x=>!x.n.tags.includes('beispiel'));let mode='replace';
+  if(hasLocal){const r=await ask({title:'Mit dem Sync verbinden',text:'Auf diesem Gerät sind schon eigene Notizen. Was soll mit ihnen passieren?',
+      fields:[{name:'mode',label:'Notizen auf diesem Gerät',type:'select',options:[['merge','Zusammenführen – beide Stände behalten'],['replace','Ersetzen – nur die Notizen vom Sync verwenden']]}],ok:'Verbinden'});
+    if(!r)return;mode=r.mode}
+  toast('Verbinde …');
+  try{const meta=(await rpc('kn_meta',{p_token:p.code}))[0];if(!meta){toast('Dieser Sync existiert nicht mehr.');return}
+    await connectWith(p.code,p.raw,meta,mode,'Der QR-Code passt nicht zu diesem Sync.')}
+  catch(e){toast('Verbinden fehlgeschlagen: '+(e.message||e))}}
+/* QR-Code wurde mit der Kamera-App gescannt und hat diese Seite geöffnet */
+function handlePairLink(){const p=parsePair(location.hash);if(!p)return;
+  try{history.replaceState(null,'',location.pathname+location.search)}catch(e){location.hash=''}
+  if(IOS&&!STANDALONE){ask({title:'Bitte in der App scannen',cancel:'Trotzdem hier verbinden',ok:'Verstanden',
+      text:'Du hast den QR-Code mit der Kamera-App gescannt. Dadurch öffnet sich <b>Safari</b> – und Safari hat auf dem iPhone einen eigenen Speicher, getrennt von der App auf dem Home-Bildschirm.<br><br>Öffne stattdessen die <b>App Kanban Notizen</b> und tippe in den Einstellungen unter Synchronisation auf <b>Mit QR-Code verbinden</b>.'})
+    .then(r=>{if(r===null)pairWith(p)});return}
+  pairWith(p)}
