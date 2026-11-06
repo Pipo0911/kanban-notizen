@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Rechte für das Hauptfenster: Grundfunktionen, Dateidialoge, Updates",
+  "description": "Rechte für das Hauptfenster: Grundfunktionen, Dateidialoge, Updates, Mitteilungen, Autostart",
   "windows": [
     "main"
   ],
@@ -9,6 +9,8 @@
     "core:default",
     "dialog:default",
     "updater:default",
-    "process:default"
+    "process:default",
+    "notification:default",
+    "autostart:default"
   ]
 }

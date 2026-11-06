@@ -12,7 +12,7 @@ function advance(d,r){
 function spawnNext(s,n){
   if(!n.repeat)return null;
   let next=advance(n.due||today(),n.repeat);while(next<=today())next=advance(next,n.repeat);
-  const c=newNote(s,{title:n.title,body:n.body,color:n.color,tags:[...n.tags],pinned:n.pinned,colId:firstOpenCol(s).id,checklist:n.checklist.map(x=>ck(x.text)),due:next,dueTime:n.dueTime,repeat:n.repeat});
+  const c=newNote(s,{title:n.title,body:n.body,color:n.color,tags:[...n.tags],pinned:n.pinned,colId:firstOpenCol(s).id,checklist:n.checklist.map(x=>ck(x.text)),due:next,dueTime:n.dueTime,repeat:n.repeat,remind:n.remind&&!n.remind.startsWith('at:')?n.remind:''});
   n.repeat='';return c}
 function afterDone(s,n,wasDone){if(wasDone||!isDone(s,n))return;if(n.timerStart)stopTimer(s,n,true);
   const c=spawnNext(s,n);if(c)toast(`Wiederholung erstellt für ${fmtShort(c.due)}`,{open:()=>openNote(s.id,c.id)})}
@@ -29,11 +29,4 @@ let edRefresh=null;
 setInterval(()=>{const r=runningTimer();const el=$('#timerTime');if(r&&el)el.textContent=clock(Date.now()-Date.parse(r.n.timerStart));
   $$('[data-runclock]').forEach(x=>{const nn=r&&r.n.id===x.dataset.runclock?r.n:null;if(nn)x.textContent=clock(Date.now()-Date.parse(nn.timerStart)).replace(/^00:/,'')})},1000);
 /* ============ Erinnerungen ============ */
-function checkReminders(){const nw=new Date();let changed=false;
-  for(const{s,n}of allNotes()){if(isDone(s,n)||!n.due||!n.dueTime)continue;const key=n.due+' '+n.dueTime;if(n.remindedFor===key)continue;
-    const at=new Date(n.due+'T'+n.dueTime);if(nw<at)continue;
-    n.remindedFor=key;changed=true;
-    if(nw-at<36e5*12){toast('Erinnerung: '+noteLabel(n),{open:()=>openNote(s.id,n.id)});
-      notify('Erinnerung · '+noteLabel(n),(n.dueTime?n.dueTime+' · ':'')+s.name,n.id,{sid:s.id,nid:n.id})}}
-  if(changed){save(true);render()}}
-setInterval(checkReminders,30000);
+/* Erinnerungen: siehe remind.js */

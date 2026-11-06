@@ -35,7 +35,7 @@ function isoWeek(ds){const d=new Date(ds+'T12:00:00');d.setDate(d.getDate()+3-(d
 
 function makeSpace(name,color,tpl,desc=''){const t=TEMPLATES[tpl]||TEMPLATES.notizen;
   return{id:uid(),name,color,desc,created:now(),columns:t.cols.map(([n,c,done])=>({id:uid(),name:n,color:c,done:!!done})),notes:[]}}
-function blankNote(){return{id:uid(),title:'',body:'',color:'default',prio:'',tags:[],colId:'',pinned:false,fav:false,daily:'',checklist:[],due:'',dueTime:'',repeat:'',remindedFor:'',time:[],timerStart:'',images:[],archived:false,created:now(),updated:now()}}
+function blankNote(){return{id:uid(),title:'',body:'',color:'default',prio:'',tags:[],colId:'',pinned:false,fav:false,daily:'',remind:'',checklist:[],due:'',dueTime:'',repeat:'',remindedFor:'',time:[],timerStart:'',images:[],archived:false,created:now(),updated:now()}}
 function newNote(s,d={}){
   const n=Object.assign(blankNote(),d);
   if(!s.columns.some(c=>c.id===n.colId))n.colId=firstOpenCol(s).id;
@@ -62,7 +62,7 @@ function normNote(n,s,k){
   return{id:okId(n.id)?String(n.id):uid(),title:String(n.title||''),body:String(n.body||''),color:NC[n.color]?n.color:'default',
     tags:[...new Set(arr(n.tags).map(t=>String(t).trim()).filter(Boolean))],colId:cols.has(n.colId)?n.colId:s.columns[0].id,
     pinned:!!n.pinned,fav:!!n.fav,daily:isDate(n.daily)?n.daily:'',checklist:arr(n.checklist).filter(c=>c&&typeof c.text==='string').map(c=>({id:okId(c.id)?String(c.id):uid(),text:c.text,done:!!c.done})),
-    due:isDate(n.due)?n.due:'',dueTime:isDate(n.due)&&isTime(n.dueTime)?n.dueTime:'',repeat:REPEAT[n.repeat]!==undefined?n.repeat:'',remindedFor:String(n.remindedFor||''),
+    due:isDate(n.due)?n.due:'',dueTime:isDate(n.due)&&isTime(n.dueTime)?n.dueTime:'',repeat:REPEAT[n.repeat]!==undefined?n.repeat:'',remind:/^(off|rel:\d{1,5}|at:\d{4}-\d{2}-\d{2}T\d{2}:\d{2})$/.test(n.remind||'')?n.remind:'',remindedFor:String(n.remindedFor||''),
     time:arr(n.time).filter(t=>t&&isDate(t.day)&&+t.min>0).map(t=>({id:okId(t.id)?String(t.id):uid(),day:t.day,min:Math.round(+t.min),text:String(t.text||''),start:t.start||'',end:t.end||''})),
     timerStart:n.timerStart&&!isNaN(Date.parse(n.timerStart))?n.timerStart:'',
     images:arr(n.images).filter(i=>i&&/^data:image\//.test(i.data||'')).map(i=>({id:okId(i.id)?String(i.id):uid(),data:i.data,name:String(i.name||'Bild')})),
@@ -87,7 +87,7 @@ function fromV1(d){return fromV2({id:uid(),name:d.project?.name||'Altes Board',s
   issues:arr(d.issues).map(i=>({id:i.id,title:i.title,desc:i.desc,labels:i.labels,statusId:i.col,due:i.due,order:i.order,created:i.created,updated:i.updated,history:[1,2],comments:i.comments,prio:i.prio}))})}
 function normSettings(x={}){return{theme:['system','light','dark'].includes(x.theme)?x.theme:'system',jiraUrl:typeof x.jiraUrl==='string'?x.jiraUrl.trim():'',
   templates:Array.isArray(x.templates)?x.templates.filter(t=>t&&t.name).map(t=>({id:okId(t.id)?t.id:uid(),name:String(t.name),color:NC[t.color]?t.color:'default',title:String(t.title||''),body:String(t.body||''),tags:arr(t.tags).map(String),checklist:arr(t.checklist).map(String).filter(Boolean)})):DEFAULT_TPL(),
-  labels:(()=>{const o={};if(x.labels&&typeof x.labels==='object')for(const[k,v]of Object.entries(x.labels))if(LC[v]&&k.trim())o[k]=v;return o})(),notify:!!x.notify,lastBackup:x.lastBackup||'',
+  labels:(()=>{const o={};if(x.labels&&typeof x.labels==='object')for(const[k,v]of Object.entries(x.labels))if(LC[v]&&k.trim())o[k]=v;return o})(),notify:!!x.notify,osNotify:x.osNotify!==false,lastBackup:x.lastBackup||'',
   daily:{space:okId(x.daily&&x.daily.space)?String(x.daily.space):'',tpl:x.daily&&typeof x.daily.tpl==='string'?x.daily.tpl:DAILY_TPL},round:[0,5,6,10,15,30].includes(+x.round)?+x.round:0}}
 function normDB(d){
   d=d||{};

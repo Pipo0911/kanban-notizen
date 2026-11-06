@@ -38,7 +38,8 @@ function openNote(sid,id,opt={}){
     <div class="ed-grid">
       <div class="fld"><label for="edCol">Spalte</label><select id="edCol">${s.columns.map(c=>`<option value="${c.id}"${c.id===n.colId?' selected':''}>${esc(c.name)}${c.done?' ✓':''}</option>`).join('')}</select></div>
       <div class="fld"><label for="edDue">Termin</label><input type="date" id="edDue" value="${esc(n.due)}"></div>
-      <div class="fld"><label for="edTime">Uhrzeit (Erinnerung)</label><input type="time" id="edTime" value="${esc(n.dueTime)}"${n.due?'':' disabled'}></div>
+      <div class="fld"><label for="edTime">Uhrzeit</label><input type="time" id="edTime" value="${esc(n.dueTime)}"${n.due?'':' disabled'}></div>
+      <div class="fld"><label for="edRem">Erinnerung</label><select id="edRem"></select><input type="datetime-local" id="edRemAt" hidden><small id="edRemInfo"></small></div>
       <div class="fld"><label for="edRep">Wiederholen</label><select id="edRep">${Object.entries(REPEAT).map(([k,v])=>`<option value="${k}"${n.repeat===k?' selected':''}>${v}</option>`).join('')}</select></div>
       <div class="fld full"><label>Priorität</label><div class="prio-sel" id="edPrio">${[['','Keine'],...PRIOS.map(p=>[p.id,p.n])].map(([k,nm])=>`<button type="button" data-p="${k}"${n.prio===k?' class="on"':''}>${k?prioIcon(k,14):''}${nm}</button>`).join('')}</div></div>
       <div class="fld full"><label for="edLbl">Labels</label><div class="lbl-pick" id="lblPick"></div><small>Klick auf ein Label setzt oder entfernt es. Farben änderst du unter Einstellungen → Labels.</small></div>
@@ -84,9 +85,18 @@ function openNote(sid,id,opt={}){
   $('#edTitle',dlg).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ui.edTab='write';drawText();$('#edBody',dlg).focus()}});
   $$('[data-tpl]',dlg).forEach(b=>b.onclick=()=>{const t=DB.settings.templates.find(x=>x.id===b.dataset.tpl);if(!t)return;const col=n.colId;applyTpl(n,t);n.colId=col;touch();n._new=true;openNote(s.id,n.id);const ti=$('#edTitle');if(ti){ti.focus();ti.setSelectionRange(ti.value.length,ti.value.length)}});
   $('#edCol',dlg).onchange=e=>{const wasDone=isDone(s,n);n.colId=e.target.value;n.order=maxOrder(s,n.colId)+1;afterDone(s,n,wasDone);touch();$('#edRep',dlg).value=n.repeat};
-  $('#edDue',dlg).onchange=e=>{n.due=e.target.value;$('#edTime',dlg).disabled=!n.due;if(!n.due){n.dueTime='';$('#edTime',dlg).value=''}n.remindedFor='';touch()};
-  $('#edTime',dlg).onchange=e=>{n.dueTime=isTime(e.target.value)?e.target.value:'';n.remindedFor='';touch();
-    if(n.dueTime&&DB.settings.notify===false&&'Notification' in window&&Notification.permission==='default')toast('Tipp: Desktop-Benachrichtigungen unter Einstellungen aktivieren')};
+  $('#edDue',dlg).onchange=e=>{n.due=e.target.value;$('#edTime',dlg).disabled=!n.due;if(!n.due){n.dueTime='';$('#edTime',dlg).value=''}n.remindedFor='';touch();drawRem()};
+  $('#edTime',dlg).onchange=e=>{n.dueTime=isTime(e.target.value)?e.target.value:'';n.remindedFor='';touch();drawRem()};
+  /* Erinnerung */
+  const remSel=$('#edRem',dlg),remAt=$('#edRemAt',dlg),remInfo=$('#edRemInfo',dlg);
+  const drawRem=()=>{const r=n.remind||'',mode=r.startsWith('at:')?'at':r,hasT=!!(n.due&&n.dueTime);
+    remSel.innerHTML=REMIND_OPTS.map(([k,l])=>`<option value="${k}"${k===mode?' selected':''}${(k===''&&!hasT)||(k.startsWith('rel:')&&!n.due)?' disabled':''}>${k===''&&!hasT?'Zum Termin (braucht Uhrzeit)':l}</option>`).join('');
+    if(mode===''&&!hasT)remSel.value='off';
+    remAt.hidden=mode!=='at';if(mode==='at')remAt.value=r.slice(3);
+    const t=remindAt(n);remInfo.innerHTML=t?`⏰ ${esc(fmtRemind(t))}${+t<Date.now()?' <span class="muted">(vorbei)</span>':''}`:'<span class="muted">Keine Erinnerung</span>'};
+  remSel.onchange=()=>{const v=remSel.value;if(v==='at'){const base=remindAt(n)||new Date(Date.now()+36e5);base.setSeconds(0,0);n.remind='at:'+localStamp(base)}else n.remind=v;touch();drawRem();if(v==='at')remAt.focus()};
+  remAt.onchange=()=>{if(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(remAt.value)){n.remind='at:'+remAt.value.slice(0,16);touch();drawRem()}};
+  drawRem();
   $('#edRep',dlg).onchange=e=>{n.repeat=e.target.value;if(n.repeat&&!n.due){n.due=today();$('#edDue',dlg).value=n.due;$('#edTime',dlg).disabled=false}touch()};
   const drawLbl=()=>{const all=[...new Set([...allTags(),...Object.keys(DB.settings.labels),...n.tags])].sort((a,b)=>a.localeCompare(b));
     $('#lblPick',dlg).innerHTML=all.map(t=>`<button type="button" class="nlbl${n.tags.includes(t)?'':' sel-off'}" data-l="${esc(t)}" style="background:${labelColor(t)}" aria-pressed="${n.tags.includes(t)}">${n.tags.includes(t)?'✓ ':''}${esc(t)}</button>`).join('')+'<input id="edLbl" placeholder="+ Neues Label (Enter)" maxlength="40" aria-label="Neues Label">';

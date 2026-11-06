@@ -12,7 +12,11 @@ use std::{
 };
 
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Manager};
+use tauri::{
+    menu::{Menu, MenuItem},
+    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
+    AppHandle, Manager, WindowEvent,
+};
 
 /// Wie viele Tages-Sicherungen behalten werden.
 const KEEP_BACKUPS: usize = 30;
@@ -21,6 +25,14 @@ const KEEP_BACKUPS: usize = 30;
 struct Config {
     /// Vom Benutzer gewählter Speicherort. `None` = Standardpfad.
     data_path: Option<String>,
+    /// Fenster schliessen = im Infobereich weiterlaufen (für Erinnerungen). `None` = ja.
+    #[serde(default)]
+    close_to_tray: Option<bool>,
+}
+
+#[derive(Serialize, Deserialize)]
+struct Prefs {
+    close_to_tray: bool,
 }
 
 #[derive(Serialize)]
@@ -196,6 +208,29 @@ fn reveal_data(app: AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+/// Einstellungen der Desktop-Hülle lesen
+#[tauri::command]
+fn get_prefs(app: AppHandle) -> Prefs {
+    Prefs { close_to_tray: read_config(&app).close_to_tray.unwrap_or(true) }
+}
+
+/// Einstellungen der Desktop-Hülle speichern
+#[tauri::command]
+fn set_prefs(app: AppHandle, prefs: Prefs) -> Result<Prefs, String> {
+    let mut cfg = read_config(&app);
+    cfg.close_to_tray = Some(prefs.close_to_tray);
+    write_config(&app, &cfg)?;
+    Ok(get_prefs(app))
+}
+
+fn show_main(app: &AppHandle) {
+    if let Some(w) = app.get_webview_window("main") {
+        let _ = w.unminimize();
+        let _ = w.show();
+        let _ = w.set_focus();
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -212,13 +247,66 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
+        // Windows-Mitteilungen für Erinnerungen
+        .plugin(tauri_plugin_notification::init())
+        // Mit Windows starten (dann im Infobereich, ohne Fenster)
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            Some(vec!["--minimized"]),
+        ))
+        .setup(|app| {
+            let show = MenuItem::with_id(app, "show", "Kanban Notizen öffnen", true, None::<&str>)?;
+            let quit = MenuItem::with_id(app, "quit", "Beenden", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&show, &quit])?;
+            let mut tray = TrayIconBuilder::with_id("main")
+                .tooltip("Kanban Notizen")
+                .menu(&menu)
+                .show_menu_on_left_click(false)
+                .on_menu_event(|app, event| match event.id.as_ref() {
+                    "show" => show_main(app),
+                    "quit" => app.exit(0),
+                    _ => {}
+                })
+                .on_tray_icon_event(|tray, event| {
+                    if let TrayIconEvent::Click {
+                        button: MouseButton::Left,
+                        button_state: MouseButtonState::Up,
+                        ..
+                    } = event
+                    {
+                        show_main(tray.app_handle());
+                    }
+                });
+            if let Some(icon) = app.default_window_icon() {
+                tray = tray.icon(icon.clone());
+            }
+            tray.build(app)?;
+            // Autostart: unsichtbar im Infobereich starten
+            if std::env::args().any(|a| a == "--minimized") {
+                if let Some(w) = app.get_webview_window("main") {
+                    let _ = w.hide();
+                }
+            }
+            Ok(())
+        })
+        // Schliessen-Knopf: im Infobereich weiterlaufen, damit Erinnerungen kommen
+        .on_window_event(|window, event| {
+            if let WindowEvent::CloseRequested { api, .. } = event {
+                if window.label() == "main" && read_config(window.app_handle()).close_to_tray.unwrap_or(true) {
+                    api.prevent_close();
+                    let _ = window.hide();
+                }
+            }
+        })
         .invoke_handler(tauri::generate_handler![
             data_info,
             load_data,
             save_data,
             set_data_path,
             reveal_data,
-            write_text_file
+            write_text_file,
+            get_prefs,
+            set_prefs
         ])
         .run(tauri::generate_context!())
         .expect("Kanban Notizen konnte nicht gestartet werden");

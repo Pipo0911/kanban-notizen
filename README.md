@@ -86,6 +86,25 @@ Die Notizen gleichen sich über ein eigenes Supabase-Projekt (`kanban-notizen-sy
 - **Server:** Tabellen `kn_vault` und `kn_item` sind nicht direkt lesbar (RLS ohne Policies). Zugriff gibt es nur über die Funktionen `kn_create`, `kn_meta`, `kn_head`, `kn_pull`, `kn_push` und `kn_delete_vault`, die jeweils den Sync-Code prüfen.
 - **Pausieren:** Supabase pausiert Gratis-Projekte nach längerer Inaktivität. Bei regelmässiger Nutzung passiert das nicht. Sonst lässt sich das Projekt im Supabase-Dashboard wieder starten.
 
+## Erinnerungen und Push
+
+- **Zeitpunkt:** pro Notiz im Feld `remind`.
+  - Leer bedeutet „zum Termin“; das gilt nur, wenn der Termin eine Uhrzeit hat.
+  - `rel:<Minuten>` erinnert so viele Minuten vor dem Termin. Ganztägige Termine gelten dafür ab 09:00.
+  - `at:JJJJ-MM-TTTHH:MM` erinnert zu einer festen Zeit. `off` schaltet die Erinnerung ab.
+- **PC:**
+  - Die App prüft alle 20 Sekunden und zeigt eine Windows-Mitteilung über `tauri-plugin-notification`.
+  - Das Schliessen-Kreuz versteckt das Fenster nur. Die App läuft im Infobereich weiter; abschalten unter Einstellungen → Erinnerungen.
+  - Der Autostart über `tauri-plugin-autostart` startet die App mit `--minimized`.
+- **iPhone (Web Push):**
+  1. Das iPhone meldet sich über `kn_sub_upsert` beim Sync-Tresor an.
+  2. Nach jedem Abgleich plant jedes Gerät die Erinnerungen der nächsten 30 Tage für alle angemeldeten iPhones ein (`kn_jobs_replace`).
+  3. Den Inhalt verschlüsselt das Gerät dabei selbst für das jeweilige iPhone (RFC 8291, `aes128gcm`).
+- **Versand:**
+  - `pg_cron` ruft jede Minute die Edge Function `kn-push-send` auf.
+  - Sie holt die fälligen Mitteilungen, signiert sie mit VAPID und leitet den Ciphertext an Apple weiter.
+  - VAPID-Schlüssel und Cron-Schlüssel liegen in der geschützten Tabelle `kn_config`, lesbar nur für `service_role`.
+
 ## Neue Version veröffentlichen
 
 1. Die Version in **allen drei** Dateien gleich erhöhen: `src-tauri/tauri.conf.json`, `package.json`, `src-tauri/Cargo.toml`.

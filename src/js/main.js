@@ -28,4 +28,4 @@ document.addEventListener('keydown',e=>{
 /* ============ Start ============ */
 {const u=loadUi();DB=normDB({ui:u.ui,active:u.active})}
 applyTheme();render();setStatus('Lade Notizen …');if(WEB)document.documentElement.classList.add('web');if(STANDALONE)document.documentElement.classList.add('standalone');
-tauriInit().then(()=>{checkReminders();syncStart()});
+tauriInit().then(async()=>{await syncStart();await deskLoad();remindStart()});

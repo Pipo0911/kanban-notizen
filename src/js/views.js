@@ -18,6 +18,8 @@ function renderToday(el){const t=today(),end=addDays(t,7),L=[];
   const run=runningTimer();
   const todayMin=allNotes().reduce((a,{n})=>a+n.time.filter(x=>x.day===t).reduce((b,x)=>b+x.min,0),0);
   let html=`<div class="tsum"><div class="kpi"><div class="kpi-n">${secs[0][1].length}</div><div class="kpi-l">Überfällig</div></div><div class="kpi"><div class="kpi-n">${secs[1][1].length}</div><div class="kpi-l">Heute fällig</div></div><div class="kpi"><div class="kpi-n">${secs[3][1].length+secs[2][1].length}</div><div class="kpi-l">Bis in 7 Tagen</div></div><div class="kpi"><div class="kpi-n">${hm(todayMin)}</div><div class="kpi-l">Heute erfasst${run?' · Timer läuft':''}</div></div></div>`;
+  const ups=upcomingReminders(2,8);
+  if(ups.length)html+=`<div class="sec-title">Nächste Erinnerungen<span class="badge soft">${ups.length}</span></div><div class="rem-up wide">${ups.map(x=>`<button type="button" class="rem-it" data-act="openNote" data-nsid="${x.s.id}" data-nid="${x.n.id}"><span class="rem-t">${esc(fmtRemind(x.t))}</span><span>${esc(noteLabel(x.n))}</span><span class="muted sm">${esc(x.s.name)}</span></button>`).join('')}</div>`;
   let any=false;
   for(const[name,list,cls]of secs){if(!list.length)continue;any=true;
     html+=`<div class="sec-title${cls?' '+cls:''}">${name}<span class="badge soft">${list.length}</span></div><div class="wall">${list.map(x=>cardHTML(x.s,x.n,{showSpace:true,showCol:true,wall:true})).join('')}</div>`}

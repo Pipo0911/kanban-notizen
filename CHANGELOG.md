@@ -1,5 +1,18 @@
 # Änderungen
 
+## 1.6.0
+- **Erinnerungen:** Im Editor wählst du bei „Erinnerung“, wann du erinnert werden willst: zum Termin, 5 Min. bis 1 Tag vorher, zu einer eigenen Zeit oder gar nicht.
+- **PC:**
+  - Erinnerungen kommen als Windows-Mitteilung.
+  - Beim Schliessen läuft die App im Infobereich weiter (Symbol unten rechts), damit Erinnerungen auch bei geschlossenem Fenster kommen.
+  - Optional startet sie mit Windows.
+- **iPhone:**
+  - Erinnerungen kommen als Push-Mitteilung, auch wenn die App geschlossen ist.
+  - Einschalten unter Einstellungen → Erinnerungen. Das braucht die Synchronisation.
+  - Titel und Text werden auf dem Gerät verschlüsselt. Der Server sieht sie nie.
+- In der App erscheint eine Erinnerungskarte mit „Öffnen“, „+10 Min.“, „+1 Std.“, „Morgen“ und „Erledigt“.
+- „Heute & Termine“ und die Einstellungen zeigen die nächsten Erinnerungen.
+
 ## 1.5.1 · Korrektur iPhone-App
 - QR-Code-Verbindung: Nach dem Scan bleibt das Fenster offen. Darin erscheinen die Auswahl „Zusammenführen / Ersetzen“, der Fortschritt und am Ende „✓ Verbunden“ oder eine verständliche Fehlermeldung. Vorher schloss sich die Kamera, und es passierte nichts.
 - Beim Zusammenführen werden die Beispiel-Notizen des neuen Geräts weggelassen, damit sie nicht doppelt erscheinen.

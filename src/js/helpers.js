@@ -15,7 +15,9 @@ async function download(name,text,type){
   if(IOS&&navigator.canShare){try{const f=new File([b],name,{type:b.type});if(navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return true}}catch(e){if(e&&e.name==='AbortError')return false}}
   const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),3000);return true}
 /* Mitteilung: Desktop über die Notification-API, iPhone-App (iOS 16.4+) über den Service Worker */
-async function notify(title,body,tag,open){if(!DB.settings.notify||!('Notification' in window)||Notification.permission!=='granted')return;
+async function notify(title,body,tag,open,isReminder){if(DB.settings.osNotify===false)return;
+  if(TAURI&&TAURI.notification){const N=TAURI.notification;try{let ok=await N.isPermissionGranted();if(!ok)ok=(await N.requestPermission())==='granted';if(ok)N.sendNotification({title,body})}catch(e){console.warn(e)}return}
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
   try{const reg=WEB&&'serviceWorker' in navigator?await navigator.serviceWorker.getRegistration():null;
     if(reg&&reg.showNotification){await reg.showNotification(title,{body,tag,icon:'icons/icon-192.png',badge:'icons/icon-192.png',data:open||null});return}
     const no=new Notification(title,{body,tag});no.onclick=()=>{window.focus();if(open)openNote(open.sid,open.nid)}}catch(e){console.warn(e)}}

@@ -5,7 +5,7 @@
      Notiz, gewinnt die zuletzt geänderte; die andere Fassung landet im Versionsverlauf. */
 'use strict';
 const SB_URL='https://rrydcfjetigzesebghrg.supabase.co',SB_KEY='sb_publishable_RRFTyYr6PsVF1dEqzFRgLg_slAWW-6Q';
-const SYNCKEY='kanban-notizen-sync-v1',PBKDF2_ITER=310000,DEVICE_SETTINGS=['theme','notify','lastBackup'];
+const SYNCKEY='kanban-notizen-sync-v1',PBKDF2_ITER=310000,DEVICE_SETTINGS=['theme','notify','osNotify','lastBackup'];
 const sy={cfg:null,key:null,busy:false,again:false,timer:0,state:'',err:'',replace:false};
 
 /* ---------- Hilfen: Base64, Hash, Krypto ---------- */
@@ -98,7 +98,7 @@ async function syncNow(manual,force){if(!sy.cfg||!sy.key||!tv.loaded)return;if(s
     for(const o of out){const p=o.del?{id:o.id,kind:'x',deleted:true}:{id:o.id,kind:o.x.kind,data:await enc(o.x.v)};
       const sz=(p.data||'').length+100;if(size+sz>1.5e6)await flush();batch.push({id:o.id,del:!!o.del,h:o.x&&o.x.h,p});size+=sz}
     await flush();
-    sy.cfg.lastSync=now();sy.state='ok';sy.err='';sySave();
+    sy.cfg.lastSync=now();sy.state='ok';sy.err='';sySave();pushSchedule();
     if(pulled&&!manual)toast(pulled===1?'1 Änderung vom anderen Gerät übernommen':`${pulled} Änderungen vom anderen Gerät übernommen`);
     if(manual)toast(pulled?`Synchronisiert · ${pulled} Änderung${pulled===1?'':'en'} übernommen`:'Synchronisiert – alles aktuell')}
   catch(e){console.warn(e);sy.state=e.offline?'offline':'err';sy.err=e.message||String(e);if(manual)toast('Synchronisieren fehlgeschlagen: '+sy.err)}
