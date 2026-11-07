@@ -1,5 +1,17 @@
 # Änderungen
 
+## 1.6.1
+- **Neuer Space-Typ „Schule / Modul“** mit den Spalten Mitschriften, Aufträge, Zu lernen, Repetieren und Erledigt, am besten einer pro Modul.
+- **Space-Typ „Lernen“ überarbeitet:** Neu, Zu lernen, Am Lernen, Repetieren, Sitzt.
+- **5 Schul-Vorlagen:**
+  - Lektion / Mitschrift
+  - Auftrag / Hausaufgabe (mit Checkliste, Erinnerung 1 Tag vorher)
+  - Prüfung (mit Lernplan und Checkliste, Erinnerung 1 Tag vorher)
+  - Lernkarte (Frage und Antwort)
+  - Zusammenfassung
+- Jede Vorlage bringt ein farbiges Label mit.
+- Die Schul-Vorlagen werden beim Anlegen eines Schul- oder Lern-Space automatisch ergänzt, sonst unter Einstellungen → Vorlagen → „Schul-Vorlagen hinzufügen“.
+
 ## 1.6.0
 - **Erinnerungen:** Im Editor wählst du bei „Erinnerung“, wann du erinnert werden willst: zum Termin, 5 Min. bis 1 Tag vorher, zu einer eigenen Zeit oder gar nicht.
 - **PC:**

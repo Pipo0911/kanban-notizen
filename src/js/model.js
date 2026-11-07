@@ -87,7 +87,7 @@ function fromV2(s){
 function fromV1(d){return fromV2({id:uid(),name:d.project?.name||'Altes Board',statuses:arr(d.columns).map((c,k,a)=>({id:c.id,name:c.name,cat:k===a.length-1&&a.length>1?'done':'todo'})),
   issues:arr(d.issues).map(i=>({id:i.id,title:i.title,desc:i.desc,labels:i.labels,statusId:i.col,due:i.due,order:i.order,created:i.created,updated:i.updated,history:[1,2],comments:i.comments,prio:i.prio}))})}
 function normSettings(x={}){return{theme:['system','light','dark'].includes(x.theme)?x.theme:'system',jiraUrl:typeof x.jiraUrl==='string'?x.jiraUrl.trim():'',
-  templates:Array.isArray(x.templates)?x.templates.filter(t=>t&&t.name).map(t=>({id:okId(t.id)?t.id:uid(),name:String(t.name),color:NC[t.color]?t.color:'default',title:String(t.title||''),body:String(t.body||''),tags:arr(t.tags).map(String),checklist:arr(t.checklist).map(String).filter(Boolean)})):DEFAULT_TPL(),
+  templates:Array.isArray(x.templates)?x.templates.filter(t=>t&&t.name).map(t=>({id:okId(t.id)?t.id:uid(),name:String(t.name),color:NC[t.color]?t.color:'default',title:String(t.title||''),body:String(t.body||''),tags:arr(t.tags).map(String),checklist:arr(t.checklist).map(String).filter(Boolean),remind:/^(off|rel:\d{1,5})$/.test(t.remind||'')?t.remind:''})):DEFAULT_TPL(),
   labels:(()=>{const o={};if(x.labels&&typeof x.labels==='object')for(const[k,v]of Object.entries(x.labels))if(LC[v]&&k.trim())o[k]=v;return o})(),notify:!!x.notify,osNotify:x.osNotify!==false,lastBackup:x.lastBackup||'',
   daily:{space:okId(x.daily&&x.daily.space)?String(x.daily.space):'',tpl:x.daily&&typeof x.daily.tpl==='string'?x.daily.tpl:DAILY_TPL},round:[0,5,6,10,15,30].includes(+x.round)?+x.round:0}}
 function normDB(d){

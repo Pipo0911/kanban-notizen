@@ -14,7 +14,14 @@ async function createSpace(folder){
   if(typeof folder!=='string')folder='';
   const r=await ask({title:'Space erstellen',text:'Ein Space ist ein eigenes Board mit eigenen Spalten und Notizen – z. B. pro Kunde, Projekt oder für die Schule.',
     fields:[{name:'name',label:'Name',required:true,maxlength:60,placeholder:'z. B. Kunde Muster AG'},{name:'tpl',label:'Vorlage',type:'select',options:Object.entries(TEMPLATES).map(([k,t])=>[k,`${t.n} – ${t.d}`])},{name:'color',label:'Farbe',type:'select',options:SPCOL.map((c,k)=>[c,SPCOLN[k]]),value:SPCOL[DB.spaces.length%SPCOL.length]},{name:'folder',label:'Kategorie',type:'select',options:folderOptions(),value:folder}],ok:'Erstellen'});
-  if(!r)return;const s=makeSpace(r.name.trim(),r.color,r.tpl);s.folder=r.folder;expandTo(s.folder);DB.spaces.push(s);DB.ui.view='board';goSpace(s.id);save();toast(`Space „${s.name}“ erstellt`)}
+  if(!r)return;const s=makeSpace(r.name.trim(),r.color,r.tpl);s.folder=r.folder;expandTo(s.folder);DB.spaces.push(s);
+  let extra='';if(r.tpl==='schule'||r.tpl==='lernen'){const k=addSchoolTemplates();if(k)extra=` · ${k} Schul-Vorlagen hinzugefügt`;schoolGuide(s,r.tpl)}
+  DB.ui.view='board';goSpace(s.id);save();toast(`Space „${s.name}“ erstellt${extra}`)}
+/* Kurze Anleitung als erste Karte im neuen Schul-Space */
+function schoolGuide(s,tpl){const body=tpl==='schule'
+  ?'So nutzt du diesen Space – am besten **einen pro Modul** (z. B. „M426 Agile Entwicklung“):\n\n- **Mitschriften:** Vorlage „Lektion / Mitschrift“ pro Lektion.\n- **Aufträge:** Vorlage „Auftrag“, Abgabetermin setzen – du wirst 1 Tag vorher erinnert.\n- **Zu lernen → Repetieren → Erledigt:** Lernkarten und Zusammenfassungen nach rechts schieben, sobald du sie kannst.\n- **Prüfung:** Vorlage „Prüfung“ mit Lernplan und Checkliste, Erinnerung 1 Tag vorher.\n\nTipp: Mit `[[` verlinkst du Mitschrift, Zusammenfassung und Prüfung miteinander. Diese Karte kannst du löschen.'
+  :'So nutzt du diesen Space:\n\n- Neue Fragen als **Lernkarte** in „Neu“.\n- Beim Lernen nach rechts schieben: **Zu lernen → Am Lernen → Repetieren → Sitzt**.\n- Karten in „Repetieren“ ein paar Tage später nochmals durchgehen.\n\nDiese Karte kannst du löschen.';
+  newNote(s,{title:'So funktioniert dieser Space',body,color:'blue',tags:['beispiel'],pinned:true})}
 async function deleteSpace(s){
   if(DB.spaces.length<2){toast('Der letzte Space kann nicht gelöscht werden.');return}
   const r=await ask({title:`Space „${s.name}“ löschen?`,text:`Der Space wird gelöscht. Seine <b>${s.notes.length}</b> Notizen (auch archivierte) landen im Papierkorb und lassen sich dort ${TRASH_DAYS} Tage lang wiederherstellen. Tippe zur Bestätigung den Namen ein.`,fields:[{name:'k',label:'Name des Space',required:true}],ok:'Endgültig löschen',danger:true,

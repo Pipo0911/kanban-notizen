@@ -50,9 +50,28 @@ const TEMPLATES={
   arbeit:{n:'Arbeit',d:'Eingang, In Arbeit, Warten auf …, Erledigt',cols:[['Eingang','yellow'],['In Arbeit','blue'],['Warten auf …','orange'],['Erledigt','green',1]]},
   notizen:{n:'Notizen',d:'Ideen, In Arbeit, Erledigt',cols:[['Ideen','yellow'],['In Arbeit','blue'],['Erledigt','green',1]]},
   woche:{n:'Wochenplanung',d:'Später, Diese Woche, Heute, Erledigt',cols:[['Später','grey'],['Diese Woche','blue'],['Heute','orange'],['Erledigt','green',1]]},
-  lernen:{n:'Lernen',d:'Zu lernen, Am Lernen, Kann ich',cols:[['Zu lernen','purple'],['Am Lernen','blue'],['Kann ich','green',1]]},
+  schule:{n:'Schule / Modul',d:'Mitschriften, Aufträge, Zu lernen, Repetieren, Erledigt',cols:[['Mitschriften','blue'],['Aufträge','orange'],['Zu lernen','purple'],['Repetieren','yellow'],['Erledigt','green',1]]},
+  lernen:{n:'Lernen',d:'Neu, Zu lernen, Am Lernen, Repetieren, Sitzt',cols:[['Neu','grey'],['Zu lernen','purple'],['Am Lernen','blue'],['Repetieren','yellow'],['Sitzt','green',1]]},
   leer:{n:'Leer',d:'eine Spalte „Notizen“',cols:[['Notizen','yellow']]}
 };
+/* Vorlagen für die Schule – werden beim Anlegen eines Schul- oder Lern-Space automatisch ergänzt */
+const SCHOOL_LABELS={lektion:'blue',auftrag:'orange',prüfung:'red',lernkarte:'purple',zusammenfassung:'green'};
+const SCHOOL_TPL=()=>[
+  {id:uid(),name:'Lektion / Mitschrift',color:'blue',title:'Lektion {datum} – ',tags:['lektion'],checklist:[],remind:'',
+   body:'**Modul / Fach:** \n**Lehrperson:** \n**Thema:** \n\n## Lernziele\n- \n\n## Kernaussagen\n- \n\n## Begriffe\n- **Begriff:** Erklärung\n\n## Beispiel / Code\n```\n\n```\n\n## Unklar – nachfragen\n- [ ] \n\n## In 3 Sätzen\n1. \n2. \n3. '},
+  {id:uid(),name:'Auftrag / Hausaufgabe',color:'orange',title:'Auftrag: ',tags:['auftrag'],remind:'rel:1440',
+   checklist:['Auftrag gelesen und verstanden','Unklarheiten geklärt','Umsetzung','Dokumentation / Reflexion','Abgegeben'],
+   body:'**Modul:** \n**Abgabe:** (Termin unten setzen – Erinnerung 1 Tag vorher)\n**Einzel / Gruppe:** \n\n## Auftrag\n\n\n## Bewertungskriterien\n- \n\n## Vorgehen\n- [ ] \n\n## Abgabe / Link\n'},
+  {id:uid(),name:'Prüfung',color:'red',title:'Prüfung: ',tags:['prüfung'],remind:'rel:1440',
+   checklist:['Stoff und Lernziele geklärt','Zusammenfassung geschrieben','Übungsaufgaben gelöst','Unklares mit Lehrperson geklärt','Repetition am Vortag','Material bereit (Laptop, Ladegerät, Hilfsmittel)'],
+   body:'**Modul:** \n**Datum / Zeit:** (Termin unten setzen)\n**Raum:** \n**Hilfsmittel erlaubt:** \n\n## Prüfungsstoff\n- \n\n## Lernplan\n- [ ] \n\n## Noch unsicher\n- \n\n## Nach der Prüfung\n**Note:** \n**Gut gelaufen:** \n**Nächstes Mal anders:** '},
+  {id:uid(),name:'Lernkarte',color:'purple',title:'❓ ',tags:['lernkarte'],checklist:[],remind:'',
+   body:'## Frage\n\n\n## Antwort\n\n\n## Merkhilfe / Beispiel\n- \n\n*Verschiebe die Karte nach rechts, sobald du sie kannst.*'},
+  {id:uid(),name:'Zusammenfassung',color:'green',title:'Zusammenfassung: ',tags:['zusammenfassung'],checklist:[],remind:'',
+   body:'**Modul / Thema:** \n**Quellen:** Unterricht, Skript S. …\n\n## Das Wichtigste\n1. \n2. \n3. \n\n## Begriffe\n- **Begriff:** Erklärung\n\n## Zusammenhänge\n\n\n## Typische Prüfungsfragen\n- [ ] \n\n## Siehe auch\n- [[ ]]'}
+];
+function addSchoolTemplates(){const S=DB.settings,have=new Set(S.templates.map(t=>t.name));const add=SCHOOL_TPL().filter(t=>!have.has(t.name));
+  S.templates.push(...add);for(const[k,c]of Object.entries(SCHOOL_LABELS))if(!S.labels[k])S.labels[k]=c;return add.length}
 const DEFAULT_TPL=()=>[
   {id:uid(),name:'Telefonnotiz',color:'yellow',title:'Telefonat {datum}',tags:['telefon'],checklist:[],body:'**Firma / Kunde:** \n**Kontakt:** \n**Telefon / E-Mail:** \n\n## Anliegen\n\n\n## Vereinbart / nächster Schritt\n- '},
   {id:uid(),name:'Störung / Incident',color:'orange',title:'Störung: ',tags:['störung'],checklist:['Ticket erfasst','Kunde informiert','Ursache gefunden','Gelöst und dokumentiert'],body:'**Kunde:** \n**Betroffen:** \n**Seit:** {datum} \n**Ticket:** \n\n## Symptome\n- \n\n## Massnahmen\n- '},

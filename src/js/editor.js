@@ -3,7 +3,7 @@
 'use strict';
 /* ============ Editor ============ */
 function createNote(sid,colId,tpl){const s=spaceById(sid)||sp();const n=newNote(s,{colId:colId||firstOpenCol(s).id});n._new=true;if(tpl)applyTpl(n,tpl);openNote(s.id,n.id)}
-function applyTpl(n,t){t.tags.forEach(ensureLabel);n.title=fillVars(t.title);n.body=fillVars(t.body);n.color=t.color;n.tags=[...new Set([...n.tags,...t.tags])];n.checklist=t.checklist.map(x=>ck(fillVars(x)));n.updated=now()}
+function applyTpl(n,t){t.tags.forEach(ensureLabel);n.title=fillVars(t.title);n.body=fillVars(t.body);n.color=t.color;n.tags=[...new Set([...n.tags,...t.tags])];n.checklist=t.checklist.map(x=>ck(fillVars(x)));if(t.remind)n.remind=t.remind;n.updated=now()}
 async function addImages(files,n,after){
   for(const f of files){if(!/^image\//.test(f.type))continue;
     try{const data=await shrink(f);n.images.push({id:uid(),data,name:f.name||'Bild'});n.updated=now()}catch(e){toast('Bild konnte nicht gelesen werden')}}
