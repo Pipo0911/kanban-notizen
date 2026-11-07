@@ -1,3 +1,4 @@
+// © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE
 //! Kanban Notizen – Desktop-Hülle.
 //!
 //! Die eigentliche App ist `src/index.html`. Rust kümmert sich nur um das

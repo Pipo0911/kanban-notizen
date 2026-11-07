@@ -146,3 +146,9 @@ npm run build    # Installer bauen → src-tauri\target\release\bundle\
 ## Hinweis zur Signatur
 
 Die Installer haben keine Code-Signatur. Beim ersten Start zeigt Windows SmartScreen deshalb „Der Computer wurde durch Windows geschützt“. Über **Weitere Informationen → Trotzdem ausführen** geht es weiter. Updates sind trotzdem mit einem eigenen Schlüssel signiert und werden vor der Installation geprüft.
+
+## Lizenz
+
+© 2026 Philipp Seewer. **Alle Rechte vorbehalten.**
+
+Der Quellcode ist öffentlich einsehbar. Das ist aber keine Erlaubnis, ihn zu kopieren, zu verändern oder weiterzugeben. Erlaubt sind das Ansehen sowie das Installieren und Benutzen der offiziellen Installer und der Web-App für den persönlichen Gebrauch. Details stehen in [LICENSE](LICENSE). Bestandteile von Drittanbietern (`src/vendor/`, Tauri) stehen unter ihren eigenen Lizenzen.

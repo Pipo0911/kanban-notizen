@@ -1,3 +1,4 @@
+/* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
 /* Kanban Notizen · Service Worker der Web-App: läuft offline, holt Updates im Hintergrund.
    VERSION wird beim Veröffentlichen (GitHub Pages) automatisch ersetzt. */
 const VERSION='dev';

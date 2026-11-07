@@ -1,3 +1,4 @@
+/* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
 /* Kanban Notizen · Spalten und Spaces */
 'use strict';
 /* ============ Spalten & Spaces ============ */

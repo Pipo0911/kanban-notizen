@@ -1,3 +1,4 @@
+/* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
 /* Kanban Notizen · Handy/iPhone: Spalten-Leiste, Format-Leiste, Tastatur, Wischgesten, App-Badge, Installationshinweis */
 'use strict';
 const isPhone=()=>matchMedia('(max-width:700px)').matches;

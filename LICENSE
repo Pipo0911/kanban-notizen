@@ -1,0 +1,56 @@
+Kanban Notizen
+Copyright (c) 2026 Philipp Seewer. Alle Rechte vorbehalten. All rights reserved.
+
+DEUTSCH
+
+Diese Software einschliesslich Quellcode, Oberfläche, Grafiken, Dokumentation und
+Server-Funktionen ("Software") ist urheberrechtlich geschützt und Eigentum von
+Philipp Seewer.
+
+Dass der Quellcode öffentlich einsehbar ist, bedeutet keine Erlaubnis zur Nutzung.
+Ohne vorherige schriftliche Zustimmung des Rechteinhabers ist es nicht gestattet,
+die Software oder Teile davon
+
+  - zu kopieren, zu vervielfältigen oder weiterzugeben,
+  - zu verändern, zu übersetzen oder darauf aufbauende Werke zu erstellen,
+  - zu veröffentlichen, zu verbreiten, zu vermieten, zu verkaufen oder
+    unterzulizenzieren,
+  - in andere Software, Produkte oder Dienste einzubauen.
+
+Erlaubt ist einzig das Ansehen des Quellcodes auf GitHub sowie das Installieren
+und Benutzen der offiziell veröffentlichten Installer und der Web-App für den
+persönlichen Gebrauch.
+
+Die Software wird ohne jede Gewährleistung bereitgestellt. Der Rechteinhaber
+haftet nicht für Schäden oder Datenverluste, die aus der Nutzung entstehen,
+soweit gesetzlich zulässig.
+
+Anfragen zur Nutzung: https://github.com/Pipo0911
+
+ENGLISH
+
+This software, including its source code, user interface, graphics,
+documentation and server functions (the "Software"), is protected by copyright
+and owned by Philipp Seewer.
+
+The source code being publicly viewable does not grant any license. Without
+prior written permission from the copyright holder you may not copy, reproduce,
+modify, translate, create derivative works of, publish, distribute, rent, sell,
+sublicense, or incorporate the Software or any part of it into other software,
+products or services.
+
+The only permitted uses are viewing the source code on GitHub and installing
+and using the officially published installers and web app for personal use.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. TO THE EXTENT
+PERMITTED BY LAW, THE COPYRIGHT HOLDER SHALL NOT BE LIABLE FOR ANY DAMAGES OR
+DATA LOSS ARISING FROM THE USE OF THE SOFTWARE.
+
+DRITTANBIETER / THIRD-PARTY COMPONENTS
+
+Die folgenden Bestandteile stammen von Dritten und stehen unter ihren eigenen
+Lizenzen; für sie gilt diese Lizenz nicht:
+
+  - src/vendor/qrcode.js  - qrcode-generator, (c) Kazuhiko Arase, MIT License
+  - src/vendor/jsqr.js    - jsQR, (c) Cosmo Wolfe, Apache License 2.0
+  - Tauri und die Tauri-Plugins (Rust-Abhängigkeiten), MIT/Apache-2.0

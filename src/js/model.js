@@ -1,3 +1,4 @@
+/* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
 /* Kanban Notizen · Datenmodell, Normalisierung, Übernahme alter Versionen */
 'use strict';
 /* ============ Modell ============ */

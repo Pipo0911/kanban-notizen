@@ -1,3 +1,4 @@
+/* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
 /* Kanban Notizen · Grundlagen: Hilfsfunktionen, Konstanten, Symbole */
 'use strict';
 /* ============ Grundlagen ============ */

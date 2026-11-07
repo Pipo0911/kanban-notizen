@@ -1,3 +1,4 @@
+/* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
 /* Kanban Notizen · Alle Notizen, Archiv, Heute */
 'use strict';
 /* ============ Pinnwand, Archiv, Heute ============ */

@@ -3,6 +3,8 @@ name = "kanban-notizen"
 version = "1.6.0"
 description = "Kanban Notizen – Notizen, Termine und Zeiterfassung als Desktop-App"
 authors = ["Philipp Seewer"]
+license-file = "../LICENSE"
+publish = false
 edition = "2021"
 
 [lib]

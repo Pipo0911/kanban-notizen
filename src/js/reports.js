@@ -1,3 +1,4 @@
+/* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
 /* Kanban Notizen · Zeitbericht, Drucken, Markdown-Export */
 'use strict';
 /* ============ Zeiterfassung (Bericht) ============ */

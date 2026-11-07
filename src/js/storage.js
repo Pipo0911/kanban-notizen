@@ -1,3 +1,4 @@
+/* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
 /* Kanban Notizen · Speichern in die Datendatei, Desktop-Verhalten, Updates */
 'use strict';
 /* ============ Speichern (Desktop-App) ============ */

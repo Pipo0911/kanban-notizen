@@ -1,3 +1,4 @@
+/* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
 /* Kanban Notizen · Globale Ereignisse und Start */
 'use strict';
 /* ============ Globale Ereignisse ============ */

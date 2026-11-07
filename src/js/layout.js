@@ -1,3 +1,4 @@
+/* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
 /* Kanban Notizen · Seitenleiste, Kopfzeile, Filter, Kategorien-Baum */
 'use strict';
 /* ============ Navigation & Grundgerüst ============ */

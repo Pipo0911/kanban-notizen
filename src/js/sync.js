@@ -1,3 +1,4 @@
+/* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
 /* Kanban Notizen · Abgleich zwischen Geräten (PC ↔ iPhone) über Supabase.
    - Ende-zu-Ende-verschlüsselt: Schlüssel = PBKDF2(Passwort, Salz), jedes Element mit AES-GCM; der Server sieht nur Ciphertext.
    - Zugang über einen geheimen Sync-Code (kein Konto, keine E-Mail).

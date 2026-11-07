@@ -1,3 +1,4 @@
+/* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
 /* Layout: Seitenleiste (Heute, Zeit, Spaces) · rechts Spalten-Board mit farbigen Notizkarten */
 :root{
   --bg:#fbfaf8;--side:#f3f2ef;--surface:#fff;--col:#efeeea;--text:#1f2430;--text2:#4a5060;--muted:#727786;--border:#dedcd6;
