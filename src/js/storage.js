@@ -45,7 +45,8 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 window.addEventListener('focus',checkFileChanged);
 window.addEventListener('beforeunload',()=>{if(tv.dirty)tauriWrite()});
 function setStatus(t,err){statusMsg=t;statusErr=!!err;const el=$('#status');if(el){el.textContent=t;el.className='status'+(statusErr?' err':'')}}
-const busy=()=>$('#dlg').open||$('#dlg2').open||!!$('.inline-form')||!!drag;
+/* Beschäftigt = gerade wird etwas bearbeitet; dann keine fremden Änderungen übernehmen */
+const busy=()=>$('#dlg').open||$('#dlg2').open||!!$('.inline-form')||!!drag||Date.now()-(window.__pgTouch||0)<4000||!!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#bkMain'));
 const jsonFilter=[{name:'Kanban-Notizen',extensions:['json']}];
 async function tauriNewFile(){const p=await TAURI.dialog.save({defaultPath:'kanban-notizen.json',filters:jsonFilter});if(!p)return;
   await tInvoke('set_data_path',{path:p});await tauriInfo();await tauriWrite();render();toast('Notizen werden jetzt hier gespeichert: '+tv.path)}

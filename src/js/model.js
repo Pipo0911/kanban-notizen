@@ -37,7 +37,7 @@ function isoWeek(ds){const d=new Date(ds+'T12:00:00');d.setDate(d.getDate()+3-(d
 
 function makeSpace(name,color,tpl,desc=''){const t=TEMPLATES[tpl]||TEMPLATES.notizen;
   return{id:uid(),name,color,desc,created:now(),columns:t.cols.map(([n,c,done])=>({id:uid(),name:n,color:c,done:!!done})),notes:[]}}
-function blankNote(){return{id:uid(),title:'',body:'',color:'default',prio:'',tags:[],colId:'',pinned:false,fav:false,daily:'',remind:'',kind:'',checklist:[],due:'',dueTime:'',repeat:'',remindedFor:'',time:[],timerStart:'',images:[],archived:false,created:now(),updated:now()}}
+function blankNote(){return{id:uid(),title:'',body:'',color:'default',prio:'',tags:[],colId:'',pinned:false,fav:false,daily:'',remind:'',kind:'',parent:'',checklist:[],due:'',dueTime:'',repeat:'',remindedFor:'',time:[],timerStart:'',images:[],archived:false,created:now(),updated:now()}}
 function newNote(s,d={}){
   const n=Object.assign(blankNote(),d);
   if(!s.columns.some(c=>c.id===n.colId))n.colId=firstOpenCol(s).id;
@@ -63,7 +63,7 @@ function normNote(n,s,k){
   const cols=new Set(s.columns.map(c=>c.id));
   return{id:okId(n.id)?String(n.id):uid(),title:String(n.title||''),body:String(n.body||''),color:NC[n.color]?n.color:'default',
     tags:[...new Set(arr(n.tags).map(t=>String(t).trim()).filter(Boolean))],colId:cols.has(n.colId)?n.colId:s.columns[0].id,
-    kind:n.kind==='page'?'page':'',page:n.kind==='page'?normPage(n.page):undefined,
+    kind:n.kind==='page'?'page':'',parent:okId(n.parent)?String(n.parent):'',page:n.kind==='page'?normPage(n.page):undefined,
     pinned:!!n.pinned,fav:!!n.fav,daily:isDate(n.daily)?n.daily:'',checklist:arr(n.checklist).filter(c=>c&&typeof c.text==='string').map(c=>({id:okId(c.id)?String(c.id):uid(),text:c.text,done:!!c.done})),
     due:isDate(n.due)?n.due:'',dueTime:isDate(n.due)&&isTime(n.dueTime)?n.dueTime:'',repeat:REPEAT[n.repeat]!==undefined?n.repeat:'',remind:/^(off|rel:\d{1,5}|at:\d{4}-\d{2}-\d{2}T\d{2}:\d{2})$/.test(n.remind||'')?n.remind:'',remindedFor:String(n.remindedFor||''),
     time:arr(n.time).filter(t=>t&&isDate(t.day)&&+t.min>0).map(t=>({id:okId(t.id)?String(t.id):uid(),day:t.day,min:Math.round(+t.min),text:String(t.text||''),start:t.start||'',end:t.end||''})),

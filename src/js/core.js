@@ -103,6 +103,6 @@ const SVG={
 let DB,statusMsg='',statusErr=false;
 const ui={filters:blankF(),stab:'details',gtab:'general',edTab:'write',period:'week'};
 function blankF(){return{q:'',tag:'',prio:'',color:'',due:'',pinned:false}}
-const SPACE_VIEWS=['board','wall','archive','spacecfg'],GLOBAL_VIEWS=['today','time','trash','settings'];
+const SPACE_VIEWS=['board','book','wall','archive','spacecfg'],GLOBAL_VIEWS=['today','time','trash','settings'];
 const WDL=['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
 const DAILY_TPL='## Fokus heute\n- \n\n## Notizen\n\n\n## Erledigt\n- ';

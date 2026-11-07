@@ -1,5 +1,16 @@
 # Änderungen
 
+## 1.8.0
+- **Notizbuch-Ansicht wie in OneNote:** neuer Reiter „Notizbuch“ in jedem Space.
+  - **Abschnitte:** Oben stehen die Abschnitte. Das sind die Spalten deines Boards.
+  - **Seitenliste:** Links stehen die Seiten, mit **Unterseiten** zum Auf- und Zuklappen.
+  - **Bearbeiten:** Rechts bearbeitest du die gewählte Seite direkt, ohne Fenster.
+  - **Seitenmenü (⋯):** Unterseite hinzufügen, nach oben oder unten, einrücken oder ausrücken, in einen anderen Abschnitt verschieben, löschen.
+  - Board und Notizbuch zeigen dieselben Notizen. Was du hier verschiebst, siehst du dort auch.
+  - Normale Notizen erscheinen ebenfalls und lassen sich mit einem Klick in eine freie Seite umwandeln.
+  - Auf dem iPhone siehst du zuerst die Seitenliste und mit „‹ Seiten“ kommst du zurück.
+- Enter im Seitentitel springt direkt in den ersten Textkasten.
+
 ## 1.7.0
 - **Freie Seite wie in OneNote:** Beim Erstellen wählst du oben zwischen „📝 Notiz“ und „📄 Seite“.
   - **Text:** Irgendwo hinklicken oder tippen und losschreiben.

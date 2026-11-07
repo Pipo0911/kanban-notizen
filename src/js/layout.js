@@ -125,7 +125,7 @@ function renderHead(){const v=DB.ui.view,h=$('#head');
     h.innerHTML=`<div class="head-row" style="padding-bottom:12px"><button class="icon-btn menu-btn" data-act="menu" aria-label="Menü">☰</button><div class="ttl"><div class="crumb">${v==='today'?esc(new Date().toLocaleDateString('de-CH',{weekday:'long',day:'numeric',month:'long',year:'numeric'}))+' · KW '+isoWeek(today()):'Übersicht'}</div><h1>${T}</h1></div><span class="spacer"></span>${st}${timerPill()}${sb}${v==='today'?'<button class="btn primary" data-act="create" title="Taste N">+ Notiz</button>':''}</div>`;return}
   const s=sp(),na=s.notes.filter(n=>n.archived).length;
   h.innerHTML=`<div class="head-row"><button class="icon-btn menu-btn" data-act="menu" aria-label="Menü">☰</button><span class="sav lg" style="background:${esc(s.color)}">${esc((s.name.trim()[0]||'?').toUpperCase())}</span><div class="ttl"><div class="crumb">${spacePath(s).length?spacePath(s).map(esc).join(' › '):'Space'}</div><h1>${esc(s.name)}</h1></div><span class="spacer"></span>${st}${timerPill()}${sb}<button class="btn primary" data-act="create" title="Taste N">+ Notiz</button></div>
-  <nav class="tabs">${[['board','Board'],['wall','Alle Notizen'],['archive','Archiv'+(na?`<span class="cnt">${na}</span>`:'')],['spacecfg','Einstellungen']].map(([k,n])=>`<button class="tab${v===k?' on':''}" data-act="view" data-v="${k}">${n}</button>`).join('')}</nav>`}
+  <nav class="tabs">${[['board','Board'],['book','Notizbuch'],['wall','Alle Notizen'],['archive','Archiv'+(na?`<span class="cnt">${na}</span>`:'')],['spacecfg','Einstellungen']].map(([k,n])=>`<button class="tab${v===k?' on':''}" data-act="view" data-v="${k}">${n}</button>`).join('')}</nav>`}
 function renderFbar(){const v=DB.ui.view,el=$('#fbar');if(v!=='board'&&v!=='wall'){el.innerHTML='';return}
   const s=sp(),f=ui.filters,tags=tagsOf(s);
   const nAct=['tag','prio','color','due'].filter(k=>f[k]).length+(f.pinned?1:0);
@@ -146,7 +146,8 @@ function renderFbar(){const v=DB.ui.view,el=$('#fbar');if(v!=='board'&&v!=='wall
   const so=$('#fSort');if(so)so.onchange=e=>{s.sort=e.target.value;save(true);renderContent()}}
 function renderContent(){const c=$('#content'),old=$('#bw'),v=DB.ui.view,key=v+(v==='spacecfg'?ui.stab:'')+(v==='settings'?ui.gtab:'')+(SPACE_VIEWS.includes(v)?DB.active:'');
   const sc=old&&old.dataset.k===key?{l:old.scrollLeft,t:old.scrollTop,cols:$$('.col-list',old).map(x=>x.scrollTop)}:null;
-  ({board:renderBoard,wall:renderWall,archive:renderArchive,spacecfg:renderSpaceCfg,today:renderToday,time:renderTime,trash:renderTrash,settings:renderSettings}[v]||renderBoard)(c);
+  if(v!=='book'&&typeof bookCtl!=='undefined'&&bookCtl)leaveBookPage();
+  ({board:renderBoard,book:renderBook,wall:renderWall,archive:renderArchive,spacecfg:renderSpaceCfg,today:renderToday,time:renderTime,trash:renderTrash,settings:renderSettings}[v]||renderBoard)(c);
   const nw=$('#bw');if(nw){nw.dataset.k=key;if(sc){nw.scrollLeft=sc.l;nw.scrollTop=sc.t;$$('.col-list',nw).forEach((x,k)=>{if(sc.cols[k])x.scrollTop=sc.cols[k]})}}}
 function matches(s,n){const f=ui.filters;
   if(f.q){const q=f.q.trim().toLowerCase();if(q&&![n.title,n.body,n.tags.join(' '),n.checklist.map(c=>c.text).join(' ')].join('\n').toLowerCase().includes(q))return false}

@@ -202,6 +202,7 @@ function mountPage(host,n,onChange){
 
   /* Tastatur: Rückgängig und Löschen, wenn gerade kein Text bearbeitet wird */
   host.tabIndex=-1;
+  ['pointerdown','keydown','input'].forEach(ev=>host.addEventListener(ev,()=>{window.__pgTouch=Date.now()},true));
   host.addEventListener('keydown',e=>{const a=document.activeElement,editing=a&&a.classList&&a.classList.contains('pg-edit');if(editing)return;
     const k=e.key.toLowerCase();
     if((e.ctrlKey||e.metaKey)&&k==='z'){e.preventDefault();$(e.shiftKey?'#pgRedo':'#pgUndo',host).click()}
@@ -211,6 +212,8 @@ function mountPage(host,n,onChange){
   drawBar();drawAll();
   const ro=new ResizeObserver(()=>fit());ro.observe(sc);
   return{destroy:()=>{ro.disconnect();host.removeEventListener('paste',onPaste,true)},
+    focusText:()=>{st.tool='text';drawBar();const first=pg.items.filter(x=>x.t==='text').sort((a,b)=>a.y-b.y||a.x-b.x)[0];
+      if(first){const e=$(`[data-id="${first.id}"] .pg-edit`,cv);if(e){e.focus();const r=document.createRange();r.selectNodeContents(e);r.collapse(false);const sl=getSelection();sl.removeAllRanges();sl.addRange(r)}}else addText(48,48)},
     flush:()=>{const a=document.activeElement;if(a&&a.classList&&a.classList.contains('pg-edit'))a.blur()}}}
 
 /* Verkleinertes Abbild der Seite für die Karte auf dem Board */

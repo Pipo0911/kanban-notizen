@@ -98,7 +98,7 @@ function openNote(sid,id,opt={}){
     v.split(/\n|;\s*/).map(x=>x.trim()).filter(Boolean).forEach(x=>n.checklist.push(ck(x)));e.target.value='';touch();drawCk()};
   $('#ckClear',dlg).onclick=()=>{n.checklist=n.checklist.filter(c=>!c.done);touch();drawCk()};
   $('#edTitle',dlg).addEventListener('input',e=>{n.title=e.target.value;touch();const tb=$('#tplbar',dlg);if(tb&&e.target.value)tb.remove()});
-  $('#edTitle',dlg).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ui.edTab='write';drawText();$('#edBody',dlg).focus()}});
+  $('#edTitle',dlg).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();if(pgCtl){pgCtl.focusText();return}ui.edTab='write';drawText();$('#edBody',dlg).focus()}});
   $$('[data-tpl]',dlg).forEach(b=>b.onclick=()=>{const t=DB.settings.templates.find(x=>x.id===b.dataset.tpl);if(!t)return;const col=n.colId;applyTpl(n,t);n.colId=col;touch();n._new=true;openNote(s.id,n.id);const ti=$('#edTitle');if(ti){ti.focus();ti.setSelectionRange(ti.value.length,ti.value.length)}});
   $('#edCol',dlg).onchange=e=>{const wasDone=isDone(s,n);n.colId=e.target.value;n.order=maxOrder(s,n.colId)+1;afterDone(s,n,wasDone);touch();$('#edRep',dlg).value=n.repeat};
   $('#edDue',dlg).onchange=e=>{n.due=e.target.value;$('#edTime',dlg).disabled=!n.due;if(!n.due){n.dueTime='';$('#edTime',dlg).value=''}n.remindedFor='';touch();drawRem()};
