@@ -2,9 +2,17 @@
 /* Kanban Notizen · Notiz-Editor */
 'use strict';
 /* ============ Editor ============ */
-function createNote(sid,colId,tpl,kind){const s=spaceById(sid)||sp();const n=newNote(s,{colId:colId||firstOpenCol(s).id});n._new=true;if(tpl)applyTpl(n,tpl);if(kind==='page')toPage(n);openNote(s.id,n.id)}
+function toNote(n){if(n.kind!=='page')return;n.pageText=pageText(n.page);n.body=n.pageText;n.kind='';n.updated=now()}
+function createNote(sid,colId,tpl,kind){const s=spaceById(sid)||sp();if(kind===undefined&&!tpl)kind=s.kind;const n=newNote(s,{colId:colId||firstOpenCol(s).id});n._new=true;if(tpl)applyTpl(n,tpl);if(kind==='page')toPage(n);openNote(s.id,n.id)}
 /* Notiz in eine freie Seite umwandeln: vorhandener Text wird zum ersten Textkasten */
-function toPage(n){if(n.kind==='page')return;n.kind='page';n.page=blankPage();
+function toPage(n){if(n.kind==='page')return;
+  /* Gab es die Seite schon (vorher in eine Notiz umgewandelt): Anordnung wiederherstellen */
+  if(n.page&&(n.page.items.length||n.page.ink.length)){const same=(n.body||'').trim()===(n.pageText||'').trim();
+    if(!same){const tx=n.page.items.filter(x=>x.t==='text'),at=tx.sort((a,b)=>a.y-b.y||a.x-b.x)[0]||{x:40,y:40,w:560};
+      n.page.items=n.page.items.filter(x=>x.t!=='text');if(n.body.trim()){linkCtx='';n.page.items.push({id:uid(),t:'text',x:at.x,y:at.y,w:Math.max(at.w,420),html:cleanHTML(md(n.body).replace(/<a class="wl[^>]*>(.*?)<\/a>/g,'$1'))})}
+      toast('Der Text wurde in der Notiz geändert – er steht jetzt in einem Kasten, Bilder und Zeichnungen sind wieder an ihrem Platz.')}
+    n.kind='page';delete n.pageText;n.body=pageText(n.page);n.updated=now();return}
+  n.kind='page';n.page=blankPage();
   if(n.body.trim()){linkCtx='';n.page.items.push({id:uid(),t:'text',x:40,y:40,w:560,html:cleanHTML(md(n.body).replace(/<a class="wl[^>]*>(.*?)<\/a>/g,'$1'))})}
   n.images.forEach((im,k)=>n.page.items.push({id:uid(),t:'img',x:640+k*30,y:40+k*30,w:360,src:im.data}));n.images=[];n.updated=now()}
 function applyTpl(n,t){t.tags.forEach(ensureLabel);n.title=fillVars(t.title);n.body=fillVars(t.body);n.color=t.color;n.tags=[...new Set([...n.tags,...t.tags])];n.checklist=t.checklist.map(x=>ck(fillVars(x)));if(t.remind)n.remind=t.remind;n.updated=now()}
@@ -36,7 +44,7 @@ function openNote(sid,id,opt={}){
     <span class="spacer"></span><button type="button" class="icon-btn fav${n.fav?' on':''}" data-fav title="${n.fav?'Aus Favoriten entfernen':'Zu Favoriten'}" aria-label="Favorit" aria-pressed="${n.fav}">${n.fav?SVG.starOn:SVG.star}</button><button type="button" class="icon-btn${n.pinned?' on':''}" data-pin title="${n.pinned?'Lösen':'Anheften'}" aria-label="Anheften">${SVG.pin}</button><button type="button" class="icon-btn" data-close title="Schliessen (Esc)" aria-label="Schliessen">✕</button></div>
   <div class="ed-body">
     ${n._new||noteEmpty(n)?`<div class="kindbar" role="radiogroup" aria-label="Art"><span>Art:</span><button type="button" data-kind="" class="${n.kind?'':'on'}">📝 Notiz</button><button type="button" data-kind="page" class="${n.kind==='page'?'on':''}">📄 Seite <span class="muted">wie OneNote</span></button></div>`:''}
-    ${n._new&&n.kind!=='page'&&DB.settings.templates.length?`<div class="tplbar" id="tplbar">Vorlage: ${DB.settings.templates.map(t=>`<button type="button" data-tpl="${t.id}">${esc(t.name)}</button>`).join('')}</div>`:''}
+    ${n._new&&!pageHasContent(n)&&DB.settings.templates.length?`<div class="tplbar" id="tplbar">Vorlage: ${DB.settings.templates.map(t=>`<button type="button" data-tpl="${t.id}">${esc(t.name)}</button>`).join('')}</div>`:''}
     <input class="ed-title" id="edTitle" placeholder="Titel" value="${esc(n.title)}" maxlength="200" aria-label="Titel">
     <div class="seg"><button type="button" data-tab="write">Schreiben</button><button type="button" data-tab="preview">Vorschau</button><span class="spacer"></span><span class="hint" style="margin:0">**fett** · *kursiv* · - [ ] Aufgabe · # Titel · [[Notiz]] verlinken</span></div>
     <div id="edTextWrap"></div>
@@ -56,10 +64,10 @@ function openNote(sid,id,opt={}){
     <div class="ed-sec" id="blSec"></div>
     <div class="ed-info" id="edInfo"></div>
   </div>
-  <div class="ed-foot"><button type="button" class="btn sm ghost" data-copy title="Als Text in die Zwischenablage, z. B. für Tickets oder Mails">Kopieren</button><button type="button" class="btn sm ghost" data-print title="Drucken oder als PDF speichern">Drucken</button><button type="button" class="btn sm ghost" data-hist title="Frühere Versionen dieser Notiz">${SVG.hist} Verlauf${DB.history[n.id]?` <span class="muted">${DB.history[n.id].length}</span>`:''}</button><button type="button" class="btn sm ghost" data-astpl>Als Vorlage</button><button type="button" class="btn sm ghost" data-dup>Duplizieren</button><button type="button" class="btn sm ghost" data-move>Verschieben …</button><button type="button" class="btn sm ghost" data-arch>${n.archived?'Wiederherstellen':'Archivieren'}</button><span class="spacer"></span><button type="button" class="btn sm danger" data-del>Löschen</button><button type="button" class="btn sm primary" data-close>Fertig</button></div></div>`;
+  <div class="ed-foot"><button type="button" class="btn sm ghost" data-copy title="Als Text in die Zwischenablage, z. B. für Tickets oder Mails">Kopieren</button><button type="button" class="btn sm ghost" data-print title="Drucken oder als PDF speichern">Drucken</button><button type="button" class="btn sm ghost" data-hist title="Frühere Versionen dieser Notiz">${SVG.hist} Verlauf${DB.history[n.id]?` <span class="muted">${DB.history[n.id].length}</span>`:''}</button>${n._new||noteEmpty(n)?'':`<button type="button" class="btn sm ghost" data-conv>${n.kind==='page'?'In Notiz umwandeln':'In Seite umwandeln'}</button>`}<button type="button" class="btn sm ghost" data-astpl>Als Vorlage</button><button type="button" class="btn sm ghost" data-dup>Duplizieren</button><button type="button" class="btn sm ghost" data-move>Verschieben …</button><button type="button" class="btn sm ghost" data-arch>${n.archived?'Wiederherstellen':'Archivieren'}</button><span class="spacer"></span><button type="button" class="btn sm danger" data-del>Löschen</button><button type="button" class="btn sm primary" data-close>Fertig</button></div></div>`;
   const ed=$('#ed',dlg),tw=$('#edTextWrap',dlg);
   /* Art wählen */
-  $$('[data-kind]',dlg).forEach(b=>b.onclick=()=>{const k=b.dataset.kind;n._switch=true;if(k==='page')toPage(n);else{n.kind='';n.body=n.page?pageText(n.page):n.body;n.page=undefined}touch();openNote(s.id,n.id,{back:true})});
+  $$('[data-kind]',dlg).forEach(b=>b.onclick=()=>{const k=b.dataset.kind;if((k==='page')!==(n.kind==='page'))convKind(k)});
   /* Freie Seite: Fläche statt Textfeld, übrige Felder unter „Details“ */
   dlg.classList.toggle('page-mode',n.kind==='page');let pgCtl=null;
   if(n.kind==='page'){$('.seg',dlg).hidden=true;tw.hidden=true;
@@ -99,7 +107,7 @@ function openNote(sid,id,opt={}){
   $('#ckClear',dlg).onclick=()=>{n.checklist=n.checklist.filter(c=>!c.done);touch();drawCk()};
   $('#edTitle',dlg).addEventListener('input',e=>{n.title=e.target.value;touch();const tb=$('#tplbar',dlg);if(tb&&e.target.value)tb.remove()});
   $('#edTitle',dlg).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();if(pgCtl){pgCtl.focusText();return}ui.edTab='write';drawText();$('#edBody',dlg).focus()}});
-  $$('[data-tpl]',dlg).forEach(b=>b.onclick=()=>{const t=DB.settings.templates.find(x=>x.id===b.dataset.tpl);if(!t)return;const col=n.colId;applyTpl(n,t);n.colId=col;touch();n._new=true;openNote(s.id,n.id);const ti=$('#edTitle');if(ti){ti.focus();ti.setSelectionRange(ti.value.length,ti.value.length)}});
+  $$('[data-tpl]',dlg).forEach(b=>b.onclick=()=>{const t=DB.settings.templates.find(x=>x.id===b.dataset.tpl);if(!t)return;if(n.kind==='page'){n.kind='';n.page=undefined}const col=n.colId;applyTpl(n,t);n.colId=col;touch();n._new=true;openNote(s.id,n.id);const ti=$('#edTitle');if(ti){ti.focus();ti.setSelectionRange(ti.value.length,ti.value.length)}});
   $('#edCol',dlg).onchange=e=>{const wasDone=isDone(s,n);n.colId=e.target.value;n.order=maxOrder(s,n.colId)+1;afterDone(s,n,wasDone);touch();$('#edRep',dlg).value=n.repeat};
   $('#edDue',dlg).onchange=e=>{n.due=e.target.value;$('#edTime',dlg).disabled=!n.due;if(!n.due){n.dueTime='';$('#edTime',dlg).value=''}n.remindedFor='';touch();drawRem()};
   $('#edTime',dlg).onchange=e=>{n.dueTime=isTime(e.target.value)?e.target.value:'';n.remindedFor='';touch();drawRem()};
@@ -153,6 +161,9 @@ function openNote(sid,id,opt={}){
   $$('[data-close]',dlg).forEach(b=>b.onclick=()=>dlg.close());
   $('[data-copy]',dlg).onclick=async()=>{const ok=await copyText(noteText(s,n));toast(ok?'Notiz als Text kopiert':'Kopieren nicht möglich')};
   $('[data-print]',dlg).onclick=()=>{flushNow();printNotes(noteLabel(n),[{s,n}],true)};
+  const cv_=$('[data-conv]',dlg);if(cv_)cv_.onclick=()=>convKind(n.kind==='page'?'':'page');
+  async function convKind(k){if(k!=='page'&&pageHasContent(n)){if(pgCtl)pgCtl.flush();const r=await ask({title:'In normale Notiz umwandeln?',text:'Der Text bleibt erhalten. Anordnung, Zeichnungen und Bilder sieht man nur in der Seite. Wechselst du zurück zu „Seite“, ist alles wieder an seinem Platz.',ok:'Umwandeln'});if(!r)return}
+    recordHistory(n,before0.v);before0.v=snapOf(n);n._switch=true;if(k==='page')toPage(n);else toNote(n);touch();openNote(s.id,n.id,{back:true})}
   $('[data-astpl]',dlg).onclick=async()=>{const r=await ask({title:'Als Vorlage speichern',text:'Titel, Text, Checkliste, Tags und Farbe werden übernommen. Platzhalter wie {datum} kannst du im Text verwenden.',fields:[{name:'name',label:'Name der Vorlage',value:noteLabel(n),required:true,maxlength:40}],ok:'Speichern'});
     if(!r)return;DB.settings.templates.push({id:uid(),name:r.name.trim(),color:n.color,title:n.title,body:n.body,tags:[...n.tags],checklist:n.checklist.map(c=>c.text)});save(true);toast('Vorlage „'+r.name.trim()+'“ gespeichert')};
   $('[data-dup]',dlg).onclick=()=>{const c=newNote(s,{title:n.title?n.title+' (Kopie)':'',body:n.body,color:n.color,tags:[...n.tags],colId:n.colId,checklist:n.checklist.map(x=>ck(x.text,x.done)),due:n.due,dueTime:n.dueTime,images:n.images.map(i=>({...i,id:uid()}))});save();openNote(s.id,c.id);toast('Kopie erstellt')};

@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.8.1
+- **Seite ↔ Notiz ohne Verlust:** Wechselst du von „Seite“ zu „Notiz“ und zurück, sind alle Kästen, Bilder und Zeichnungen wieder genau an ihrem Platz. Vorher landete alles in einem Kasten.
+- Bevor eine Seite mit Inhalt in eine Notiz umgewandelt wird, fragt die App nach.
+- „In Seite umwandeln“ und „In Notiz umwandeln“ gibt es jetzt auch unten im Editor.
+- **Standard pro Space:** Unter Space-Einstellungen → „Neue Einträge in diesem Space“ wählst du Notiz oder Seite. Neue „Schule / Modul“-Spaces erstellen automatisch Seiten.
+- Wie in OneNote entsteht mit einem einzigen Klick neben einen Kasten sofort ein neuer.
+
 ## 1.8.0
 - **Notizbuch-Ansicht wie in OneNote:** neuer Reiter „Notizbuch“ in jedem Space.
   - **Abschnitte:** Oben stehen die Abschnitte. Das sind die Spalten deines Boards.

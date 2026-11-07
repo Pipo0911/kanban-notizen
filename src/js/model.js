@@ -36,7 +36,7 @@ function fillVars(t,d){d=d||today();return String(t||'').replace(/\{datum\}/g,fm
 function isoWeek(ds){const d=new Date(ds+'T12:00:00');d.setDate(d.getDate()+3-(d.getDay()+6)%7);const w1=new Date(d.getFullYear(),0,4);return 1+Math.round(((d-w1)/864e5-3+(w1.getDay()+6)%7)/7)}
 
 function makeSpace(name,color,tpl,desc=''){const t=TEMPLATES[tpl]||TEMPLATES.notizen;
-  return{id:uid(),name,color,desc,created:now(),columns:t.cols.map(([n,c,done])=>({id:uid(),name:n,color:c,done:!!done})),notes:[]}}
+  return{id:uid(),name,color,desc,kind:tpl==='schule'?'page':'',created:now(),columns:t.cols.map(([n,c,done])=>({id:uid(),name:n,color:c,done:!!done})),notes:[]}}
 function blankNote(){return{id:uid(),title:'',body:'',color:'default',prio:'',tags:[],colId:'',pinned:false,fav:false,daily:'',remind:'',kind:'',parent:'',checklist:[],due:'',dueTime:'',repeat:'',remindedFor:'',time:[],timerStart:'',images:[],archived:false,created:now(),updated:now()}}
 function newNote(s,d={}){
   const n=Object.assign(blankNote(),d);
@@ -63,7 +63,7 @@ function normNote(n,s,k){
   const cols=new Set(s.columns.map(c=>c.id));
   return{id:okId(n.id)?String(n.id):uid(),title:String(n.title||''),body:String(n.body||''),color:NC[n.color]?n.color:'default',
     tags:[...new Set(arr(n.tags).map(t=>String(t).trim()).filter(Boolean))],colId:cols.has(n.colId)?n.colId:s.columns[0].id,
-    kind:n.kind==='page'?'page':'',parent:okId(n.parent)?String(n.parent):'',page:n.kind==='page'?normPage(n.page):undefined,
+    kind:n.kind==='page'?'page':'',parent:okId(n.parent)?String(n.parent):'',page:n.page&&typeof n.page==='object'?normPage(n.page):undefined,pageText:n.kind!=='page'&&typeof n.pageText==='string'?n.pageText:undefined,
     pinned:!!n.pinned,fav:!!n.fav,daily:isDate(n.daily)?n.daily:'',checklist:arr(n.checklist).filter(c=>c&&typeof c.text==='string').map(c=>({id:okId(c.id)?String(c.id):uid(),text:c.text,done:!!c.done})),
     due:isDate(n.due)?n.due:'',dueTime:isDate(n.due)&&isTime(n.dueTime)?n.dueTime:'',repeat:REPEAT[n.repeat]!==undefined?n.repeat:'',remind:/^(off|rel:\d{1,5}|at:\d{4}-\d{2}-\d{2}T\d{2}:\d{2})$/.test(n.remind||'')?n.remind:'',remindedFor:String(n.remindedFor||''),
     time:arr(n.time).filter(t=>t&&isDate(t.day)&&+t.min>0).map(t=>({id:okId(t.id)?String(t.id):uid(),day:t.day,min:Math.round(+t.min),text:String(t.text||''),start:t.start||'',end:t.end||''})),
@@ -72,7 +72,7 @@ function normNote(n,s,k){
     prio:PRIO[n.prio]?n.prio:'',archived:!!n.archived,order:isFinite(+n.order)?+n.order:k,created:n.created||now(),updated:n.updated||n.created||now()}}
 function normSpace(s){
   const cols=arr(s.columns).filter(Boolean),hasFlag=cols.some(c=>'done' in c);
-  const o={sort:SORTS[s.sort]?s.sort:'manual',id:okId(s.id)?String(s.id):uid(),folder:okId(s.folder)?String(s.folder):'',name:String(s.name||'Space'),color:/^#[0-9a-f]{6}$/i.test(s.color)?s.color:SPCOL[0],desc:String(s.desc||''),created:s.created||now(),
+  const o={sort:SORTS[s.sort]?s.sort:'manual',id:okId(s.id)?String(s.id):uid(),folder:okId(s.folder)?String(s.folder):'',name:String(s.name||'Space'),color:/^#[0-9a-f]{6}$/i.test(s.color)?s.color:SPCOL[0],desc:String(s.desc||''),kind:s.kind==='page'?'page':'',created:s.created||now(),
     columns:cols.map(c=>({id:okId(c.id)?String(c.id):uid(),name:String(c.name||'Spalte'),color:NC[c.color]?c.color:'grey',done:hasFlag?!!c.done:/erledigt|fertig|done|kann ich|abgeschlossen|gelöst/i.test(c.name||'')}))};
   if(!o.columns.length)o.columns=[{id:uid(),name:'Notizen',color:'yellow',done:false}];
   o.notes=arr(s.notes).filter(n=>n&&typeof n==='object').map((n,k)=>normNote(n,o,k));

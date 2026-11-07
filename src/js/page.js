@@ -140,7 +140,7 @@ function mountPage(host,n,onChange){
   let penClick=false;
   cv.addEventListener('click',e=>{if(penClick){penClick=false;return}
     if(st.tool!=='text'||e.target!==cv&&e.target!==svg&&e.target.id!=='pgHint')return;
-    const a=document.activeElement;if(a&&a.classList&&a.classList.contains('pg-edit')){a.blur();return}
+    const a=document.activeElement;if(a&&a.classList&&a.classList.contains('pg-edit'))a.blur();
     select(null);const p=pos(e);st.last=p;addText(p.x,p.y)});
 
   /* ---------- Zeichnen und Radieren ---------- */

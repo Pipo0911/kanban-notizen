@@ -33,6 +33,7 @@ function renderSpaceCfg(el){const s=sp(),tab=ui.stab;let body='';
     <div class="fld"><label>Farbe</label><div class="swatches">${SPCOL.map((c,k)=>`<button type="button" class="sw${c===s.color?' on':''}" style="background:${c}" data-c="${c}" title="${SPCOLN[k]}" aria-label="${SPCOLN[k]}"></button>`).join('')}</div></div>
     <div class="fld"><label for="sfFolder">Kategorie</label><select id="sfFolder" name="folder">${folderOptions().map(([v,l])=>`<option value="${v}"${v===s.folder?' selected':''}>${esc(l)}</option>`).join('')}</select></div>
     <div class="fld"><label for="sfDesc">Beschreibung</label><textarea id="sfDesc" name="desc" rows="3">${esc(s.desc)}</textarea></div>
+    <div class="fld"><label for="sfKind">Neue Einträge in diesem Space</label><select id="sfKind" name="kind"><option value=""${s.kind?'':' selected'}>📝 Notiz (Textfeld)</option><option value="page"${s.kind==='page'?' selected':''}>📄 Seite wie OneNote (freie Fläche)</option></select><small>Beim Erstellen kannst du jederzeit oben zwischen Notiz und Seite wechseln.</small></div>
     <button class="btn primary">Speichern</button></form></div>
     <div class="panel"><h3>Exportieren</h3><p class="muted">Alle Notizen dieses Space als Dokument – zum Ablegen, Weitergeben oder als PDF.</p><div class="row-btns"><button class="btn" id="prSp">Drucken / PDF</button><button class="btn" id="mdSp">Markdown (.md)</button><button class="btn" id="jsSp">JSON</button></div></div>
     <div class="panel danger-zone"><h3>Space löschen</h3><p class="muted">Löscht den Space. Die ${s.notes.length} Notizen kommen in den Papierkorb.</p><button class="btn danger-solid" id="delSp">Space löschen …</button></div>`;
@@ -43,7 +44,7 @@ function renderSpaceCfg(el){const s=sp(),tab=ui.stab;let body='';
   $$('[data-stab]',el).forEach(b=>b.onclick=()=>{ui.stab=b.dataset.stab;renderContent()});
   if(tab==='details'){const f=$('#sf',el);let color=s.color;
     $$('.sw',f).forEach(b=>b.onclick=()=>{color=b.dataset.c;$$('.sw',f).forEach(x=>x.classList.toggle('on',x===b))});
-    f.onsubmit=e=>{e.preventDefault();if(!f.checkValidity()){f.reportValidity();return}s.name=f.elements.name.value.trim()||s.name;s.desc=f.elements.desc.value.trim();s.color=color;s.folder=f.elements.folder.value;expandTo(s.folder);save();render();toast('Gespeichert')};
+    f.onsubmit=e=>{e.preventDefault();if(!f.checkValidity()){f.reportValidity();return}s.name=f.elements.name.value.trim()||s.name;s.desc=f.elements.desc.value.trim();s.kind=f.elements.kind.value==='page'?'page':'';s.color=color;s.folder=f.elements.folder.value;expandTo(s.folder);save();render();toast('Gespeichert')};
     $('#prSp',el).onclick=()=>printSpace(s);$('#mdSp',el).onclick=()=>exportMd(s);
     $('#jsSp',el).onclick=()=>download(`space-${safeName(s.name)}-${today()}.json`,JSON.stringify({app:'kanban-notizen',v:4,kind:'space',exported:now(),space:s},null,1));
     $('#delSp',el).onclick=()=>deleteSpace(s)}
