@@ -19,7 +19,7 @@ function renderBook(el){const s=sp(),b=bookState(s);
   const sel=b.nid&&byId(s,b.nid)&&!byId(s,b.nid).archived?byId(s,b.nid):null;
   if(sel&&sel.colId!==b.col)b.col=sel.colId;
   const tree=bookTree(s,b.col);
-  const tabs=s.columns.map(c=>`<button class="bk-tab${c.id===b.col?' on':''}" data-bcol="${c.id}" style="--tc:${NC[c.color].d}">${esc(c.name)}<span class="cnt">${live(s).filter(n=>n.colId===c.id).length}</span></button>`).join('')+'<button class="bk-tab add" data-act="addCol" title="Abschnitt hinzufügen">+</button>';
+  const tabs=s.columns.map(c=>`<button class="bk-tab${c.id===b.col?' on':''}" data-bcol="${c.id}" style="--tc:${colHex(c.color)}">${esc(c.name)}<span class="cnt">${live(s).filter(n=>n.colId===c.id).length}</span></button>`).join('')+'<button class="bk-tab add" data-act="addCol" title="Abschnitt hinzufügen">+</button>';
   const list=tree.length?tree.map(({n,d,has})=>`<div class="bk-it${sel&&sel.id===n.id?' on':''}" data-bnid="${n.id}" style="--d:${d}">
       ${has?`<button class="bk-tog" data-btog="${n.id}" aria-label="${bookCollapsed.has(n.id)?'Aufklappen':'Zuklappen'}">${bookCollapsed.has(n.id)?'▸':'▾'}</button>`:'<span class="bk-tog sp"></span>'}
       <span class="bk-ic">${n.kind==='page'?'📄':'📝'}</span><span class="bk-t">${esc(noteLabel(n)||'Ohne Titel')}</span>

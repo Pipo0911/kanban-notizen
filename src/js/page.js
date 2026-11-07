@@ -56,7 +56,7 @@ function strokePath(p){const pts=p.split(' ').map(s=>s.split(',').map(Number));i
 /* ---------- Seite bearbeiten ---------- */
 function mountPage(host,n,onChange){
   if(!n.page)n.page=blankPage();const pg=n.page;
-  const st={tool:'text',pen:PEN_COLORS[0],mark:MARK_COLORS[0],size:3,sel:null,undo:[],redo:[],last:{x:60,y:60}};
+  const st={tool:'text',pen:PEN_COLORS[0],mark:MARK_COLORS[0],fg:'#d64545',hl:'#ffe14d',size:3,sel:null,undo:[],redo:[],last:{x:60,y:60}};
   host.innerHTML=`<div class="pg-bar" role="toolbar" aria-label="Seite">
       <div class="pg-grp" data-g="tools">
         <button type="button" data-tool="text" title="Text: irgendwo hinklicken und schreiben">${PG_IC.text}<span>Text</span></button>
@@ -68,7 +68,7 @@ function mountPage(host,n,onChange){
       <div class="pg-grp pg-sizes" id="pgSizes"></div>
       <div class="pg-grp pg-fmt" id="pgFmt">
         <button type="button" data-cmd="bold" title="Fett (Strg+B)"><b>B</b></button><button type="button" data-cmd="italic" title="Kursiv (Strg+I)"><i>I</i></button><button type="button" data-cmd="underline" title="Unterstrichen (Strg+U)"><u>U</u></button><button type="button" data-cmd="strikeThrough" title="Durchgestrichen"><s>S</s></button>
-        <button type="button" data-cmd="h" title="Überschrift">H</button><button type="button" data-cmd="insertUnorderedList" title="Aufzählung">•</button><button type="button" data-cmd="insertOrderedList" title="Nummerierung">1.</button><button type="button" data-cmd="check" title="Aufgabe ☐">☐</button><button type="button" data-cmd="hilite" title="Gelb markieren">${PG_IC.mark}</button>
+        <button type="button" data-cmd="h" title="Überschrift">H</button><button type="button" data-cmd="insertUnorderedList" title="Aufzählung">•</button><button type="button" data-cmd="insertOrderedList" title="Nummerierung">1.</button><button type="button" data-cmd="check" title="Aufgabe ☐">☐</button><span class="pg-split"><button type="button" data-cmd="fore" title="Textfarbe" class="pg-fg"><b>A</b><i id="pgFgBar"></i></button><button type="button" class="pg-more" data-pick="fore" title="Textfarbe wählen" aria-label="Textfarbe wählen">▾</button></span><span class="pg-split"><button type="button" data-cmd="hilite" title="Markieren" class="pg-hl">${PG_IC.mark}<i id="pgHlBar"></i></button><button type="button" class="pg-more" data-pick="hilite" title="Markierfarbe wählen" aria-label="Markierfarbe wählen">▾</button></span>
       </div>
       <div class="pg-grp">
         <button type="button" id="pgImg" title="Bild einfügen (oder Strg+V / hierher ziehen)">${PG_IC.img}<span>Bild</span></button>
@@ -169,7 +169,10 @@ function mountPage(host,n,onChange){
     const ink=st.tool==='pen'||st.tool==='mark';
     $('#pgColors',host).hidden=!ink;$('#pgSizes',host).hidden=st.tool!=='pen';$('#pgFmt',host).hidden=st.tool!=='text';
     const cols=st.tool==='mark'?MARK_COLORS:PEN_COLORS,curc=st.tool==='mark'?st.mark:st.pen;
-    $('#pgColors',host).innerHTML=cols.map(c=>`<button type="button" class="pg-sw${c===curc?' on':''}" data-c="${c}" style="background:${c}" aria-label="Farbe ${c}"></button>`).join('');
+    const extra=!cols.includes(curc);
+    $('#pgColors',host).innerHTML=cols.map(c=>`<button type="button" class="pg-sw${c===curc?' on':''}" data-c="${c}" style="background:${c}" aria-label="Farbe ${c}"></button>`).join('')+`<button type="button" class="pg-sw more${extra?' on':''}" id="pgColMore" style="${extra?'background:'+curc:''}" title="Weitere Farben …" aria-label="Weitere Farben"></button>`;
+    $('#pgColMore',host).onclick=e=>colorPick(e.currentTarget,curc,c=>{if(!isHex(c))return;if(st.tool==='mark')st.mark=c;else st.pen=c;drawBar()},{title:st.tool==='mark'?'Farbe des Markers':'Farbe des Stifts'});
+    $('#pgFgBar',host).style.background=st.fg;$('#pgHlBar',host).style.background=st.hl;
     $('#pgSizes',host).innerHTML=[[2,'Fein'],[3,'Mittel'],[6,'Dick']].map(([v,l])=>`<button type="button" data-sz="${v}" class="${st.size===v?'on':''}" title="${l}"><i style="width:${v+3}px;height:${v+3}px"></i></button>`).join('');
     $$('[data-c]',host).forEach(b=>b.onclick=()=>{if(st.tool==='mark')st.mark=b.dataset.c;else st.pen=b.dataset.c;drawBar()});
     $$('[data-sz]',host).forEach(b=>b.onclick=()=>{st.size=+b.dataset.sz;drawBar()});
@@ -180,9 +183,17 @@ function mountPage(host,n,onChange){
     const c=b.dataset.cmd;
     if(c==='h'){const blk=document.queryCommandValue('formatBlock').toLowerCase();document.execCommand('formatBlock',false,blk==='h2'?'div':'h2')}
     else if(c==='check')document.execCommand('insertHTML',false,'<input type="checkbox">&nbsp;');
-    else if(c==='hilite'){document.execCommand('styleWithCSS',false,true);document.execCommand('hiliteColor',false,'#ffe14d');document.execCommand('styleWithCSS',false,false)}
+    else if(c==='hilite'||c==='fore')applyColor(c,c==='fore'?st.fg:st.hl)
     else document.execCommand(c,false,null);
     a.dispatchEvent(new Event('input'))}});
+  /* Text- und Markierfarbe: Auswahl merken, damit sie beim Farbwähler nicht verloren geht */
+  let savedRange=null;
+  const applyColor=(cmd,col)=>{document.execCommand('styleWithCSS',false,true);document.execCommand(cmd==='fore'?'foreColor':'hiliteColor',false,col);document.execCommand('styleWithCSS',false,false)};
+  $$('[data-pick]',host).forEach(b=>{b.addEventListener('pointerdown',e=>{e.preventDefault();const sl=getSelection();savedRange=sl.rangeCount?sl.getRangeAt(0).cloneRange():null});
+    b.onclick=()=>{const k=b.dataset.pick,ed=savedRange&&savedRange.startContainer&&(savedRange.startContainer.nodeType===1?savedRange.startContainer:savedRange.startContainer.parentElement).closest('.pg-edit');
+      colorPick(b,k==='fore'?st.fg:st.hl,c=>{if(!isHex(c))return;if(k==='fore')st.fg=c;else st.hl=c;drawBar();
+        if(ed&&savedRange){ed.focus();const sl=getSelection();sl.removeAllRanges();sl.addRange(savedRange);applyColor(k,c);ed.dispatchEvent(new Event('input'))}},
+        {title:k==='fore'?'Textfarbe':'Markierfarbe',presets:k==='fore'?PEN_COLORS.map(c=>[c,c,c]):MARK_COLORS.map(c=>[c,c,c])})}});
   $('#pgBg',host).onchange=e=>{pushUndo();pg.bg=e.target.value;cv.className='pg-canvas bg-'+pg.bg+' tool-'+st.tool;changed()};
   $('#pgUndo',host).onclick=()=>{if(!st.undo.length)return;st.redo.push(snap());restore(st.undo.pop())};
   $('#pgRedo',host).onclick=()=>{if(!st.redo.length)return;st.undo.push(snap());restore(st.redo.pop())};

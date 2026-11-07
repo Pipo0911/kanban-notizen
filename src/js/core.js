@@ -40,10 +40,10 @@ function prioIcon(id,sz=16){const p=PRIO[id];if(!p)return'';const up=id==='highe
   return`<span class="prio" title="Priorität: ${p.n}"><svg width="${sz}" height="${sz}" viewBox="0 0 16 16"><path d="${dbl?ch(up?3:2)+' '+ch(up?8:7):ch(up?5.5:4.5)}" fill="none" stroke="${p.c}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`}
 const LCOL=[{id:'red',n:'Rot',c:'#f8857a'},{id:'orange',n:'Orange',c:'#fbac6e'},{id:'yellow',n:'Gelb',c:'#f5cd47'},{id:'green',n:'Grün',c:'#6fd3a0'},{id:'teal',n:'Türkis',c:'#6cc9d6'},{id:'blue',n:'Blau',c:'#8fb2ff'},{id:'purple',n:'Lila',c:'#b9a5f7'},{id:'pink',n:'Rosa',c:'#f49ccb'},{id:'grey',n:'Grau',c:'#c2c5cc'}];
 const LC=Object.fromEntries(LCOL.map(c=>[c.id,c]));
-function labelColor(name){const c=DB&&DB.settings.labels[name];if(LC[c])return LC[c].c;let h=0;for(const ch of name)h=(h*31+ch.charCodeAt(0))>>>0;return LCOL[h%LCOL.length].c}
+function labelColor(name){const c=DB&&DB.settings.labels[name];if(LC[c])return LC[c].c;if(/^#[0-9a-f]{6}$/i.test(c||''))return c;let h=0;for(const ch of name)h=(h*31+ch.charCodeAt(0))>>>0;return LCOL[h%LCOL.length].c}
 function labelColorId(name){const c=DB&&DB.settings.labels[name];if(LC[c])return c;let h=0;for(const ch of name)h=(h*31+ch.charCodeAt(0))>>>0;return LCOL[h%LCOL.length].id}
 function ensureLabel(name){if(!DB.settings.labels[name]){let h=0;for(const ch of name)h=(h*31+ch.charCodeAt(0))>>>0;DB.settings.labels[name]=LCOL[h%LCOL.length].id}}
-const lblHTML=t=>`<span class="nlbl" style="background:${labelColor(t)}">${esc(t)}</span>`;
+const lblHTML=t=>{const c=labelColor(t);return`<span class="nlbl" style="background:${c};color:${textOn(c)}">${esc(t)}</span>`};
 const SORTS={manual:'Manuell',prio:'Priorität',due:'Termin',updated:'Zuletzt geändert'};
 const REPEAT={'':'Nie',daily:'Täglich',weekdays:'Werktags (Mo–Fr)',weekly:'Wöchentlich',biweekly:'Alle 2 Wochen',monthly:'Monatlich',yearly:'Jährlich'};
 const TEMPLATES={

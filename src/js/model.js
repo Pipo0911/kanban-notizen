@@ -61,7 +61,7 @@ function seedSpaces(){
 /* ============ Normalisieren & Übernahme alter Versionen ============ */
 function normNote(n,s,k){
   const cols=new Set(s.columns.map(c=>c.id));
-  return{id:okId(n.id)?String(n.id):uid(),title:String(n.title||''),body:String(n.body||''),color:NC[n.color]?n.color:'default',
+  return{id:okId(n.id)?String(n.id):uid(),title:String(n.title||''),body:String(n.body||''),color:okColor(n.color,NC)?n.color:'default',
     tags:[...new Set(arr(n.tags).map(t=>String(t).trim()).filter(Boolean))],colId:cols.has(n.colId)?n.colId:s.columns[0].id,
     kind:n.kind==='page'?'page':'',parent:okId(n.parent)?String(n.parent):'',page:n.page&&typeof n.page==='object'?normPage(n.page):undefined,pageText:n.kind!=='page'&&typeof n.pageText==='string'?n.pageText:undefined,
     pinned:!!n.pinned,fav:!!n.fav,daily:isDate(n.daily)?n.daily:'',checklist:arr(n.checklist).filter(c=>c&&typeof c.text==='string').map(c=>({id:okId(c.id)?String(c.id):uid(),text:c.text,done:!!c.done})),
@@ -73,7 +73,7 @@ function normNote(n,s,k){
 function normSpace(s){
   const cols=arr(s.columns).filter(Boolean),hasFlag=cols.some(c=>'done' in c);
   const o={sort:SORTS[s.sort]?s.sort:'manual',id:okId(s.id)?String(s.id):uid(),folder:okId(s.folder)?String(s.folder):'',name:String(s.name||'Space'),color:/^#[0-9a-f]{6}$/i.test(s.color)?s.color:SPCOL[0],desc:String(s.desc||''),kind:s.kind==='page'?'page':'',created:s.created||now(),
-    columns:cols.map(c=>({id:okId(c.id)?String(c.id):uid(),name:String(c.name||'Spalte'),color:NC[c.color]?c.color:'grey',done:hasFlag?!!c.done:/erledigt|fertig|done|kann ich|abgeschlossen|gelöst/i.test(c.name||'')}))};
+    columns:cols.map(c=>({id:okId(c.id)?String(c.id):uid(),name:String(c.name||'Spalte'),color:okColor(c.color,NC)?c.color:'grey',done:hasFlag?!!c.done:/erledigt|fertig|done|kann ich|abgeschlossen|gelöst/i.test(c.name||'')}))};
   if(!o.columns.length)o.columns=[{id:uid(),name:'Notizen',color:'yellow',done:false}];
   o.notes=arr(s.notes).filter(n=>n&&typeof n==='object').map((n,k)=>normNote(n,o,k));
   const seen=new Set();o.notes=o.notes.filter(n=>!seen.has(n.id)&&seen.add(n.id));
@@ -89,8 +89,8 @@ function fromV2(s){
 function fromV1(d){return fromV2({id:uid(),name:d.project?.name||'Altes Board',statuses:arr(d.columns).map((c,k,a)=>({id:c.id,name:c.name,cat:k===a.length-1&&a.length>1?'done':'todo'})),
   issues:arr(d.issues).map(i=>({id:i.id,title:i.title,desc:i.desc,labels:i.labels,statusId:i.col,due:i.due,order:i.order,created:i.created,updated:i.updated,history:[1,2],comments:i.comments,prio:i.prio}))})}
 function normSettings(x={}){return{theme:['system','light','dark'].includes(x.theme)?x.theme:'system',jiraUrl:typeof x.jiraUrl==='string'?x.jiraUrl.trim():'',
-  templates:Array.isArray(x.templates)?x.templates.filter(t=>t&&t.name).map(t=>({id:okId(t.id)?t.id:uid(),name:String(t.name),color:NC[t.color]?t.color:'default',title:String(t.title||''),body:String(t.body||''),tags:arr(t.tags).map(String),checklist:arr(t.checklist).map(String).filter(Boolean),remind:/^(off|rel:\d{1,5})$/.test(t.remind||'')?t.remind:''})):DEFAULT_TPL(),
-  labels:(()=>{const o={};if(x.labels&&typeof x.labels==='object')for(const[k,v]of Object.entries(x.labels))if(LC[v]&&k.trim())o[k]=v;return o})(),notify:!!x.notify,osNotify:x.osNotify!==false,lastBackup:x.lastBackup||'',
+  templates:Array.isArray(x.templates)?x.templates.filter(t=>t&&t.name).map(t=>({id:okId(t.id)?t.id:uid(),name:String(t.name),color:okColor(t.color,NC)?t.color:'default',title:String(t.title||''),body:String(t.body||''),tags:arr(t.tags).map(String),checklist:arr(t.checklist).map(String).filter(Boolean),remind:/^(off|rel:\d{1,5})$/.test(t.remind||'')?t.remind:''})):DEFAULT_TPL(),
+  labels:(()=>{const o={};if(x.labels&&typeof x.labels==='object')for(const[k,v]of Object.entries(x.labels))if((LC[v]||isHex(v))&&k.trim())o[k]=v;return o})(),notify:!!x.notify,osNotify:x.osNotify!==false,lastBackup:x.lastBackup||'',
   daily:{space:okId(x.daily&&x.daily.space)?String(x.daily.space):'',tpl:x.daily&&typeof x.daily.tpl==='string'?x.daily.tpl:DAILY_TPL},round:[0,5,6,10,15,30].includes(+x.round)?+x.round:0}}
 function normDB(d){
   d=d||{};

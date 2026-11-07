@@ -133,7 +133,7 @@ function renderFbar(){const v=DB.ui.view,el=$('#fbar');if(v!=='board'&&v!=='wall
   el.innerHTML=`<button class="fbar-toggle${nAct?' act':''}" id="fTog" aria-expanded="${!!ui.fOpen}">Filter${nAct?` · ${nAct}`:''}</button><div class="search">${SVG.search}<input id="q" type="search" placeholder="In diesem Space suchen ( / )" value="${esc(f.q)}" autocomplete="off" aria-label="Suchen"></div>
   <select class="f${f.tag?' act':''}" id="fTag" aria-label="Tag"><option value="">Alle Labels</option>${tags.map(t=>`<option value="${esc(t)}"${f.tag===t?' selected':''}>${esc(t)}</option>`).join('')}</select>
   <select class="f${f.prio?' act':''}" id="fPrio" aria-label="Priorität"><option value="">Alle Prioritäten</option>${PRIOS.map(p=>`<option value="${p.id}"${f.prio===p.id?' selected':''}>${p.n}</option>`).join('')}<option value="none"${f.prio==='none'?' selected':''}>Ohne Priorität</option></select>
-  <select class="f${f.color?' act':''}" id="fCol" aria-label="Farbe"><option value="">Alle Farben</option>${NCOL.map(c=>`<option value="${c.id}"${f.color===c.id?' selected':''}>${c.n}</option>`).join('')}</select>
+  <select class="f${f.color?' act':''}" id="fCol" aria-label="Farbe"><option value="">Alle Farben</option>${NCOL.map(c=>`<option value="${c.id}"${f.color===c.id?' selected':''}>${c.n}</option>`).join('')}<option value="custom"${f.color==='custom'?' selected':''}>Eigene Farben</option></select>
   <select class="f${f.due?' act':''}" id="fDue" aria-label="Termin"><option value="">Alle Termine</option>${[['late','Überfällig'],['today','Heute'],['week','Nächste 7 Tage'],['any','Mit Termin'],['none','Ohne Termin']].map(([k,n])=>`<option value="${k}"${f.due===k?' selected':''}>${n}</option>`).join('')}</select>
   <label class="chk"><input type="checkbox" id="fPin"${f.pinned?' checked':''}> Nur angeheftete</label>
   <button class="link" data-act="clearF" id="clearF"${Object.values(f).some(Boolean)?'':' hidden'}>Filter löschen</button>${v==='board'?`<span class="spacer"></span><label class="chk">Sortieren nach <select class="f" id="fSort" aria-label="Sortierung">${Object.entries(SORTS).map(([k,n])=>`<option value="${k}"${(s.sort||'manual')===k?' selected':''}>${n}</option>`).join('')}</select></label>`:''}`;
@@ -152,7 +152,7 @@ function renderContent(){const c=$('#content'),old=$('#bw'),v=DB.ui.view,key=v+(
 function matches(s,n){const f=ui.filters;
   if(f.q){const q=f.q.trim().toLowerCase();if(q&&![n.title,n.body,n.tags.join(' '),n.checklist.map(c=>c.text).join(' ')].join('\n').toLowerCase().includes(q))return false}
   if(f.tag&&!n.tags.includes(f.tag))return false;
-  if(f.color&&n.color!==f.color)return false;
+  if(f.color&&(f.color==='custom'?!isHex(n.color):n.color!==f.color))return false;
   if(f.prio&&(f.prio==='none'?!!n.prio:n.prio!==f.prio))return false;
   if(f.pinned&&!n.pinned)return false;
   if(f.due){const t=today();

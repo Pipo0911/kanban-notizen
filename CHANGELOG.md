@@ -1,5 +1,15 @@
 # Änderungen
 
+## 1.9.0
+- **Grosse Farbpalette überall, wo man Farben wählt:** bei Notizen, Spalten, Labels, Spaces und auf Seiten (Textfarbe, Markieren, Stift).
+  - **Alle Farben:** 84 Farben, nämlich 12 Farbtöne in 6 Helligkeiten und 12 Grautöne.
+  - **Eigene Farbe:** frei wählen mit dem Farbwähler oder einem Hex-Code wie #3A7BD5.
+  - **Zuletzt verwendet:** Die letzten 12 Farben stehen oben zum schnellen Wiederverwenden.
+  - Geöffnet wird die Palette mit dem bunten Punkt ◉ neben den bisherigen Farben.
+- Karten mit eigener Farbe werden hell oder dunkel passend eingefärbt. Label-Schrift wird automatisch schwarz oder weiss, damit sie lesbar bleibt.
+- Auf Seiten gibt es neben „Textfarbe“ und „Markieren“ einen kleinen Pfeil ▾ für die ganze Palette.
+- Der Farbfilter auf dem Board kennt neu „Eigene Farben“.
+
 ## 1.8.1
 - **Seite ↔ Notiz ohne Verlust:** Wechselst du von „Seite“ zu „Notiz“ und zurück, sind alle Kästen, Bilder und Zeichnungen wieder genau an ihrem Platz. Vorher landete alles in einem Kasten.
 - Bevor eine Seite mit Inhalt in eine Notiz umgewandelt wird, fragt die App nach.

@@ -17,11 +17,11 @@ function renderSettings(el){const S=DB.settings,tab=ui.gtab;let body='';
   else if(tab==='labels'){const all=[...new Set([...allTags(),...Object.keys(S.labels)])].sort((a,b)=>a.localeCompare(b));
     const used=t=>DB.spaces.reduce((a,x)=>a+x.notes.filter(n=>n.tags.includes(t)).length,0);
     body=`<div class="panel"><h3>Labels</h3><p>Labels gelten für alle Spaces. Hier legst du ihre Farbe fest, benennst sie um oder entfernst sie. Umbenennen und Löschen wirkt auf alle Notizen.</p>
-    ${all.length?all.map((t,k)=>`<div class="lb-row" data-k="${k}">${lblHTML(t)}<input type="text" value="${esc(t)}" maxlength="40" aria-label="Name"><select aria-label="Farbe">${LCOL.map(c=>`<option value="${c.id}"${labelColorId(t)===c.id?' selected':''}>${c.n}</option>`).join('')}</select><span class="muted sm num">${used(t)} Notiz${used(t)===1?'':'en'}</span><span class="spacer"></span><button class="icon-btn sm del" data-del aria-label="Label löschen">✕</button></div>`).join(''):'<p class="muted">Noch keine Labels. Du setzt sie im Editor einer Notiz.</p>'}
+    ${all.length?all.map((t,k)=>`<div class="lb-row" data-k="${k}">${lblHTML(t)}<input type="text" value="${esc(t)}" maxlength="40" aria-label="Name"><button type="button" class="cp-btn" data-lcol style="--c:${labelColor(t)}" title="Farbe wählen" aria-label="Farbe wählen"><span></span>▾</button><span class="muted sm num">${used(t)} Notiz${used(t)===1?'':'en'}</span><span class="spacer"></span><button class="icon-btn sm del" data-del aria-label="Label löschen">✕</button></div>`).join(''):'<p class="muted">Noch keine Labels. Du setzt sie im Editor einer Notiz.</p>'}
     <div class="inline-add" style="margin-top:12px"><input id="lbNew" placeholder="Neues Label" maxlength="40" aria-label="Neues Label"><button class="btn" id="lbAdd">+ Hinzufügen</button></div></div>`;
     setTimeout(()=>{const el2=$('#bw');if(!el2)return;
       $$('.lb-row',el2).forEach(r=>{const t=all[+r.dataset.k];
-        $('select',r).onchange=e=>{S.labels[t]=e.target.value;save();setTimeout(render,0)};
+        $('[data-lcol]',r).onclick=e=>colorPick(e.currentTarget,S.labels[t]||labelColorId(t),v=>{if(!v)return;S.labels[t]=v;save();setTimeout(render,0)},{title:`Farbe für „${t}“`,presets:LABEL_PRESETS()});
         $('input',r).onchange=e=>{const v=e.target.value.trim();if(!v||v===t){e.target.value=t;return}
           DB.spaces.forEach(x=>x.notes.forEach(n=>{if(n.tags.includes(t))n.tags=[...new Set(n.tags.map(y=>y===t?v:y))]}));S.templates.forEach(tp=>tp.tags=tp.tags.map(y=>y===t?v:y));
           if(!S.labels[v])S.labels[v]=S.labels[t]||'';delete S.labels[t];ensureLabel(v);save();setTimeout(render,0);toast(`Label umbenannt in „${v}“`)};

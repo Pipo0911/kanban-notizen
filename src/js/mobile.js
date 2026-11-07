@@ -5,7 +5,7 @@ const isPhone=()=>matchMedia('(max-width:700px)').matches;
 
 /* ---------- Spalten-Leiste über dem Board ---------- */
 function colChipsHTML(s,notes){return`<div class="col-chips" id="colChips">${s.columns.map((c,k)=>{const n=notes.filter(x=>x.colId===c.id).length;
-  return`<button class="cchip${k===0?' on':''}" data-cchip="${k}"><span class="col-dot" style="background:${NC[c.color].d}"></span>${esc(c.name)}<span class="cc-n">${n}</span></button>`}).join('')}</div>`}
+  return`<button class="cchip${k===0?' on':''}" data-cchip="${k}"><span class="col-dot" style="background:${colHex(c.color)}"></span>${esc(c.name)}<span class="cc-n">${n}</span></button>`}).join('')}</div>`}
 function bindColChips(el){const bar=$('#colChips',el),bw=$('#bw',el);if(!bar||!bw)return;
   const cols=$$('.col',bw),chips=$$('.cchip',bar);
   const mark=()=>{const x=bw.scrollLeft+bw.clientWidth*0.35;let k=0;cols.forEach((c,i)=>{if(c.offsetLeft<=x)k=i});
