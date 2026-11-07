@@ -1,5 +1,19 @@
 # Änderungen
 
+## 1.7.0
+- **Freie Seite wie in OneNote:** Beim Erstellen wählst du oben zwischen „📝 Notiz“ und „📄 Seite“.
+  - **Text:** Irgendwo hinklicken oder tippen und losschreiben.
+  - **Kästen:** frei verschieben (Griff oben ⋯) und in der Breite ändern.
+  - **Formatieren:** fett, kursiv, unterstrichen, durchgestrichen, Überschrift, Aufzählung, Nummerierung, Aufgaben ☐ und gelb markieren.
+  - **Bilder und Screenshots:** einfügen mit Strg+V, hineinziehen oder mit „Bild“; frei verschieben und in der Grösse ändern.
+  - **Zeichnen:** Stift in 6 Farben und 3 Stärken, Textmarker, Radierer. Mit dem Apple Pencil wird auch im Text-Modus gezeichnet.
+  - **Papier:** Blanko, liniert, kariert oder Punkte.
+  - Rückgängig und Wiederholen (Strg+Z / Strg+Y).
+  - Auf dem iPhone geht alles auch mit dem Finger.
+- Auf dem Board zeigt die Karte ein verkleinertes Abbild der Seite.
+- Termin, Erinnerung, Labels und Checkliste findest du bei Seiten unter „Details“.
+- Suche, [[Links]] und Rückverweise funktionieren auch mit dem Text auf Seiten.
+
 ## 1.6.1
 - **Neuer Space-Typ „Schule / Modul“** mit den Spalten Mitschriften, Aufträge, Zu lernen, Repetieren und Erledigt, am besten einer pro Modul.
 - **Space-Typ „Lernen“ überarbeitet:** Neu, Zu lernen, Am Lernen, Repetieren, Sitzt.

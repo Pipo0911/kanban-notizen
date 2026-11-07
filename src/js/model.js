@@ -22,7 +22,8 @@ const live=s=>s.notes.filter(n=>!n.archived);
 const tagsOf=s=>[...new Set(live(s).flatMap(n=>n.tags))].sort((a,b)=>a.localeCompare(b));
 const allTags=()=>[...new Set(DB.spaces.flatMap(s=>live(s).flatMap(n=>n.tags)))].sort((a,b)=>a.localeCompare(b));
 const maxOrder=(s,c)=>s.notes.filter(n=>n.colId===c).reduce((m,n)=>Math.max(m,n.order),-1);
-const noteEmpty=n=>!n.title.trim()&&!n.body.trim()&&!n.checklist.length&&!n.images.length&&!n.time.length&&!n.timerStart;
+const pageHasContent=n=>n.kind==='page'&&n.page&&(n.page.items.length||n.page.ink.length);
+const noteEmpty=n=>!n.title.trim()&&!n.body.trim()&&!n.checklist.length&&!n.images.length&&!n.time.length&&!n.timerStart&&!pageHasContent(n);
 const dispSort=(a,b)=>(b.pinned-a.pinned)||(a.order-b.order)||(a.created<b.created?-1:1);
 function colSort(s){const m=s.sort||'manual';return(a,b)=>(b.pinned-a.pinned)||(m==='prio'?PRANK(a.prio)-PRANK(b.prio):m==='due'?(a.due||'9999').localeCompare(b.due||'9999')||(a.dueTime||'99').localeCompare(b.dueTime||'99'):m==='updated'?b.updated.localeCompare(a.updated):0)||dispSort(a,b)}
 const noteLabel=n=>n.title.trim()||n.body.trim().split('\n')[0].replace(/^[#>*\-\s]+/,'').slice(0,70)||'Ohne Titel';
@@ -36,7 +37,7 @@ function isoWeek(ds){const d=new Date(ds+'T12:00:00');d.setDate(d.getDate()+3-(d
 
 function makeSpace(name,color,tpl,desc=''){const t=TEMPLATES[tpl]||TEMPLATES.notizen;
   return{id:uid(),name,color,desc,created:now(),columns:t.cols.map(([n,c,done])=>({id:uid(),name:n,color:c,done:!!done})),notes:[]}}
-function blankNote(){return{id:uid(),title:'',body:'',color:'default',prio:'',tags:[],colId:'',pinned:false,fav:false,daily:'',remind:'',checklist:[],due:'',dueTime:'',repeat:'',remindedFor:'',time:[],timerStart:'',images:[],archived:false,created:now(),updated:now()}}
+function blankNote(){return{id:uid(),title:'',body:'',color:'default',prio:'',tags:[],colId:'',pinned:false,fav:false,daily:'',remind:'',kind:'',checklist:[],due:'',dueTime:'',repeat:'',remindedFor:'',time:[],timerStart:'',images:[],archived:false,created:now(),updated:now()}}
 function newNote(s,d={}){
   const n=Object.assign(blankNote(),d);
   if(!s.columns.some(c=>c.id===n.colId))n.colId=firstOpenCol(s).id;
@@ -62,6 +63,7 @@ function normNote(n,s,k){
   const cols=new Set(s.columns.map(c=>c.id));
   return{id:okId(n.id)?String(n.id):uid(),title:String(n.title||''),body:String(n.body||''),color:NC[n.color]?n.color:'default',
     tags:[...new Set(arr(n.tags).map(t=>String(t).trim()).filter(Boolean))],colId:cols.has(n.colId)?n.colId:s.columns[0].id,
+    kind:n.kind==='page'?'page':'',page:n.kind==='page'?normPage(n.page):undefined,
     pinned:!!n.pinned,fav:!!n.fav,daily:isDate(n.daily)?n.daily:'',checklist:arr(n.checklist).filter(c=>c&&typeof c.text==='string').map(c=>({id:okId(c.id)?String(c.id):uid(),text:c.text,done:!!c.done})),
     due:isDate(n.due)?n.due:'',dueTime:isDate(n.due)&&isTime(n.dueTime)?n.dueTime:'',repeat:REPEAT[n.repeat]!==undefined?n.repeat:'',remind:/^(off|rel:\d{1,5}|at:\d{4}-\d{2}-\d{2}T\d{2}:\d{2})$/.test(n.remind||'')?n.remind:'',remindedFor:String(n.remindedFor||''),
     time:arr(n.time).filter(t=>t&&isDate(t.day)&&+t.min>0).map(t=>({id:okId(t.id)?String(t.id):uid(),day:t.day,min:Math.round(+t.min),text:String(t.text||''),start:t.start||'',end:t.end||''})),
@@ -109,6 +111,6 @@ function normTrash(t){return arr(t).filter(e=>e&&e.note&&typeof e.note==='object
     return{id:okId(e.id)?String(e.id):uid(),note:n,sid:okId(e.sid)?String(e.sid):'',spaceName:String(e.spaceName||''),colName:String(e.colName||''),deletedAt:isNaN(Date.parse(e.deletedAt))?now():e.deletedAt}})}
 /* Versionsverlauf: bis zu 20 frühere Stände pro Notiz (ohne Bilder) */
 function normHistory(h){const o={};if(!h||typeof h!=='object')return o;
-  for(const[k,v]of Object.entries(h)){if(!okId(k))continue;const l=arr(v).filter(x=>x&&!isNaN(Date.parse(x.at))).map(x=>({at:x.at,title:String(x.title||''),body:String(x.body||''),checklist:arr(x.checklist).filter(c=>c&&typeof c.text==='string').map(c=>({text:c.text,done:!!c.done}))})).slice(-HISTORY_MAX);if(l.length)o[k]=l}
+  for(const[k,v]of Object.entries(h)){if(!okId(k))continue;const l=arr(v).filter(x=>x&&!isNaN(Date.parse(x.at))).map(x=>({at:x.at,title:String(x.title||''),body:String(x.body||''),checklist:arr(x.checklist).filter(c=>c&&typeof c.text==='string').map(c=>({text:c.text,done:!!c.done})),...(x.page&&typeof x.page==='object'?{page:x.page}:{})})).slice(-HISTORY_MAX);if(l.length)o[k]=l}
   return o}
 function payload(){return{app:'kanban-notizen',v:5,saved:now(),folders:DB.folders,spaces:DB.spaces,settings:DB.settings,trash:DB.trash,history:DB.history}}

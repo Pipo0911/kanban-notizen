@@ -36,8 +36,8 @@ function renderTrash(el){const L=DB.trash;
     DB.trash.forEach(e=>delete DB.history[e.note.id]);DB.trash=[];save();render();toast('Papierkorb geleert')}}
 
 /* ---------- Versionsverlauf ---------- */
-const snapOf=n=>({at:n.updated,title:n.title,body:n.body,checklist:n.checklist.map(c=>({text:c.text,done:c.done}))});
-const snapKey=x=>JSON.stringify([x.title,x.body,x.checklist.map(c=>[c.text,c.done])]);
+const snapOf=n=>{const o={at:n.updated,title:n.title,body:n.body,checklist:n.checklist.map(c=>({text:c.text,done:c.done}))};if(n.kind==='page'&&n.page)o.page=JSON.parse(JSON.stringify(n.page));return o};
+const snapKey=x=>JSON.stringify([x.title,x.body,x.checklist.map(c=>[c.text,c.done]),x.page?x.page.items.map(i=>[i.id,i.x,i.y,i.w,i.html||i.src.length]).concat(x.page.ink.map(s=>s.id)):0]);
 /* Speichert den Stand vor der Bearbeitung, wenn sich etwas geändert hat */
 function recordHistory(n,before){if(!before||snapKey(before)===snapKey(snapOf(n)))return;
   const l=DB.history[n.id]||(DB.history[n.id]=[]);if(l.length&&snapKey(l[l.length-1])===snapKey(before))return;
@@ -56,5 +56,5 @@ function showHistory(s,n,onRestore){const l=[...(DB.history[n.id]||[])].reverse(
       <div class="df"><span class="muted sm">Der aktuelle Stand wird beim Wiederherstellen selbst als Version gesichert.</span><span class="spacer"></span><button type="button" class="btn ghost" data-x>Schliessen</button><button type="button" class="btn primary" data-restore>Diese Version wiederherstellen</button></div>`;
     $$('.hist-it',d).forEach(b=>b.onclick=()=>{sel=+b.dataset.k;draw()});
     $('[data-x]',d).onclick=()=>d.close();
-    $('[data-restore]',d).onclick=()=>{const v=l[sel];recordHistory(n,snapOf(n));n.title=v.title;n.body=v.body;n.checklist=v.checklist.map(c=>ck(c.text,c.done));n.updated=now();save();d.close();onRestore();toast('Version vom '+fmtTime(v.at)+' wiederhergestellt')}};
+    $('[data-restore]',d).onclick=()=>{const v=l[sel];recordHistory(n,snapOf(n));n.title=v.title;n.body=v.body;n.checklist=v.checklist.map(c=>ck(c.text,c.done));if(v.page&&n.kind==='page')n.page=normPage(v.page);n.updated=now();save();d.close();onRestore();toast('Version vom '+fmtTime(v.at)+' wiederhergestellt')}};
   draw();d.onclose=()=>{d.style.width=''};d.showModal();$('.hist-it',d).focus()}

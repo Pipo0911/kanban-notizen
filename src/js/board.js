@@ -8,11 +8,11 @@ function cardHTML(s,n,opt={}){linkCtx=s.id;
   const short=n.body.split('\n').length<=6&&n.body.length<280;
   const col=opt.showCol?colOf(s,n):null,tt=timeTotal(n),run=!!n.timerStart;
   return`<div class="card c-${n.color}${done?' is-done':''}${opt.ro?'':' has-play'}" data-id="${n.id}" data-sid="${s.id}" tabindex="0" role="button" aria-label="${esc(noteLabel(n))}">
-  ${n.images.length?`<img class="n-img" src="${n.images[0].data}" alt="">`:''}
+  ${n.kind==='page'?'':n.images.length?`<img class="n-img" src="${n.images[0].data}" alt="">`:''}
   ${n.pinned||n.fav?`<span class="pin">${n.fav?`<span class="fav-s" title="Favorit">${SVG.starOn}</span>`:''}${n.pinned?`<span title="Angeheftet">${SVG.pin}</span>`:''}</span>`:''}
-  ${n.title.trim()?`<div class="n-title">${esc(n.title)}</div>`:''}
-  ${n.body.trim()?`<div class="n-body md${short?' short':''}"${n.title.trim()?'':' style="margin-top:0"'}>${md(n.body)}</div>`:''}
-  ${!n.title.trim()&&!n.body.trim()&&!tot&&!n.images.length?'<div class="n-title muted">Leere Notiz</div>':''}
+  ${n.title.trim()||n.kind==='page'?`<div class="n-title">${n.kind==='page'?'<span class="pg-badge" title="Freie Seite">📄</span>':''}${esc(n.title.trim()||'Seite ohne Titel')}</div>`:''}
+  ${n.kind==='page'?pageMiniHTML(n.page):n.body.trim()?`<div class="n-body md${short?' short':''}"${n.title.trim()?'':' style="margin-top:0"'}>${md(n.body)}</div>`:''}
+  ${!n.title.trim()&&!n.body.trim()&&!tot&&!n.images.length&&n.kind!=='page'?'<div class="n-title muted">Leere Notiz</div>':''}
   ${tot?`<div class="prog" title="${dn} von ${tot} erledigt"><div style="width:${dn/tot*100}%"></div></div><div class="n-ck">${show.map(c=>`<label class="ck-row${c.done?' done':''}"><input type="checkbox" data-ck="${n.id}:${c.id}"${c.done?' checked':''}${opt.ro?' disabled':''}><span>${esc(c.text)}</span></label>`).join('')}${tot>show.length?`<div class="ck-more">+ ${tot-show.length} weitere</div>`:''}</div>`:''}
   <div class="n-meta">${n.prio?prioIcon(n.prio):''}${opt.showSpace?`<span class="spchip"><i style="background:${esc(s.color)}"></i>${esc(s.name)}</span>`:''}${col?`<span class="colchip"><span class="col-dot" style="background:${NC[col.color].d}"></span>${esc(col.name)}</span>`:''}${n.due?`<span class="chip ${st}" title="Termin ${fmtDate(n.due)}${n.dueTime?' '+n.dueTime:''}">${SVG.cal}${fmtShort(n.due)}${n.dueTime?' '+n.dueTime:''}</span>`:''}${n.repeat?`<span class="chip" title="Wiederholt sich: ${REPEAT[n.repeat]}">${SVG.rep}</span>`:''}${run?`<span class="chip run">${SVG.clock}<span data-runclock="${n.id}">${clock(Date.now()-Date.parse(n.timerStart)).replace(/^00:/,'')}</span></span>`:tt?`<span class="chip" title="Erfasste Zeit">${SVG.clock}${hm(tt)}</span>`:''}${n.images.length>1?`<span class="chip">${SVG.img}${n.images.length}</span>`:''}${n.tags.map(lblHTML).join('')}</div>
   ${opt.ro?'':`<button class="play${run?' run':''}" data-play="${n.id}" title="${run?'Zeit stoppen':'Zeit starten'}" aria-label="${run?'Zeit stoppen':'Zeit starten'}">${run?'■':'▶'}</button>`}

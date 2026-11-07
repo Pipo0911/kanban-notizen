@@ -2,7 +2,11 @@
 /* Kanban Notizen · Notiz-Editor */
 'use strict';
 /* ============ Editor ============ */
-function createNote(sid,colId,tpl){const s=spaceById(sid)||sp();const n=newNote(s,{colId:colId||firstOpenCol(s).id});n._new=true;if(tpl)applyTpl(n,tpl);openNote(s.id,n.id)}
+function createNote(sid,colId,tpl,kind){const s=spaceById(sid)||sp();const n=newNote(s,{colId:colId||firstOpenCol(s).id});n._new=true;if(tpl)applyTpl(n,tpl);if(kind==='page')toPage(n);openNote(s.id,n.id)}
+/* Notiz in eine freie Seite umwandeln: vorhandener Text wird zum ersten Textkasten */
+function toPage(n){if(n.kind==='page')return;n.kind='page';n.page=blankPage();
+  if(n.body.trim()){linkCtx='';n.page.items.push({id:uid(),t:'text',x:40,y:40,w:560,html:cleanHTML(md(n.body).replace(/<a class="wl[^>]*>(.*?)<\/a>/g,'$1'))})}
+  n.images.forEach((im,k)=>n.page.items.push({id:uid(),t:'img',x:640+k*30,y:40+k*30,w:360,src:im.data}));n.images=[];n.updated=now()}
 function applyTpl(n,t){t.tags.forEach(ensureLabel);n.title=fillVars(t.title);n.body=fillVars(t.body);n.color=t.color;n.tags=[...new Set([...n.tags,...t.tags])];n.checklist=t.checklist.map(x=>ck(fillVars(x)));if(t.remind)n.remind=t.remind;n.updated=now()}
 async function addImages(files,n,after){
   for(const f of files){if(!/^image\//.test(f.type))continue;
@@ -31,7 +35,8 @@ function openNote(sid,id,opt={}){
   <div class="ed-top"><div class="dots" role="radiogroup" aria-label="Farbe">${NCOL.map(c=>`<button type="button" class="dot${n.color===c.id?' on':''}" style="background:${c.d}" data-color="${c.id}" title="${c.n}" aria-label="${c.n}"></button>`).join('')}</div><span class="ed-loc">${esc(s.name)}</span>
     <span class="spacer"></span><button type="button" class="icon-btn fav${n.fav?' on':''}" data-fav title="${n.fav?'Aus Favoriten entfernen':'Zu Favoriten'}" aria-label="Favorit" aria-pressed="${n.fav}">${n.fav?SVG.starOn:SVG.star}</button><button type="button" class="icon-btn${n.pinned?' on':''}" data-pin title="${n.pinned?'Lösen':'Anheften'}" aria-label="Anheften">${SVG.pin}</button><button type="button" class="icon-btn" data-close title="Schliessen (Esc)" aria-label="Schliessen">✕</button></div>
   <div class="ed-body">
-    ${n._new&&DB.settings.templates.length?`<div class="tplbar" id="tplbar">Vorlage: ${DB.settings.templates.map(t=>`<button type="button" data-tpl="${t.id}">${esc(t.name)}</button>`).join('')}</div>`:''}
+    ${n._new||noteEmpty(n)?`<div class="kindbar" role="radiogroup" aria-label="Art"><span>Art:</span><button type="button" data-kind="" class="${n.kind?'':'on'}">📝 Notiz</button><button type="button" data-kind="page" class="${n.kind==='page'?'on':''}">📄 Seite <span class="muted">wie OneNote</span></button></div>`:''}
+    ${n._new&&n.kind!=='page'&&DB.settings.templates.length?`<div class="tplbar" id="tplbar">Vorlage: ${DB.settings.templates.map(t=>`<button type="button" data-tpl="${t.id}">${esc(t.name)}</button>`).join('')}</div>`:''}
     <input class="ed-title" id="edTitle" placeholder="Titel" value="${esc(n.title)}" maxlength="200" aria-label="Titel">
     <div class="seg"><button type="button" data-tab="write">Schreiben</button><button type="button" data-tab="preview">Vorschau</button><span class="spacer"></span><span class="hint" style="margin:0">**fett** · *kursiv* · - [ ] Aufgabe · # Titel · [[Notiz]] verlinken</span></div>
     <div id="edTextWrap"></div>
@@ -53,6 +58,16 @@ function openNote(sid,id,opt={}){
   </div>
   <div class="ed-foot"><button type="button" class="btn sm ghost" data-copy title="Als Text in die Zwischenablage, z. B. für Tickets oder Mails">Kopieren</button><button type="button" class="btn sm ghost" data-print title="Drucken oder als PDF speichern">Drucken</button><button type="button" class="btn sm ghost" data-hist title="Frühere Versionen dieser Notiz">${SVG.hist} Verlauf${DB.history[n.id]?` <span class="muted">${DB.history[n.id].length}</span>`:''}</button><button type="button" class="btn sm ghost" data-astpl>Als Vorlage</button><button type="button" class="btn sm ghost" data-dup>Duplizieren</button><button type="button" class="btn sm ghost" data-move>Verschieben …</button><button type="button" class="btn sm ghost" data-arch>${n.archived?'Wiederherstellen':'Archivieren'}</button><span class="spacer"></span><button type="button" class="btn sm danger" data-del>Löschen</button><button type="button" class="btn sm primary" data-close>Fertig</button></div></div>`;
   const ed=$('#ed',dlg),tw=$('#edTextWrap',dlg);
+  /* Art wählen */
+  $$('[data-kind]',dlg).forEach(b=>b.onclick=()=>{const k=b.dataset.kind;n._switch=true;if(k==='page')toPage(n);else{n.kind='';n.body=n.page?pageText(n.page):n.body;n.page=undefined}touch();openNote(s.id,n.id,{back:true})});
+  /* Freie Seite: Fläche statt Textfeld, übrige Felder unter „Details“ */
+  dlg.classList.toggle('page-mode',n.kind==='page');let pgCtl=null;
+  if(n.kind==='page'){$('.seg',dlg).hidden=true;tw.hidden=true;
+    const pw=document.createElement('div');pw.className='pg-wrap';pw.id='pgWrap';tw.after(pw);
+    const det=document.createElement('details');det.className='pg-details';
+    det.innerHTML='<summary>Details: Spalte, Termin, Erinnerung, Labels, Checkliste, Zeiterfassung</summary>';
+    [...$$('.ed-body > .ed-sec',dlg).filter(x=>x.id!=='blSec'),$('.ed-grid',dlg)].sort((a,b)=>a.compareDocumentPosition(b)&4?-1:1).forEach(x=>{if(!/Bilder/.test(x.textContent.slice(0,20)))det.appendChild(x);else x.hidden=true});
+    pw.after(det);pgCtl=mountPage(pw,n,touch)}
   const info=()=>{$('#edInfo',dlg).textContent=`Erstellt ${fmtTime(n.created)} · Geändert ${rel(n.updated)}`};info();
   const drawText=()=>{$$('[data-tab]',dlg).forEach(b=>b.classList.toggle('on',b.dataset.tab===ui.edTab));
     if(ui.edTab==='write'){tw.innerHTML=`<textarea class="ed-text" id="edBody" placeholder="Notiz schreiben …" aria-label="Text">${esc(n.body)}</textarea>${mdBarHTML()}`;const ta=$('#edBody',dlg);
@@ -149,10 +164,11 @@ function openNote(sid,id,opt={}){
     const t=spaceById(r.to),snap=JSON.stringify(DB);s.notes=s.notes.filter(x=>x!==n);n.colId=firstOpenCol(t).id;n.order=maxOrder(t,n.colId)+1;n.updated=now();delete n._new;t.notes.push(n);n._gone=true;
     dlg.close();save();render();toast('Verschoben nach „'+t.name+'“',{undo:snap})};
   dlg.oncancel=e=>{if(curAC&&curAC.open()){e.preventDefault();curAC.close()}};
-  dlg.onclose=()=>{clearTimeout(saveT);edRefresh=null;dlg.onclose=null;curAC=null;$$('.ac-pop').forEach(x=>x.remove());
+  dlg.onclose=()=>{if(pgCtl){pgCtl.flush();pgCtl.destroy()}dlg.classList.remove('page-mode');clearTimeout(saveT);edRefresh=null;dlg.onclose=null;curAC=null;$$('.ac-pop').forEach(x=>x.remove());
     let removed=false;
-    if(!n._gone&&(noteEmpty(n)||dailyUntouched(n))){const sp_=spaceById(edCur&&edCur.sid)||s;sp_.notes=sp_.notes.filter(x=>x!==n);removed=true;if(!n._new&&n._dailyFresh===undefined)toast('Leere Notiz entfernt')}
+    const sw=n._switch;delete n._switch;
+    if(!sw&&!n._gone&&(noteEmpty(n)||dailyUntouched(n))){const sp_=spaceById(edCur&&edCur.sid)||s;sp_.notes=sp_.notes.filter(x=>x!==n);removed=true;if(!n._new&&n._dailyFresh===undefined)toast('Leere Notiz entfernt')}
     if(!removed){recordHistory(n,before0.v);const c=relinkTitle(n,origTitle);if(c)toast(`${c} Verweis${c===1?'':'e'} auf „${n.title.trim()}“ aktualisiert`)}
-    delete n._new;delete n._gone;delete n._dailyFresh;if(!edNav){edStack=[];edCur=null}save(true);render();applyExternal()};
+    if(!sw)delete n._new;delete n._gone;if(!sw)delete n._dailyFresh;if(!edNav){edStack=[];edCur=null}save(true);render();applyExternal()};
   if(!dlg.open)dlg.showModal();
   if(n._new)$('#edTitle',dlg).focus();else $('.ed-body',dlg).scrollTop=0}

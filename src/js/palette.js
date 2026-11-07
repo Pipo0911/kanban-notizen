@@ -8,7 +8,7 @@ function openPalette(){const d=$('#pal');let sel=0,items=[];
   const cmds=()=>{const s=sp();return[
     {sec:'Befehle',i:'+',t:`Neue Notiz in „${s.name}“`,run:()=>createNote(s.id)},
     ...DB.settings.templates.map(t=>({sec:'Befehle',i:'+',t:`Neue Notiz aus Vorlage: ${t.name}`,run:()=>createNote(s.id,null,t)})),
-    {sec:'Befehle',i:'▦',t:'Tagesnotiz von heute',run:()=>openDaily(today())},{sec:'Befehle',i:'▦',t:'Tagesnotiz von gestern',run:()=>openDaily(addDays(today(),-1))},
+    {sec:'Befehle',i:'▦',t:'Tagesnotiz von heute',run:()=>openDaily(today())},{sec:'Befehle',i:'📄',t:'Neue Seite (frei, wie OneNote)',run:()=>createNote(DB.active,'',null,'page')},{sec:'Befehle',i:'▦',t:'Tagesnotiz von gestern',run:()=>openDaily(addDays(today(),-1))},
     {sec:'Befehle',i:'⏱',t:runningTimer()?'Zeiterfassung stoppen':'Zeiterfassung öffnen',run:()=>{const r=runningTimer();r?stopTimer(r.s,r.n):setView('time')}},
     {sec:'Gehe zu',i:'›',t:'Heute & Termine',run:()=>setView('today')},{sec:'Gehe zu',i:'›',t:'Zeiterfassung',run:()=>setView('time')},{sec:'Gehe zu',i:'›',t:'Papierkorb',run:()=>setView('trash')},{sec:'Gehe zu',i:'›',t:'Einstellungen',run:()=>setView('settings')},
     ...DB.spaces.map(x=>({sec:'Gehe zu',i:'›',t:'Space: '+spaceLabel(x),run:()=>goSpace(x.id)})),
