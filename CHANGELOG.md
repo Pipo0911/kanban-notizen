@@ -1,5 +1,19 @@
 # Änderungen
 
+## 1.10.0
+- **Whiteboard pro Kategorie:** Jede Kategorie (Ordner) in der Seitenleiste hat jetzt ein eigenes Whiteboard. Es steht direkt unter dem Ordner, oder im Ordner-Menü ⋯ → „Whiteboard öffnen“.
+  - **Zeichnen:** mit Stift, Finger, Maus oder Apple Pencil, dazu Textmarker und Radierer. Der Apple Pencil zeichnet auch im Auswahl-Modus.
+  - **Haftnotizen:** in 7 Farben oder einer eigenen Farbe, beschriften mit Doppeltipp.
+  - **Text:** in vier Grössen und jeder Farbe.
+  - **Formen:** Rechteck, Kreis, Raute, Linie und Pfeil.
+  - **Sticker:** 40 Emoji-Sticker.
+  - **Bilder:** einfügen mit „Bild“, Strg+V oder Hineinziehen.
+  - **Bearbeiten:** Alles lässt sich verschieben, in der Grösse ändern, einfärben, duplizieren, nach vorne oder hinten legen und löschen.
+  - **Unendliche Fläche:** Mit zwei Fingern verschieben und zoomen, am PC mit Mausrad und Strg + Mausrad. „Alles“ zeigt den ganzen Inhalt.
+  - Hintergrund mit Punkten, kariert, liniert oder leer. Rückgängig mit Strg+Z.
+  - Whiteboards werden wie Notizen verschlüsselt zwischen PC, iPhone und iPad synchronisiert.
+- Tastenkürzel im Whiteboard: V Auswählen, H Verschieben, P Stift, M Marker, E Radierer, T Text, S Haftnotiz, R Form, Leertaste gedrückt halten zum Verschieben.
+
 ## 1.9.0
 - **Grosse Farbpalette überall, wo man Farben wählt:** bei Notizen, Spalten, Labels, Spaces und auf Seiten (Textfarbe, Markieren, Stift).
   - **Alle Farben:** 84 Farben, nämlich 12 Farbtöne in 6 Helligkeiten und 12 Grautöne.

@@ -10,6 +10,7 @@ const ACTIONS={newSpace:()=>createSpace(''),newFolder:()=>createFolder(''),addMe
 document.addEventListener('click',e=>{if(e.target.closest('dialog'))return;
   const tl=e.target.closest('[data-fadd],[data-fmenu],[data-smenu]');
   if(tl){e.stopPropagation();const[x,y]=menuAt(tl);if(tl.dataset.fadd)addMenu(x,y,tl.dataset.fadd);else if(tl.dataset.fmenu)folderMenu(folderById(tl.dataset.fmenu),x,y);else spaceMenu(spaceById(tl.dataset.smenu),x,y);return}
+  const wbr=e.target.closest('[data-wb]');if(wbr){openWB(wbr.dataset.wb);return}
   const fo=e.target.closest('[data-folder]');if(fo){toggleFolder(fo.dataset.folder);return}
   const sb=e.target.closest('[data-space]');if(sb){goSpace(sb.dataset.space);return}
   const a=e.target.closest('[data-act]');if(a&&ACTIONS[a.dataset.act])ACTIONS[a.dataset.act](a,e)});

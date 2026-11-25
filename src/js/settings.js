@@ -75,7 +75,7 @@ $('#fileIn').onchange=async e=>{const file=e.target.files[0];e.target.value='';i
     if(!spaces.length)throw new Error('Die Datei enthält keine Notizen');
     const conv=spaces.map(normSpace);
     if(fileMode==='all'){const r=await ask({title:'Backup wiederherstellen?',text:`Die Datei enthält ${conv.length} Space${conv.length===1?'':'s'} mit ${conv.reduce((a,s)=>a+s.notes.length,0)} Notizen. Alle aktuellen Notizen werden ersetzt.`,ok:'Wiederherstellen',danger:true});if(!r)return;
-      DB=normDB({folders:d.folders,spaces:conv.map((x,k)=>Object.assign(x,{folder:(spaces[k]||{}).folder||''})),settings:d.settings||DB.settings,trash:d.trash,history:d.history,ui:{view:'board'}});applyTheme();toast('Backup wiederhergestellt',{undo:snap})}
+      DB=normDB({boards:d.boards,folders:d.folders,spaces:conv.map((x,k)=>Object.assign(x,{folder:(spaces[k]||{}).folder||''})),settings:d.settings||DB.settings,trash:d.trash,history:d.history,ui:{view:'board'}});applyTheme();toast('Backup wiederhergestellt',{undo:snap})}
     else{conv.forEach(s=>{s.id=uid();s.folder='';s.notes.forEach(n=>n.id=uid());DB.spaces.push(s)});DB.active=conv[conv.length-1].id;DB.ui.view='board';toast(`${conv.length} Space${conv.length===1?'':'s'} importiert`,{undo:snap})}
     ui.filters=blankF();save();render()}
   catch(err){DB=normDB(JSON.parse(snap));toast('Import fehlgeschlagen: '+err.message)}};

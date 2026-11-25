@@ -12,6 +12,7 @@ Die App läuft komplett offline und speichert in eine JSON-Datei auf deinem PC. 
 | Notizen | Markdown, Checklisten, Farben, Prioritäten, Labels, Bilder per `Strg`+`V`, Vorlagen |
 | Verknüpfen | `[[Titel]]` oder `[[Titel\|Text]]` mit Vorschlägen beim Tippen. Fehlende Notizen entstehen per Klick. Jede Notiz zeigt ihre Rückverweise. Beim Umbenennen werden die Links angepasst. |
 | Tagesnotiz | Taste `D`. Eine Notiz pro Tag mit Vorlage, im Editor Vor- und Folgetag. Verlinken mit `[[2026-10-28]]`. |
+| Whiteboard | Pro Kategorie ein unendliches Whiteboard: zeichnen mit Stift, Finger oder Maus, Haftnotizen, Text, Formen und Pfeile, Sticker und Bilder. Zwei Finger verschieben und zoomen. |
 | Favoriten | Stern im Editor. Favoriten stehen oben in der Seitenleiste und in der Suche. |
 | Sicherheit | Papierkorb (30 Tage), Versionsverlauf (20 Stände pro Notiz), tägliche Backups, Rückgängig |
 | Planung | Heute & Termine, Erinnerungen, Wiederholungen, Zeiterfassung mit CSV-Export |

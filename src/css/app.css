@@ -723,3 +723,58 @@ dialog#dlg.page-mode{width:min(1600px,calc(100vw - 24px));max-width:none;height:
   #printArea .r{text-align:right}
   #printArea tr.day td{font-weight:700;background:#eee}
 }
+
+/* ============ Whiteboard pro Kategorie ============ */
+.sp-item.wb-row .wb-ic{background:var(--accent-soft);color:var(--accent)}
+.wb{flex:1;min-height:0;display:flex;flex-direction:column;outline:none}
+.wb-bar{border-top:1px solid var(--border)}
+.wb-bar .sep,.wb-selbar .sep{width:1px;align-self:stretch;background:var(--border);margin:3px 4px;flex:none}
+.wb-dot{display:inline-block;border-radius:50%;background:currentColor}
+.wb-zv{min-width:58px;justify-content:center;font-variant-numeric:tabular-nums}
+.wb-stage{flex:1;min-height:0;position:relative;overflow:hidden;background-color:#fff;color:#1d1f24;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:default}
+.wb-stage.bg-dots{background-image:radial-gradient(circle,#c4ccd8 1.3px,transparent 1.7px)}
+.wb-stage.bg-grid{background-image:linear-gradient(#e7ebf2 1px,transparent 1px),linear-gradient(90deg,#e7ebf2 1px,transparent 1px)}
+.wb-stage.bg-lines{background-image:linear-gradient(to bottom,transparent calc(100% - 1px),#dfe6f2 0)}
+.wb-stage.drop{box-shadow:inset 0 0 0 3px var(--accent)}
+.wb-stage.t-hand,.wb-stage.panning{cursor:grab}
+.wb-stage.t-pen,.wb-stage.t-mark,.wb-stage.t-shape{cursor:crosshair}
+.wb-stage.t-erase{cursor:cell}
+.wb-stage.t-text{cursor:text}
+.wb-stage.t-pen .wb-it,.wb-stage.t-mark .wb-it,.wb-stage.t-erase .wb-it,.wb-stage.t-shape .wb-it,.wb-stage.panning .wb-it{pointer-events:none!important}
+.wb-stage.t-pen .wb-it *,.wb-stage.t-mark .wb-it *,.wb-stage.t-erase .wb-it *,.wb-stage.t-shape .wb-it *{pointer-events:none!important}
+.wb-world{position:absolute;left:0;top:0;width:0;height:0;transform-origin:0 0}
+.wb-items{position:absolute;left:0;top:0}
+.wb-ink{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;z-index:5}
+.wb-ink path.mk{mix-blend-mode:multiply}
+.wb-it{position:absolute;box-sizing:border-box;color:#1d1f24;cursor:move}
+.wb-it.sel{outline:calc(2px*var(--iz,1)) solid var(--accent);outline-offset:calc(4px*var(--iz,1))}
+.wb-it.editing{outline-style:dashed;cursor:text}
+.wb-sticky{padding:14px 16px;border-radius:3px;box-shadow:0 1px 2px rgba(0,0,0,.12),0 8px 18px rgba(0,0,0,.1);font-size:18px;line-height:1.35}
+.wb-text{padding:2px 4px;line-height:1.3}
+.wb-tx{outline:none;min-height:1.3em;overflow-wrap:anywhere}
+.wb-tx[contenteditable=true]{user-select:text;-webkit-user-select:text;cursor:text}
+.wb-tx h2{font-size:1.4em;margin:.2em 0}.wb-tx ul,.wb-tx ol{margin:.2em 0;padding-left:1.3em}
+.wb-img img{display:block;width:100%;height:auto;border-radius:4px;pointer-events:none;-webkit-user-drag:none}
+.wb-sticker{display:flex;align-items:center;justify-content:center;line-height:1;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+.wb-shape{pointer-events:none}
+.wb-shape svg{display:block;overflow:visible}
+.wb-shape svg *{pointer-events:visiblePainted}
+.wb-h{position:absolute;width:calc(14px*var(--iz,1));height:calc(14px*var(--iz,1));right:calc(-11px*var(--iz,1));bottom:calc(-11px*var(--iz,1));background:#fff;border:calc(2px*var(--iz,1)) solid var(--accent);border-radius:50%;pointer-events:auto!important;cursor:nwse-resize;z-index:2;box-sizing:border-box}
+.wb-h.pt{right:auto;bottom:auto;transform:translate(-50%,-50%);cursor:move}
+@media (pointer:coarse){.wb-h{width:calc(26px*var(--iz,1));height:calc(26px*var(--iz,1));right:calc(-17px*var(--iz,1));bottom:calc(-17px*var(--iz,1))}}
+.wb-selbar{position:absolute;z-index:20;display:flex;gap:2px;align-items:center;padding:4px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow-l);white-space:nowrap;max-width:calc(100% - 12px);overflow-x:auto}
+.wb-selbar button{border:0;background:none;border-radius:6px;min-width:30px;min-height:30px;padding:0 6px;color:var(--text);font-size:14px;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.wb-selbar button:hover{background:var(--hover)}
+.wb-selbar .pg-sw{min-width:0!important;flex:none}
+@media (max-width:1700px){.wb-bar [data-wt] span,#wbStk span,#wbImg span{display:none}}
+.wb-selbar button.on{background:var(--accent-soft);color:var(--accent)}
+.wb-selbar .danger{color:var(--danger)}
+.wb-fill{display:inline-block;width:16px;height:16px;border-radius:4px;border:1.5px solid currentColor;background-image:linear-gradient(45deg,transparent 45%,currentColor 45% 55%,transparent 55%)}
+.wb-fill[style*="background:#"]{background-image:none}
+.wb-hint{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);color:#8a919c;font-size:14px;text-align:center;pointer-events:none;width:min(520px,90%);line-height:1.7}
+.wb-hint b{font-size:18px;color:#5b6270}
+.wb-pop{position:fixed;z-index:500;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-l);padding:8px;display:grid;grid-template-columns:repeat(8,42px);gap:2px}
+.wb-pop button{border:0;background:none;font-size:26px;border-radius:8px;height:42px;cursor:pointer;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+.wb-pop button:hover{background:var(--hover)}
+@media (pointer:coarse){.wb-selbar button{min-width:38px;min-height:38px}}
+@media (max-width:700px){.wb{padding-bottom:calc(64px + env(safe-area-inset-bottom))}.wb-pop{grid-template-columns:repeat(6,42px)}}
