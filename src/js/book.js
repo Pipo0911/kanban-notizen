@@ -1,5 +1,5 @@
 /* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
-/* Kanban Notizen · Notizbuch-Ansicht wie in OneNote:
+/* Notara · Notizbuch-Ansicht wie in OneNote:
    Space = Notizbuch, Spalten = Abschnitte (Reiter oben), Notizen = Seiten (Liste links, mit Unterseiten über n.parent),
    rechts die gewählte Seite direkt bearbeitbar. Board und Notizbuch zeigen dieselben Daten. */
 'use strict';

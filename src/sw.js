@@ -1,5 +1,5 @@
 /* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
-/* Kanban Notizen · Service Worker der Web-App: läuft offline, holt Updates im Hintergrund.
+/* Notara · Service Worker der Web-App: läuft offline, holt Updates im Hintergrund.
    VERSION wird beim Veröffentlichen (GitHub Pages) automatisch ersetzt. */
 const VERSION='dev';
 const CACHE='kanban-notizen-'+VERSION;
@@ -15,4 +15,4 @@ self.addEventListener('notificationclick',e=>{e.notification.close();const open=
   e.waitUntil(self.clients.matchAll({type:'window',includeUncontrolled:true}).then(cs=>{const c=cs[0];if(c){c.focus();if(open)c.postMessage({open})}else return self.clients.openWindow(open?`./?open=${open.sid}.${open.nid}`:'./')}))});
 /* Erinnerung per Push: Inhalt wurde auf dem anderen Gerät für dieses verschlüsselt, der Browser entschlüsselt ihn */
 self.addEventListener('push',e=>{let d={};try{d=e.data?e.data.json():{}}catch(x){d={body:e.data?e.data.text():''}}
-  e.waitUntil(self.registration.showNotification(d.title||'Kanban Notizen',{body:d.body||'',tag:d.tag||undefined,icon:'icons/icon-192.png',badge:'icons/icon-192.png',data:d.open||null,timestamp:Date.now()}))});
+  e.waitUntil(self.registration.showNotification(d.title||'Notara',{body:d.body||'',tag:d.tag||undefined,icon:'icons/icon-192.png',badge:'icons/icon-192.png',data:d.open||null,timestamp:Date.now()}))});

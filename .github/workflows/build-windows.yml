@@ -90,10 +90,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: v${{ steps.ver.outputs.version }}
-          releaseName: Kanban Notizen v${{ steps.ver.outputs.version }}
+          releaseName: Notara v${{ steps.ver.outputs.version }}
           releaseCommitish: ${{ github.sha }}
           releaseBody: |
-            Installer: **Kanban Notizen_…_x64-setup.exe** herunterladen und ausführen.
+            Installer: **Notara_…_x64-setup.exe** herunterladen und ausführen.
             Bereits installiert? Die App meldet sich beim nächsten Start selbst mit dem Update.
           releaseDraft: false
           prerelease: false

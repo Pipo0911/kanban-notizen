@@ -1,6 +1,6 @@
 {
-  "name": "Kanban Notizen",
-  "short_name": "Notizen",
+  "name": "Notara",
+  "short_name": "Notara",
   "description": "Notizen auf Boards – mit Tagesnotiz, Wiki-Links, Checklisten und Zeiterfassung.",
   "lang": "de",
   "start_url": "./",

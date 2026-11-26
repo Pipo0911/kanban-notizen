@@ -1,5 +1,5 @@
 /* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
-/* Kanban Notizen · Globale Einstellungen und Import */
+/* Notara · Globale Einstellungen und Import */
 'use strict';
 /* ============ Globale Einstellungen ============ */
 async function backupAll(){if(await download(`kanban-notizen-backup-${today()}.json`,JSON.stringify(payload(),null,1))){DB.settings.lastBackup=now();save(true)}}

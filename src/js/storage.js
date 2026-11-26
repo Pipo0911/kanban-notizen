@@ -1,5 +1,5 @@
 /* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
-/* Kanban Notizen · Speichern in die Datendatei, Desktop-Verhalten, Updates */
+/* Notara · Speichern in die Datendatei, Desktop-Verhalten, Updates */
 'use strict';
 /* ============ Speichern (Desktop-App) ============ */
 /* Desktop-App: Die Notizen liegen als JSON-Datei auf der Festplatte (Rust-Seite: src-tauri/src/lib.rs).
@@ -18,7 +18,7 @@ function fileFields(d){return{boards:d.boards,folders:d.folders,spaces:d.spaces,
 function applyFileData(d){DB=normDB(Object.assign(fileFields(d),{active:DB.active,ui:DB.ui}));applyTheme();render()}
 async function tauriInfo(){const i=await tInvoke('data_info');tv.path=i.path;tv.isDefault=i.is_default;return i}
 async function tauriLoad(){const i=await tauriInfo();const txt=await tInvoke('load_data');
-  if(txt&&txt.trim()){const d=JSON.parse(txt);if(!Array.isArray(d.spaces))throw new Error('Die Datei enthält keine Kanban-Notizen');applyFileData(d);tv.mtime=i.mtime;return true}return false}
+  if(txt&&txt.trim()){const d=JSON.parse(txt);if(!Array.isArray(d.spaces))throw new Error('Die Datei enthält keine Notara-Daten');applyFileData(d);tv.mtime=i.mtime;return true}return false}
 /* Einmalige Übernahme aus Version 1.0 (damals lagen die Notizen im Speicher des Fensters) */
 function legacyLocal(){try{const r=localStorage.getItem('kanban-notizen-office-v1');return r?JSON.parse(r):null}catch(e){return null}}
 async function tauriInit(){
@@ -47,7 +47,7 @@ window.addEventListener('beforeunload',()=>{if(tv.dirty)tauriWrite()});
 function setStatus(t,err){statusMsg=t;statusErr=!!err;const el=$('#status');if(el){el.textContent=t;el.className='status'+(statusErr?' err':'')}}
 /* Beschäftigt = gerade wird etwas bearbeitet; dann keine fremden Änderungen übernehmen */
 const busy=()=>$('#dlg').open||$('#dlg2').open||!!$('.inline-form')||!!drag||Date.now()-(window.__pgTouch||0)<4000||!!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#bkMain,.wb-it.editing'));
-const jsonFilter=[{name:'Kanban-Notizen',extensions:['json']}];
+const jsonFilter=[{name:'Notara',extensions:['json']}];
 async function tauriNewFile(){const p=await TAURI.dialog.save({defaultPath:'kanban-notizen.json',filters:jsonFilter});if(!p)return;
   await tInvoke('set_data_path',{path:p});await tauriInfo();await tauriWrite();render();toast('Notizen werden jetzt hier gespeichert: '+tv.path)}
 async function tauriOpenFile(){const p=await TAURI.dialog.open({multiple:false,directory:false,filters:jsonFilter});if(!p)return;
@@ -76,7 +76,7 @@ async function checkUpdate(manual){
   try{const u=await TAURI.updater.check();
     if(u){const isNew=upd.version!==u.version;upd.update=u;upd.version=u.version;upd.notes=u.body||'';upd.state='available';if(manual)upd.dismissed=false;
       if(isNew){toast(`Neue Version ${u.version} ist verfügbar`,{open:installUpdate,openLabel:'Jetzt installieren'});
-        notify('Kanban Notizen '+u.version+' ist verfügbar','Klicke in der App auf „Jetzt aktualisieren“.','kn-update')}}
+        notify('Notara '+u.version+' ist verfügbar','Klicke in der App auf „Jetzt aktualisieren“.','kn-update')}}
     else{upd.state='none';upd.update=null;if(manual)toast(`Du hast die neueste Version (${upd.current||'?'}).`)}}
   catch(e){console.warn(e);upd.state='error';if(manual)toast('Update-Prüfung fehlgeschlagen. Bist du online?')}
   refreshUpdateUI()}
@@ -149,4 +149,4 @@ function webStoreOnly(){let kb=0;try{kb=Math.round((localStorage.getItem(WEBKEY)
   return`<div class="panel"><h3>Speicherort</h3>
     <div class="store-state"><span class="dotst ok"></span><div><b>Auf diesem Gerät</b><div class="muted sm">${STANDALONE?'Als App vom Home-Bildschirm':'Im Browser'} · ca. ${kb>1024?(kb/1024).toFixed(1)+' MB':kb+' KB'} belegt</div></div></div>
     <p>Die Notizen bleiben auf diesem Gerät und werden nicht automatisch mit dem PC abgeglichen. Mit <b>Backup speichern</b> und <b>Backup wiederherstellen</b> (unter „Backup &amp; Import“) überträgst du sie zwischen iPhone und PC.</p>
-    ${IOS&&!STANDALONE?'<p class="warn-box"><b>Tipp:</b> Tippe in Safari auf <b>Teilen</b> und dann auf <b>Zum Home-Bildschirm</b>. So läuft Kanban Notizen wie eine App, auch offline, und iOS löscht die Notizen nicht nach längerer Pause.</p>':''}</div>`}
+    ${IOS&&!STANDALONE?'<p class="warn-box"><b>Tipp:</b> Tippe in Safari auf <b>Teilen</b> und dann auf <b>Zum Home-Bildschirm</b>. So läuft Notara wie eine App, auch offline, und iOS löscht die Notizen nicht nach längerer Pause.</p>':''}</div>`}

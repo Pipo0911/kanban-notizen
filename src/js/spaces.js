@@ -1,5 +1,5 @@
 /* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
-/* Kanban Notizen · Spalten und Spaces */
+/* Notara · Spalten und Spaces */
 'use strict';
 /* ============ Spalten & Spaces ============ */
 async function renameCol(s,c){if(!c)return;const r=await ask({title:'Spalte umbenennen',fields:[{name:'n',label:'Name',value:c.name,required:true,maxlength:40}],ok:'Speichern'});if(!r)return;c.name=r.n.trim()||c.name;save();render()}

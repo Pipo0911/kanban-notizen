@@ -1,5 +1,5 @@
 /* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
-/* Kanban Notizen · Papierkorb und Versionsverlauf */
+/* Notara · Papierkorb und Versionsverlauf */
 'use strict';
 
 /* ---------- Papierkorb ---------- */

@@ -1,5 +1,5 @@
 /* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
-/* Kanban Notizen · Globale Ereignisse und Start */
+/* Notara · Globale Ereignisse und Start */
 'use strict';
 /* ============ Globale Ereignisse ============ */
 const ACTIONS={newSpace:()=>createSpace(''),newFolder:()=>createFolder(''),addMenu:a=>{const[x,y]=menuAt(a);addMenu(x,y,'')},view:a=>setView(a.dataset.v),create:()=>createNote(sp().id),menu:()=>$('.app').classList.toggle('menu-open'),

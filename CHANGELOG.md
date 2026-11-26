@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.0.0 · Kanban Notizen heisst jetzt Notara
+- **Neuer Name:** Die App heisst jetzt **Notara**, auf dem PC, auf dem iPhone und auf dem iPad.
+- **PC:** Das Update kommt wie gewohnt. Danach heisst die App im Startmenü und auf dem Desktop „Notara“. Der alte Eintrag „Kanban Notizen“ wird automatisch entfernt. Deine Notizen, Einstellungen und der Autostart bleiben erhalten.
+- **iPhone und iPad:** Die Web-App hat eine neue Adresse: **pipo0911.github.io/notara**.
+  - Öffne sie in Safari und füge sie mit Teilen → Zum Home-Bildschirm neu hinzu.
+  - Verbinde dort den Sync mit dem QR-Code vom PC. Danach sind alle Notizen und Whiteboards wieder da.
+  - Schalte Push-Erinnerungen in der neuen App wieder ein und lösche danach die alte App.
+  - Die alte App zeigt oben einen Hinweis mit Knopf zur neuen Adresse.
+- Der QR-Code für weitere Geräte führt jetzt zur neuen Adresse.
+
 ## 1.10.1
 - **Nur mit dem Stift zeichnen:** Sobald du auf dem iPad einmal mit dem Apple Pencil zeichnest, zeichnet bei Stift, Marker und Radierer nur noch der Stift. Finger und Handballen hinterlassen keine Striche mehr.
   - Auf dem Whiteboard verschiebst du mit einem Finger die Fläche, mit zwei Fingern zoomst du.

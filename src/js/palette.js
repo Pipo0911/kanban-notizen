@@ -1,5 +1,5 @@
 /* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
-/* Kanban Notizen · Suche und Befehle (Strg+K) */
+/* Notara · Suche und Befehle (Strg+K) */
 'use strict';
 /* ============ Suche & Befehle (Strg+K) ============ */
 function openPalette(){const d=$('#pal');let sel=0,items=[];

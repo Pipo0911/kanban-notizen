@@ -1,5 +1,5 @@
 /* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
-/* Kanban Notizen · Notizkarten und Board mit Ziehen */
+/* Notara · Notizkarten und Board mit Ziehen */
 'use strict';
 /* ============ Karten ============ */
 function cardHTML(s,n,opt={}){linkCtx=s.id;

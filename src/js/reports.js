@@ -1,5 +1,5 @@
 /* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
-/* Kanban Notizen · Zeitbericht, Drucken, Markdown-Export */
+/* Notara · Zeitbericht, Drucken, Markdown-Export */
 'use strict';
 /* ============ Zeiterfassung (Bericht) ============ */
 function periodRange(p){const t=today(),d=dow(t),mon=addDays(t,-((d+6)%7));

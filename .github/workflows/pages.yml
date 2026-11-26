@@ -1,5 +1,5 @@
 # Veröffentlicht die Web-App (iPhone / Browser) auf GitHub Pages.
-# Adresse: https://pipo0911.github.io/kanban-notizen/
+# Adresse: https://pipo0911.github.io/notara/
 # Einmalig nötig: Settings → Pages → Source: "GitHub Actions"
 name: Web-App veröffentlichen
 

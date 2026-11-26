@@ -1,5 +1,5 @@
 /* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
-/* Kanban Notizen · Wiki-Links, Rückverweise, Tagesnotiz, Favoriten */
+/* Notara · Wiki-Links, Rückverweise, Tagesnotiz, Favoriten */
 'use strict';
 
 /* ---------- Wiki-Links: [[Titel]] und [[Titel|Anzeigetext]] ---------- */

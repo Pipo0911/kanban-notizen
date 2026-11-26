@@ -1,5 +1,5 @@
 /* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
-/* Kanban Notizen · Toast, Dialoge, Export, Markdown */
+/* Notara · Toast, Dialoge, Export, Markdown */
 'use strict';
 /* ============ Helfer: Toast, Dialoge, Download, Markdown ============ */
 let toastT;

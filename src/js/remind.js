@@ -1,5 +1,5 @@
 /* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
-/* Kanban Notizen · Erinnerungen: Zeitpunkt pro Notiz, Hinweis in der App, Windows-Mitteilung und iPhone-Push.
+/* Notara · Erinnerungen: Zeitpunkt pro Notiz, Hinweis in der App, Windows-Mitteilung und iPhone-Push.
    - PC: Die App prüft laufend (auch im Infobereich) und zeigt eine Windows-Mitteilung.
    - iPhone: Jedes Gerät plant nach dem Abgleich alle Erinnerungen der nächsten 30 Tage auf dem Server ein.
      Titel und Text werden dabei auf dem Gerät für das iPhone verschlüsselt (Web Push, RFC 8291);

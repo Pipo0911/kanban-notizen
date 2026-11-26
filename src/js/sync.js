@@ -1,5 +1,5 @@
 /* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
-/* Kanban Notizen · Abgleich zwischen Geräten (PC ↔ iPhone) über Supabase.
+/* Notara · Abgleich zwischen Geräten (PC ↔ iPhone) über Supabase.
    - Ende-zu-Ende-verschlüsselt: Schlüssel = PBKDF2(Passwort, Salz), jedes Element mit AES-GCM; der Server sieht nur Ciphertext.
    - Zugang über einen geheimen Sync-Code (kein Konto, keine E-Mail).
    - Abgeglichen wird pro Element (Notiz, Space, Kategorien, Einstellungen, Papierkorb, Verlauf). Ändern beide Geräte dieselbe
@@ -180,7 +180,7 @@ function bindSyncPanel(el){const on=(id,f)=>{const x=$('#'+id,el);if(x)x.onclick
    Der QR-Code enthält einen Link mit Sync-Code und Schlüssel im #-Teil (wird nie an einen Server geschickt).
    Die iPhone-App scannt ihn mit der eingebauten Kamera; die Kamera-App würde ihn in Safari öffnen,
    das auf dem iPhone einen eigenen Speicher hat. */
-const PAIR_URL='https://pipo0911.github.io/kanban-notizen/';
+const PAIR_URL=APP_URL;
 const CAN_SCAN=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)&&(WEB||IOS)&&matchMedia('(pointer:coarse)').matches;
 const b64url=s=>s.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 const unb64url=s=>{s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return s};
@@ -194,7 +194,7 @@ async function showPairQR(fresh){if(!sy.cfg)return;
   const q=qrcode(0,'M');q.addData(pairLink());q.make();
   const svg=q.createSvgTag({cellSize:6,margin:3,scalable:true});let left=120,t=0;
   await ask({title:fresh?'Synchronisation ist eingerichtet':'Weiteres Gerät verbinden',cancel:null,ok:'Fertig',wide:true,
-    text:`${fresh?'<p>Deine Notizen liegen jetzt verschlüsselt in der Cloud.</p>':''}<p>Öffne auf dem iPhone die <b>App Kanban Notizen</b> (vom Home-Bildschirm), dann <b>Einstellungen → Synchronisation → Mit QR-Code verbinden</b> und halte die Kamera auf diesen Code:</p>
+    text:`${fresh?'<p>Deine Notizen liegen jetzt verschlüsselt in der Cloud.</p>':''}<p>Öffne auf dem iPhone die <b>App Notara</b> (vom Home-Bildschirm), dann <b>Einstellungen → Synchronisation → Mit QR-Code verbinden</b> und halte die Kamera auf diesen Code:</p>
       <div class="pair-qr" id="pairQR">${svg}</div><p class="muted sm" style="text-align:center" id="pairLeft">Wird nach 2:00 Minuten ausgeblendet</p>
       <p class="muted sm"><b>Nicht mit der Kamera-App scannen</b> – die öffnet Safari statt der App. Der QR-Code ist ein Schlüssel zu deinen Notizen: Zeige ihn niemandem und mach keinen Screenshot davon.</p>`,
     init:()=>{t=setInterval(()=>{left--;const el=$('#pairLeft');if(el)el.textContent=`Wird nach ${Math.floor(left/60)}:${String(left%60).padStart(2,'0')} Minuten ausgeblendet`;
@@ -220,7 +220,7 @@ async function scanPairQR(){
       g.drawImage(v,0,0,c.width,c.height);const img=g.getImageData(0,0,c.width,c.height),res=jsQR(img.data,img.width,img.height,{inversionAttempts:'dontInvert'});
       if(res&&res.data){const p=parsePair(res.data);
         if(p){stop();pairInDialog(d,p);return}
-        if(++wrong%30===1)$('#scanMsg',d).textContent='Das ist kein QR-Code von Kanban Notizen.'}}
+        if(++wrong%30===1)$('#scanMsg',d).textContent='Das ist kein QR-Code von Notara.'}}
     raf=requestAnimationFrame(tick)};
   tick()}
 /* Nach dem Scan im selben Fenster weitermachen – kein Schliessen und neu Öffnen (auf iOS unzuverlässig) */
@@ -254,6 +254,6 @@ async function pairWith(p){
 function handlePairLink(){const p=parsePair(location.hash);if(!p)return;
   try{history.replaceState(null,'',location.pathname+location.search)}catch(e){location.hash=''}
   if(IOS&&!STANDALONE){ask({title:'Bitte in der App scannen',cancel:'Trotzdem hier verbinden',ok:'Verstanden',
-      text:'Du hast den QR-Code mit der Kamera-App gescannt. Dadurch öffnet sich <b>Safari</b> – und Safari hat auf dem iPhone einen eigenen Speicher, getrennt von der App auf dem Home-Bildschirm.<br><br>Öffne stattdessen die <b>App Kanban Notizen</b> und tippe in den Einstellungen unter Synchronisation auf <b>Mit QR-Code verbinden</b>.'})
+      text:'Du hast den QR-Code mit der Kamera-App gescannt. Dadurch öffnet sich <b>Safari</b> – und Safari hat auf dem iPhone einen eigenen Speicher, getrennt von der App auf dem Home-Bildschirm.<br><br>Öffne stattdessen die <b>App Notara</b> und tippe in den Einstellungen unter Synchronisation auf <b>Mit QR-Code verbinden</b>.'})
     .then(r=>{if(r===null)pairWith(p)});return}
   pairWith(p)}

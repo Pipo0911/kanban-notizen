@@ -1,6 +1,7 @@
 /* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
-/* Kanban Notizen · Grundlagen: Hilfsfunktionen, Konstanten, Symbole */
+/* Notara · Grundlagen: Hilfsfunktionen, Konstanten, Symbole */
 'use strict';
+const APP_NAME='Notara',APP_URL='https://pipo0911.github.io/notara/';
 /* ============ Grundlagen ============ */
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);

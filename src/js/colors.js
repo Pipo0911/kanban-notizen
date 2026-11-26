@@ -1,5 +1,5 @@
 /* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
-/* Kanban Notizen · Grosse Farbpalette für Notizen, Spalten, Labels, Spaces und Seiten.
+/* Notara · Grosse Farbpalette für Notizen, Spalten, Labels, Spaces und Seiten.
    Farben sind entweder eine der bisherigen Voreinstellungen (z. B. 'blue') oder ein Hex-Wert '#rrggbb'. */
 'use strict';
 const isHex=c=>/^#[0-9a-f]{6}$/i.test(c||'');

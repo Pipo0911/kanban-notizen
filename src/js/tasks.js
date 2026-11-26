@@ -1,5 +1,5 @@
 /* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
-/* Kanban Notizen · Wiederholungen, Zeiterfassung, Erinnerungen */
+/* Notara · Wiederholungen, Zeiterfassung, Erinnerungen */
 'use strict';
 /* ============ Wiederholungen ============ */
 function advance(d,r){

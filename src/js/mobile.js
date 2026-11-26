@@ -1,5 +1,5 @@
 /* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
-/* Kanban Notizen · Handy/iPhone: Spalten-Leiste, Format-Leiste, Tastatur, Wischgesten, App-Badge, Installationshinweis */
+/* Notara · Handy/iPhone: Spalten-Leiste, Format-Leiste, Tastatur, Wischgesten, App-Badge, Installationshinweis */
 'use strict';
 const isPhone=()=>matchMedia('(max-width:700px)').matches;
 
@@ -50,3 +50,7 @@ const INSTALL_KEY='kanban-notizen-install-hint';
 function showInstallHint(){if(!WEB||!IOS||STANDALONE)return false;try{return!localStorage.getItem(INSTALL_KEY)}catch(e){return true}}
 function installHintHTML(){return`<span>Als App nutzen: unten auf <b>Teilen</b> <span class="share-ic" aria-hidden="true">⬆︎</span> tippen, dann <b>Zum Home-Bildschirm</b>.</span><button class="btn sm ghost" id="instX">Ausblenden</button>`}
 function bindInstallHint(){const x=$('#instX');if(x)x.onclick=()=>{try{localStorage.setItem(INSTALL_KEY,'1')}catch(e){}renderBanner()}}
+
+/* ---------- Umzug: alte Adresse …/kanban-notizen/ → …/notara/ ---------- */
+const MOVED=WEB&&/^\/kanban-notizen(\/|$)/.test(location.pathname);
+function movedHTML(){return`<span><b>Kanban Notizen heisst jetzt Notara</b> und hat eine neue Adresse. Öffne <b>pipo0911.github.io/notara</b> in Safari, tippe auf <b>Teilen → Zum Home-Bildschirm</b> und verbinde dort den Sync mit dem QR-Code. Danach kannst du diese App löschen.</span><a class="btn sm primary" href="${APP_URL}" target="_blank" rel="noopener">Neue Adresse öffnen</a>`}

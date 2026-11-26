@@ -780,3 +780,4 @@ dialog#dlg.page-mode{width:min(1600px,calc(100vw - 24px));max-width:none;height:
 .wb-pop button:hover{background:var(--hover)}
 @media (pointer:coarse){.wb-selbar button{min-width:38px;min-height:38px}}
 @media (max-width:700px){.wb{padding-bottom:calc(64px + env(safe-area-inset-bottom))}.wb-pop{grid-template-columns:repeat(6,42px)}}
+#banner a.btn{text-decoration:none}

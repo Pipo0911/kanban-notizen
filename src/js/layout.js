@@ -1,5 +1,5 @@
 /* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
-/* Kanban Notizen · Seitenleiste, Kopfzeile, Filter, Kategorien-Baum */
+/* Notara · Seitenleiste, Kopfzeile, Filter, Kategorien-Baum */
 'use strict';
 /* ============ Navigation & Grundgerüst ============ */
 function setView(v){DB.ui.view=v;$('.app').classList.remove('menu-open');save(true);render()}
@@ -20,10 +20,11 @@ function renderBanner(){const b=$('#banner');
     else b.innerHTML=upd.state==='downloading'?'<span>Update wird heruntergeladen … <b id="updProg">'+upd.progress+' %</b></span>':'<span>Update wird installiert – die App startet gleich neu.</span>';
     return}
   if(WEB&&webUpdate){b.hidden=false;b.innerHTML=`<span>Eine neue Version ist bereit.</span><button class="btn sm primary" id="webUpd">Jetzt aktualisieren</button>`;$('#webUpd').onclick=webApplyUpdate}
+  else if(MOVED){b.hidden=false;b.innerHTML=movedHTML()}
   else if(showInstallHint()){b.hidden=false;b.innerHTML=installHintHTML();bindInstallHint()}
   else b.hidden=true}
 function renderSide(){const v=DB.ui.view,g=GLOBAL_VIEWS.includes(v),ct=countToday();
-  $('#side').innerHTML=`<div class="brand"><span class="logo">${SVG.logo}</span><span>Notizen</span></div>
+  $('#side').innerHTML=`<div class="brand"><span class="logo">${SVG.logo}</span><span>Notara</span></div>
   <nav class="nav"><button class="nav-item${v==='today'?' on':''}" data-act="view" data-v="today">${SVG.today}<span class="sp-n">Heute &amp; Termine</span>${ct?`<span class="badge">${ct}</span>`:''}</button>
   <button class="nav-item" data-act="daily" title="Tagesnotiz von heute öffnen (Taste D)">${SVG.daily}<span class="sp-n">Tagesnotiz</span><span class="sp-c">${WD[dow(today())]} ${+today().slice(8)}.${+today().slice(5,7)}.</span></button>
   <button class="nav-item${v==='time'?' on':''}" data-act="view" data-v="time">${SVG.time}<span class="sp-n">Zeiterfassung</span>${runningTimer()?'<span class="badge soft">läuft</span>':''}</button></nav>

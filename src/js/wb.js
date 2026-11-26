@@ -1,5 +1,5 @@
 /* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
-/* Kanban Notizen · Whiteboard pro Kategorie (Ordner): unendliche Fläche zum Zeichnen mit Stift, Finger oder Maus,
+/* Notara · Whiteboard pro Kategorie (Ordner): unendliche Fläche zum Zeichnen mit Stift, Finger oder Maus,
    dazu Haftnotizen, Text, Formen und Pfeile, Sticker und Bilder. Zwei Finger verschieben und zoomen.
    Daten: DB.boards[folderId]={updated,bg,items:[…],ink:[{id,c,w,a,p}]} – alle Koordinaten in Weltpunkten.
    Ansicht (Verschiebung/Zoom) wird pro Gerät gemerkt, nicht synchronisiert. */

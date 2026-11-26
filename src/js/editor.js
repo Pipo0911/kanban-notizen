@@ -1,5 +1,5 @@
 /* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
-/* Kanban Notizen · Notiz-Editor */
+/* Notara · Notiz-Editor */
 'use strict';
 /* ============ Editor ============ */
 function toNote(n){if(n.kind!=='page')return;n.pageText=pageText(n.page);n.body=n.pageText;n.kind='';n.updated=now()}

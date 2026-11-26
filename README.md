@@ -1,4 +1,6 @@
-# Kanban Notizen
+# Notara
+
+_Früher „Kanban Notizen“._
 
 Desktop-App für Windows, die Notizen auf Boards organisiert. Dazu gehören Spaces und Kategorien, Wiki-Links mit Rückverweisen, eine Tagesnotiz, Favoriten, ein Papierkorb und ein Versionsverlauf. Ausserdem: Prioritäten, Labels, Checklisten, Termine mit Erinnerung, Wiederholungen, Zeiterfassung, Vorlagen, Screenshots und Drucken/PDF.
 
@@ -20,7 +22,7 @@ Die App läuft komplett offline und speichert in eine JSON-Datei auf deinem PC. 
 ## Ordnerstruktur
 
 ```
-kanban-notizen/
+notara/
 ├─ src/                            Oberfläche (Desktop-App und Web-App)
 │  ├─ manifest.webmanifest, sw.js  Web-App: Name, Icons, Offline-Betrieb
 │  ├─ index.html                   Grundgerüst, lädt CSS und Module
@@ -55,7 +57,7 @@ Die Module sind klassische Skripte ohne Build-Schritt. Sie teilen sich den globa
 
 ## iPhone (Web-App)
 
-Dieselbe Oberfläche läuft auch als Web-App auf GitHub Pages: **https://pipo0911.github.io/kanban-notizen/**
+Dieselbe Oberfläche läuft auch als Web-App auf GitHub Pages: **https://pipo0911.github.io/notara/**
 
 1. Die Adresse auf dem iPhone in **Safari** öffnen.
 2. Auf **Teilen** tippen, dann auf **Zum Home-Bildschirm**.
@@ -123,7 +125,7 @@ Für die Update-Signatur braucht das Repo die Secrets `TAURI_SIGNING_PRIVATE_KEY
 
 ## Wo liegen die Notizen?
 
-- Standard: `Dokumente\Kanban Notizen\kanban-notizen.json`
+- Standard: `Dokumente\Kanban Notizen\kanban-notizen.json` (der Ordnername stammt noch vom alten App-Namen)
 - Tägliche Sicherungen: im Unterordner `Backups\` (die letzten 30 Tage)
 - Ändern unter **Einstellungen → Speicherort**, z. B. in einen OneDrive-Ordner
 - Deinstallieren löscht die Notizen **nicht**

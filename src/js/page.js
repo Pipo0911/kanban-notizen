@@ -1,5 +1,5 @@
 /* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
-/* Kanban Notizen · Freie Seite wie in OneNote: Textkästen und Bilder frei platzieren, mit Stift zeichnen.
+/* Notara · Freie Seite wie in OneNote: Textkästen und Bilder frei platzieren, mit Stift zeichnen.
    Daten: n.kind='page', n.page={bg, items:[{id,t:'text',x,y,w,html}|{id,t:'img',x,y,w,src}], ink:[{id,c,w,a,p}]}
    n.body wird automatisch aus den Textkästen erzeugt – so funktionieren Suche, Vorschau, Links und Rückverweise weiter. */
 'use strict';

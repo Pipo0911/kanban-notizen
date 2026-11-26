@@ -1,5 +1,5 @@
 /* © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE */
-/* Kanban Notizen · Alle Notizen, Archiv, Heute */
+/* Notara · Alle Notizen, Archiv, Heute */
 'use strict';
 /* ============ Pinnwand, Archiv, Heute ============ */
 function renderWall(el){const s=sp(),notes=live(s).filter(n=>matches(s,n)).sort((a,b)=>(b.pinned-a.pinned)||b.updated.localeCompare(a.updated));

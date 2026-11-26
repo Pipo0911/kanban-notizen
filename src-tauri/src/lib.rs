@@ -1,5 +1,5 @@
 // © 2026 Philipp Seewer · Alle Rechte vorbehalten · siehe LICENSE
-//! Kanban Notizen – Desktop-Hülle.
+//! Notara (früher Kanban Notizen) – Desktop-Hülle.
 //!
 //! Die eigentliche App ist `src/index.html`. Rust kümmert sich nur um das
 //! Speichern: Die Notizen liegen als JSON-Datei auf der Festplatte
@@ -74,6 +74,7 @@ fn default_path(app: &AppHandle) -> Result<PathBuf, String> {
         .document_dir()
         .or_else(|_| app.path().app_data_dir())
         .map_err(err)?;
+    // Ordnername bleibt vom alten App-Namen, damit bestehende Notizen gefunden werden
     Ok(base.join("Kanban Notizen").join("kanban-notizen.json"))
 }
 
@@ -256,11 +257,11 @@ pub fn run() {
             Some(vec!["--minimized"]),
         ))
         .setup(|app| {
-            let show = MenuItem::with_id(app, "show", "Kanban Notizen öffnen", true, None::<&str>)?;
+            let show = MenuItem::with_id(app, "show", "Notara öffnen", true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "Beenden", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show, &quit])?;
             let mut tray = TrayIconBuilder::with_id("main")
-                .tooltip("Kanban Notizen")
+                .tooltip("Notara")
                 .menu(&menu)
                 .show_menu_on_left_click(false)
                 .on_menu_event(|app, event| match event.id.as_ref() {
@@ -310,5 +311,5 @@ pub fn run() {
             set_prefs
         ])
         .run(tauri::generate_context!())
-        .expect("Kanban Notizen konnte nicht gestartet werden");
+        .expect("Notara konnte nicht gestartet werden");
 }
