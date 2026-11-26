@@ -84,14 +84,18 @@ function linkAC(ta,n,sid,onPick){let pop=null,items=[],sel=0,start=-1;
 const dailyTitle=d=>`Tagesnotiz ${WDL[dow(d)]}, ${fmtDate(d)}`;
 function dailySpace(){const S=DB.settings.daily;let s=spaceById(S.space);
   if(!s){s=DB.spaces.find(x=>x.name==='Tagesnotizen');
-    if(!s){s=makeSpace('Tagesnotizen','#1f8fbf','leer','Eine Notiz pro Tag – öffnen mit der Taste D.');s.columns[0].name='Tage';DB.spaces.push(s)}
+    if(!s){s=makeSpace('Tagesnotizen','#1f8fbf','leer','Eine Notiz pro Tag – öffnen mit der Taste D.');s.columns[0].name='Tage';s.folder='';s.sort='manual';DB.spaces.push(s)}
     S.space=s.id}
   return s}
 function findDaily(d){for(const x of allNotes())if(x.n.daily===d)return x;return null}
 function openDaily(d,opt={}){d=isDate(d)?d:today();let x=findDaily(d);
   if(!x){const s=dailySpace(),body=fillVars(DB.settings.daily.tpl,d);
-    const n=newNote(s,{title:dailyTitle(d),body,daily:d});n._dailyFresh=body;x={s,n};save(true);render()}
+    const n=newNote(s,{title:dailyTitle(d),body,daily:d});n._dailyFresh=body;sortDaily(s,n.colId);x={s,n};save(true);render()}
   openNote(x.s.id,x.n.id,opt)}
+/* Neueste Tagesnotiz zuoberst: Tagesnotizen der Spalte nach Datum absteigend, andere Notizen danach */
+function sortDaily(s,colId){const col=s.notes.filter(x=>x.colId===colId).sort((a,b)=>a.order-b.order);
+  const days=col.filter(x=>x.daily).sort((a,b)=>b.daily.localeCompare(a.daily)),rest=col.filter(x=>!x.daily);
+  [...days,...rest].forEach((x,i)=>x.order=i+1)}
 /* Unveränderte, leere Tagesnotiz wieder entfernen (z. B. nach dem Blättern) */
 function dailyUntouched(n){return n._dailyFresh!==undefined&&n.body===n._dailyFresh&&n.title===dailyTitle(n.daily)&&!n.checklist.length&&!n.images.length&&!n.time.length&&!n.timerStart}
 

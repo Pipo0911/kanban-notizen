@@ -59,6 +59,7 @@ function md(src){const out=[];let list=null,para=[],code=null;
     if(code!==null){if(/^```/.test(l)){out.push('<pre>'+esc(code.join('\n'))+'</pre>');code=null}else code.push(raw);continue}
     if(/^```/.test(l)){fp();fl();code=[];continue}
     if(!l.trim()){fp();fl();continue}
+    if(/^\s*([-*•]|[-*]\s+\[( |x|X)\])$/.test(l))continue; /* leerer Aufzählungspunkt, z. B. aus Vorlagen */
     if(/^(-{3,}|\*{3,})$/.test(l.trim())){fp();fl();out.push('<hr>');continue}
     if((m=l.match(/^#{1,4}\s+(.*)/))){fp();fl();out.push('<h4>'+inl(m[1])+'</h4>');continue}
     if((m=l.match(/^>\s?(.*)/))){fp();fl();out.push('<blockquote>'+inl(m[1])+'</blockquote>');continue}

@@ -184,4 +184,6 @@ function openNote(sid,id,opt={}){
     if(!removed){recordHistory(n,before0.v);const c=relinkTitle(n,origTitle);if(c)toast(`${c} Verweis${c===1?'':'e'} auf „${n.title.trim()}“ aktualisiert`)}
     if(!sw)delete n._new;delete n._gone;if(!sw)delete n._dailyFresh;if(!edNav){edStack=[];edCur=null}save(true);render();applyExternal()};
   if(!dlg.open)dlg.showModal();
-  if(n._new)$('#edTitle',dlg).focus();else $('.ed-body',dlg).scrollTop=0}
+  if(n._new)$('#edTitle',dlg).focus();
+  else if(n._dailyFresh!==undefined&&$('#edBody',dlg)){const b=$('#edBody',dlg),i=b.value.indexOf('- ');b.focus();const p=i<0?b.value.length:i+2;b.setSelectionRange(p,p);b.scrollTop=0}
+  else{const ed=$('#ed',dlg);ed.tabIndex=-1;ed.focus({preventScroll:true});$('.ed-body',dlg).scrollTop=0}}

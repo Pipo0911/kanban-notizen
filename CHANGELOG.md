@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.0.2 · Tagesnotiz korrigiert
+- **Direkt losschreiben:** Beim Öffnen der Tagesnotiz (Taste D) steht der Cursor jetzt gleich unter „Fokus heute“. Vorher lag der Fokus auf dem Knopf „Vortag“: Tippen ging ins Leere, und Enter sprang einen Tag zurück.
+- Bei bestehenden Notizen ist kein Knopf mehr vorausgewählt, der versehentlich ausgelöst werden kann.
+- **Neueste Tagesnotiz zuoberst:** Im Space „Tagesnotizen“ stehen die Tage jetzt nach Datum absteigend, heute oben. Vorher kam jeder neue Tag ganz nach unten.
+- Der automatisch angelegte Space „Tagesnotizen“ erscheint sofort in der Seitenleiste. Vorher erst nach einem Neustart.
+- Leere Aufzählungspunkte aus Vorlagen (ein einzelnes „-“) werden auf den Karten und in der Vorschau nicht mehr als Strich angezeigt.
+
 ## 2.0.1
 - Zwischen den Punkten einer Checkliste steht jetzt ein feiner Trennstrich, auf der Karte und im Editor. So lassen sich die Punkte besser auseinanderhalten.
 
