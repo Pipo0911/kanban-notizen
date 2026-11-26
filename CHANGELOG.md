@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.0.1
+- Zwischen den Punkten einer Checkliste steht jetzt ein feiner Trennstrich, auf der Karte und im Editor. So lassen sich die Punkte besser auseinanderhalten.
+
 ## 2.0.0 · Kanban Notizen heisst jetzt Notara
 - **Neuer Name:** Die App heisst jetzt **Notara**, auf dem PC, auf dem iPhone und auf dem iPad.
 - **PC:** Das Update kommt wie gewohnt. Danach heisst die App im Startmenü und auf dem Desktop „Notara“. Der alte Eintrag „Kanban Notizen“ wird automatisch entfernt. Deine Notizen, Einstellungen und der Autostart bleiben erhalten.

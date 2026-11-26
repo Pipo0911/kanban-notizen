@@ -185,7 +185,9 @@ select.f.act{border-color:var(--accent);background:var(--accent-soft);color:var(
 .n-img{display:block;width:calc(100% + 24px);margin:-10px -12px 8px;max-height:130px;object-fit:cover;border-radius:8px 8px 0 0}
 .n-body{font-size:13px;color:var(--text2);margin-top:4px;max-height:10.5em;overflow:hidden;word-wrap:break-word;-webkit-mask-image:linear-gradient(#000 75%,transparent);mask-image:linear-gradient(#000 75%,transparent)}
 .n-body.short{-webkit-mask-image:none;mask-image:none}
-.n-ck{margin-top:8px;display:flex;flex-direction:column;gap:3px}
+.n-ck{margin-top:8px;display:flex;flex-direction:column;gap:0}
+.n-ck .ck-row{padding:5px 0}
+.n-ck .ck-row+.ck-row{border-top:1px solid color-mix(in srgb,var(--text) 10%,transparent)}
 .ck-row{display:flex;align-items:flex-start;gap:7px;font-size:13px;color:var(--text2);line-height:1.35;cursor:pointer}
 .ck-row input{margin-top:1px}
 .ck-row.done span{text-decoration:line-through;color:var(--muted)}
@@ -318,7 +320,8 @@ dialog::backdrop{background:rgba(20,24,32,.5)}
 .ed-prev{min-height:120px;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;cursor:text}
 .ed-sec{margin-top:18px}
 .ed-sec-h{font-weight:650;font-size:13px;margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.ck-edit{display:flex;align-items:center;gap:8px;padding:2px 0}
+.ck-edit{display:flex;align-items:center;gap:8px;padding:3px 0}
+.ck-edit+.ck-edit{border-top:1px solid color-mix(in srgb,var(--text) 10%,transparent)}
 .ck-edit input[type=text]{flex:1;border-color:transparent;padding:4px 6px;background:transparent}
 .ck-edit input[type=text]:hover{background:var(--hover)}
 .ck-edit input[type=text]:focus{border-color:var(--accent);background:var(--surface)}
@@ -503,7 +506,7 @@ button,.card,.sp-item{touch-action:manipulation}
 @media (pointer:coarse){
   .icon-btn.sm{min-width:34px;min-height:34px}
   .n-ck input[type=checkbox],.ck-edit input[type=checkbox]{width:20px;height:20px}
-  .ck-row{padding:3px 0}
+  .ck-row{padding:6px 0}
   .card:active{transform:scale(.985)}
   .card{transition:box-shadow .12s,transform .08s}
   .md-bar{display:flex;gap:4px;margin-top:6px;overflow-x:auto;scrollbar-width:none}
