@@ -591,6 +591,8 @@ dialog#dlg.page-mode{width:min(1600px,calc(100vw - 24px));max-width:none;height:
 .pg-canvas.bg-dots{background-image:radial-gradient(#cdd4df 1.2px,transparent 1.4px);background-size:22px 22px;background-color:#fff}
 .pg-canvas.tool-pen,.pg-canvas.tool-mark{cursor:crosshair;touch-action:none}
 .pg-canvas.tool-erase{cursor:cell;touch-action:none}
+.pg-canvas.pen-only.tool-pen,.pg-canvas.pen-only.tool-mark,.pg-canvas.pen-only.tool-erase{touch-action:pan-x pan-y}
+.pen-only span{margin-left:4px}
 .pg-canvas.tool-pen .pg-item,.pg-canvas.tool-mark .pg-item,.pg-canvas.tool-erase .pg-item{pointer-events:none}
 .pg-ink{position:absolute;left:0;top:0;pointer-events:none;z-index:5;overflow:visible}
 .pg-ink path.mk{mix-blend-mode:multiply}

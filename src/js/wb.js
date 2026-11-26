@@ -199,7 +199,9 @@ function mountWB(host,fid){
     b.ink=b.ink.filter(s=>{const rr=r+s.w/2;return!s.p.split(' ').some(q=>{const[x,y]=q.split(',').map(Number);return Math.abs(x-w.x)<rr&&Math.abs(y-w.y)<rr})});
     if(b.ink.length!==n){drawInk();return true}return false};
   const begin=e=>{const w=toW(e.clientX,e.clientY),sx=e.clientX,sy=e.clientY;
-    const tool=e.pointerType==='pen'&&(P.tool==='select'||P.tool==='hand')?'pen':P.tool;
+    let tool=e.pointerType==='pen'&&(P.tool==='select'||P.tool==='hand')?'pen':P.tool;
+    /* Nur Stift: Finger zeichnen nicht, sondern verschieben */
+    if(e.pointerType==='touch'&&['pen','mark','erase'].includes(tool)&&penOnly())tool='hand';
     const tEl=e.target.closest&&e.target.closest('.wb-it'),it=tEl&&b.items.find(x=>x.id===tEl.dataset.id),hd=e.target.closest&&e.target.closest('.wb-h');
     if(e.button===1||st.space||tool==='hand'){act={k:'pan',sx,sy,vx:v.x,vy:v.y,moved:false,tool};return}
     if(tool==='pen'||tool==='mark'){const mk=tool==='mark',z=Math.max(.1,v.z);
@@ -251,7 +253,7 @@ function mountWB(host,fid){
     if(e.target.closest('.wb-tx')&&e.target.closest('.wb-tx').isContentEditable)return;
     if(isEditing())document.activeElement.blur();
     if(e.pointerType==='mouse'&&e.button===2)return;
-    e.preventDefault();window.__pgTouch=Date.now();wb.focus({preventScroll:true});
+    e.preventDefault();notePen(e);window.__pgTouch=Date.now();wb.focus({preventScroll:true});
     if(e.isPrimary&&PT.size){PT.clear();if(act&&act.k!=='pinch')endAct(null,true);act=null}
     PT.set(e.pointerId,{x:e.clientX,y:e.clientY,t:e.pointerType});try{stage.setPointerCapture(e.pointerId)}catch(x){}
     if(PT.size===2&&[...PT.values()].every(p=>p.t==='touch')){endAct(null,act&&(act.k==='draw'||act.k==='shape'));const g=pinch();act={k:'pinch',d0:g.d,m0:g.m,v0:{...v}};return}
@@ -283,11 +285,13 @@ function mountWB(host,fid){
     const c=P.col[t],extra=!cols.includes(c);let h='';
     if(t==='shape')h+=WB_SHAPES.map(([k,l])=>`<button type="button" data-shp="${k}" class="${P.shape===k?'on':''}" title="${l}" aria-label="${l}">${WB_IC[k]}</button>`).join('')+'<i class="sep"></i>';
     h+=cols.map(x=>sw(x,x===c,'data-oc')).join('')+`<button type="button" class="pg-sw more${extra?' on':''}" id="wbColMore" style="${extra?'background:'+c:''}" title="Weitere Farben …" aria-label="Weitere Farben"></button>`;
+    if((t==='pen'||t==='mark')&&HAS_TOUCH)h+='<i class="sep"></i>'+penOnlyBtn();
     if(t==='pen'||t==='shape')h+='<i class="sep"></i>'+[[2,'Fein'],[4,'Mittel'],[8,'Dick']].map(([s,l])=>`<button type="button" data-sz="${s}" class="${P.size===s?'on':''}" title="${l}"><i class="wb-dot" style="width:${s+3}px;height:${s+3}px"></i></button>`).join('');
     o.innerHTML=h;
     $$('[data-oc]',o).forEach(x=>x.onclick=()=>{P.col[t]=x.dataset.oc;drawBar()});
     $('#wbColMore',o).onclick=e=>colorPick(e.currentTarget,c,x=>{if(isHex(x)){P.col[t]=x;drawBar()}},{title:{pen:'Farbe des Stifts',mark:'Farbe des Markers',shape:'Farbe der Form',sticky:'Farbe der Haftnotiz',text:'Textfarbe'}[t]});
     $$('[data-sz]',o).forEach(x=>x.onclick=()=>{P.size=+x.dataset.sz;drawBar()});
+    $$('[data-penonly]',o).forEach(x=>x.onclick=()=>{setPenOnly(!penOnly());drawBar()});
     $$('[data-shp]',o).forEach(x=>x.onclick=()=>{P.shape=x.dataset.shp;drawBar()});
     applyView()}
   $$('[data-wt]',host).forEach(x=>x.onclick=()=>setTool(x.dataset.wt));
@@ -333,11 +337,12 @@ function mountWB(host,fid){
 
   selBar.addEventListener('pointerdown',e=>{if(!e.target.closest('[data-sm],[data-fill]'))e.preventDefault()});
   selBar.addEventListener('click',()=>{if(!isEditing()&&!document.querySelector('.cpick'))wb.focus({preventScroll:true})});
+  const onPen=()=>drawBar();document.addEventListener('kn-pen',onPen);
   const ro=new ResizeObserver(()=>posSel());ro.observe(stage);
   drawAll();drawBar();
   if(!wbViews[fid]._seen){wbViews[fid]._seen=1;if(b.items.length||b.ink.length)requestAnimationFrame(fitAll)}
   wb.focus({preventScroll:true});
-  return{destroy:()=>{if(!alive)return;alive=false;if(isEditing())document.activeElement.blur();ro.disconnect();$$('.wb-pop').forEach(x=>x.remove());
+  return{destroy:()=>{if(!alive)return;alive=false;document.removeEventListener('kn-pen',onPen);if(isEditing())document.activeElement.blur();ro.disconnect();$$('.wb-pop').forEach(x=>x.remove());
     clearTimeout(vt);wbSaveView();if(ct){clearTimeout(ct);ct=0;save()}}}}
 
 const WB_IC={

@@ -54,6 +54,19 @@ function strokePath(p){const pts=p.split(' ').map(s=>s.split(',').map(Number));i
   const l=pts[pts.length-1];return d+`L${l[0]} ${l[1]}`}
 
 /* ---------- Seite bearbeiten ---------- */
+/* ---------- Nur mit dem Stift zeichnen (Handballen/Finger ignorieren) ----------
+   'auto': sobald auf dem Gerät ein Apple Pencil benutzt wurde, zeichnet nur noch der Stift; Finger verschieben. */
+const PENKEY='kanban-notizen-pen',HAS_TOUCH=(navigator.maxTouchPoints||0)>0;
+const penMode=()=>{try{return localStorage.getItem(PENKEY)||'auto'}catch(e){return'auto'}};
+const penSeen=()=>{try{return localStorage.getItem(PENKEY+'-seen')==='1'}catch(e){return false}};
+const penOnly=()=>{const m=penMode();return m==='on'||(m==='auto'&&penSeen())};
+function notePen(e){if(e.pointerType==='pen'&&!penSeen()){try{localStorage.setItem(PENKEY+'-seen','1')}catch(x){}document.dispatchEvent(new Event('kn-pen'))}}
+function setPenOnly(v){try{localStorage.setItem(PENKEY,v?'on':'off')}catch(e){}toast(v?'Nur der Stift zeichnet. Mit dem Finger verschiebst du.':'Stift und Finger zeichnen.')}
+const penOnlyBtn=()=>HAS_TOUCH?`<button type="button" class="pen-only${penOnly()?' on':''}" data-penonly aria-pressed="${penOnly()}" title="Nur mit dem Stift zeichnen, Finger und Handballen werden ignoriert">✍︎<span>Nur Stift</span></button>`:'';
+/* Stift auf iPad: Scrollen verhindern, Finger dürfen weiter scrollen */
+function stylusNoScroll(el,active){const h=e=>{if(active()&&[...e.changedTouches].some(t=>t.touchType==='stylus'))e.preventDefault()};
+  el.addEventListener('touchstart',h,{passive:false});el.addEventListener('touchmove',h,{passive:false})}
+
 function mountPage(host,n,onChange){
   if(!n.page)n.page=blankPage();const pg=n.page;
   const st={tool:'text',pen:PEN_COLORS[0],mark:MARK_COLORS[0],fg:'#d64545',hl:'#ffe14d',size:3,sel:null,undo:[],redo:[],last:{x:60,y:60}};
@@ -65,7 +78,7 @@ function mountPage(host,n,onChange){
         <button type="button" data-tool="erase" title="Radierer (Striche löschen)">${PG_IC.erase}<span>Radierer</span></button>
       </div>
       <div class="pg-grp pg-colors" id="pgColors"></div>
-      <div class="pg-grp pg-sizes" id="pgSizes"></div>
+      <div class="pg-grp pg-sizes" id="pgSizes"></div><div class="pg-grp" id="pgPenOnly"></div>
       <div class="pg-grp pg-fmt" id="pgFmt">
         <button type="button" data-cmd="bold" title="Fett (Strg+B)"><b>B</b></button><button type="button" data-cmd="italic" title="Kursiv (Strg+I)"><i>I</i></button><button type="button" data-cmd="underline" title="Unterstrichen (Strg+U)"><u>U</u></button><button type="button" data-cmd="strikeThrough" title="Durchgestrichen"><s>S</s></button>
         <button type="button" data-cmd="h" title="Überschrift">H</button><button type="button" data-cmd="insertUnorderedList" title="Aufzählung">•</button><button type="button" data-cmd="insertOrderedList" title="Nummerierung">1.</button><button type="button" data-cmd="check" title="Aufgabe ☐">☐</button><span class="pg-split"><button type="button" data-cmd="fore" title="Textfarbe" class="pg-fg"><b>A</b><i id="pgFgBar"></i></button><button type="button" class="pg-more" data-pick="fore" title="Textfarbe wählen" aria-label="Textfarbe wählen">▾</button></span><span class="pg-split"><button type="button" data-cmd="hilite" title="Markieren" class="pg-hl">${PG_IC.mark}<i id="pgHlBar"></i></button><button type="button" class="pg-more" data-pick="hilite" title="Markierfarbe wählen" aria-label="Markierfarbe wählen">▾</button></span>
@@ -154,7 +167,8 @@ function mountPage(host,n,onChange){
     try{cv.setPointerCapture(e.pointerId)}catch(x){}};
   const eraseAt=p=>{const before=pg.ink.length;pg.ink=pg.ink.filter(s=>{const r=s.w/2+10;return!s.p.split(' ').some(q=>{const[x,y]=q.split(',').map(Number);return Math.abs(x-p.x)<r&&Math.abs(y-p.y)<r})});
     if(pg.ink.length!==before)drawInk()};
-  cv.addEventListener('pointerdown',e=>{const penInput=e.pointerType==='pen'&&st.tool==='text'&&(e.target===cv||e.target===svg);
+  stylusNoScroll(cv,()=>['pen','mark','erase'].includes(st.tool)&&penOnly());
+  cv.addEventListener('pointerdown',e=>{notePen(e);if(e.pointerType==='touch'&&['pen','mark','erase'].includes(st.tool)&&penOnly())return;const penInput=e.pointerType==='pen'&&st.tool==='text'&&(e.target===cv||e.target===svg);
     if(!(st.tool!=='text'||penInput))return;if(e.target.closest&&e.target.closest('.pg-item')&&!penInput&&st.tool==='text')return;
     e.preventDefault();if(penInput)penClick=true;startInk(e)});
   cv.addEventListener('pointermove',e=>{if(!cur)return;const p=pos(e);
@@ -176,7 +190,10 @@ function mountPage(host,n,onChange){
     $('#pgSizes',host).innerHTML=[[2,'Fein'],[3,'Mittel'],[6,'Dick']].map(([v,l])=>`<button type="button" data-sz="${v}" class="${st.size===v?'on':''}" title="${l}"><i style="width:${v+3}px;height:${v+3}px"></i></button>`).join('');
     $$('[data-c]',host).forEach(b=>b.onclick=()=>{if(st.tool==='mark')st.mark=b.dataset.c;else st.pen=b.dataset.c;drawBar()});
     $$('[data-sz]',host).forEach(b=>b.onclick=()=>{st.size=+b.dataset.sz;drawBar()});
-    cv.className='pg-canvas bg-'+pg.bg+' tool-'+st.tool};
+    const po=$('#pgPenOnly',host);po.hidden=!(HAS_TOUCH&&(ink||st.tool==='erase'));po.innerHTML=penOnlyBtn();
+    const pb=$('[data-penonly]',po);if(pb)pb.onclick=()=>{setPenOnly(!penOnly());drawBar()};
+    cv.className='pg-canvas bg-'+pg.bg+' tool-'+st.tool+(penOnly()?' pen-only':'')};
+  const onPen=()=>{if(host.isConnected)drawBar()};document.addEventListener('kn-pen',onPen);
   $$('[data-tool]',host).forEach(b=>b.onclick=()=>{st.tool=b.dataset.tool;const a=document.activeElement;if(a&&a.classList&&a.classList.contains('pg-edit'))a.blur();select(null);drawBar()});
   $$('[data-cmd]',host).forEach(b=>{b.addEventListener('pointerdown',e=>e.preventDefault());b.onclick=()=>{const a=document.activeElement;
     if(!a||!a.classList||!a.classList.contains('pg-edit')){toast('Erst in einen Textkasten klicken');return}

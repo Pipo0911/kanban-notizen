@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.10.1
+- **Nur mit dem Stift zeichnen:** Sobald du auf dem iPad einmal mit dem Apple Pencil zeichnest, zeichnet bei Stift, Marker und Radierer nur noch der Stift. Finger und Handballen hinterlassen keine Striche mehr.
+  - Auf dem Whiteboard verschiebst du mit einem Finger die Fläche, mit zwei Fingern zoomst du.
+  - Auf Seiten scrollst du mit dem Finger.
+  - Der Knopf „Nur Stift“ in der Werkzeugleiste schaltet das ein und aus, z. B. wenn du ohne Stift mit dem Finger zeichnen willst.
+- Am PC mit Maus und auf dem iPhone ohne Stift ändert sich nichts.
+
 ## 1.10.0
 - **Whiteboard pro Kategorie:** Jede Kategorie (Ordner) in der Seitenleiste hat jetzt ein eigenes Whiteboard. Es steht direkt unter dem Ordner, oder im Ordner-Menü ⋯ → „Whiteboard öffnen“.
   - **Zeichnen:** mit Stift, Finger, Maus oder Apple Pencil, dazu Textmarker und Radierer. Der Apple Pencil zeichnet auch im Auswahl-Modus.
