@@ -230,7 +230,6 @@ select.f.act{border-color:var(--accent);background:var(--accent-soft);color:var(
 .md code{font-family:var(--mono);font-size:.9em;background:var(--hover2);padding:0 4px;border-radius:3px}
 .md pre{font-family:var(--mono);font-size:.88em;background:var(--hover2);padding:6px 8px;border-radius:5px;overflow-x:auto;margin:0 0 .5em;white-space:pre}
 .md a{color:var(--accent);word-break:break-all}
-.md a.jira{font-weight:650;text-decoration:none;background:var(--accent-soft);padding:0 4px;border-radius:3px;word-break:normal;white-space:nowrap}
 .md .mdck{display:inline-block;width:12px;height:12px;border:1.5px solid var(--muted);border-radius:3px;margin-right:5px;vertical-align:-1px}
 .md .mdck.on{background:var(--ok);border-color:var(--ok)}
 .md blockquote{margin:0 0 .5em;padding-left:9px;border-left:3px solid var(--border);color:var(--muted)}

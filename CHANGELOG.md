@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.1.2
+- Die Jira-Verknüpfung wurde entfernt, aus den Einstellungen und aus der App. Vorgangsschlüssel wie „SUP-123“ erscheinen wieder als normaler Text.
+
 ## 2.1.1
 - Der Kalender auf „Heute & Termine“ steht jetzt ohne Rahmen über die ganze Breite und füllt die Seite. Die Tage sind deutlich grösser und zeigen mehr Termine.
 - Die Termine des gewählten Tages und die Listen „Überfällig“, „Heute“ usw. stehen darunter.

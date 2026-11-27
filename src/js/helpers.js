@@ -49,8 +49,6 @@ function inl(t){
   s=s.replace(WL_RE,(_,tg,al)=>hold(wikiHTML(tg,al)));
   s=esc(s);
   s=s.replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)\]])/g,u=>hold(`<a href="${u}" target="_blank" rel="noopener">${u}</a>`));
-  const j=DB&&DB.settings.jiraUrl;
-  if(j)s=s.replace(/\b([A-Z][A-Z0-9]{1,9}-\d{1,7})\b/g,k=>hold(`<a class="jira" href="${esc(j.replace(/\/?$/,'/'))}${k}" target="_blank" rel="noopener" title="In Jira öffnen">${k}</a>`));
   s=s.replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/(^|[^*\w])\*([^*\s][^*]*)\*/g,'$1<i>$2</i>').replace(/~~([^~]+)~~/g,'<s>$1</s>');
   return s.replace(/\u0000(\d+)\u0000/g,(_,i)=>keep[+i])}
 function md(src){const out=[];let list=null,para=[],code=null;

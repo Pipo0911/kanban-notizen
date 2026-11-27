@@ -12,8 +12,7 @@ function renderSettings(el){const S=DB.settings,tab=ui.gtab;let body='';
       <div class="fld"><label for="sDailyTpl">Vorlage für neue Tagesnotizen</label><textarea id="sDailyTpl" rows="6">${esc(S.daily.tpl)}</textarea><small>Platzhalter: {datum}, {wochentag}, {kw}. Unveränderte Tagesnotizen werden beim Schliessen nicht gespeichert.</small></div>
       <div class="row-btns"><button class="btn" id="sDailySave">Speichern</button><button class="btn ghost" id="sDailyReset">Standardvorlage</button></div></div>
     ${remindPanelHTML()}
-    <div class="panel"><h3>Zeiterfassung</h3><div class="fld" style="max-width:320px;margin:0"><label for="sRound">Beim Stoppen aufrunden auf</label><select id="sRound">${[[0,'Nicht runden'],[5,'5 Minuten'],[6,'6 Minuten (0,1 h)'],[10,'10 Minuten'],[15,'15 Minuten'],[30,'30 Minuten']].map(([v,n])=>`<option value="${v}"${S.round===v?' selected':''}>${n}</option>`).join('')}</select></div></div>
-    <div class="panel"><h3>Jira-Verknüpfung</h3><p>Vorgangsschlüssel wie <code>SUP-123</code> im Text werden automatisch zu Links.</p><div class="inline-add" style="max-width:560px"><input id="sJira" placeholder="https://firma.atlassian.net/browse/" value="${esc(S.jiraUrl)}" aria-label="Jira-Adresse"><button class="btn" id="sJiraSave">Speichern</button></div><small>Leer lassen, um die Verknüpfung auszuschalten.</small></div>`}
+    <div class="panel"><h3>Zeiterfassung</h3><div class="fld" style="max-width:320px;margin:0"><label for="sRound">Beim Stoppen aufrunden auf</label><select id="sRound">${[[0,'Nicht runden'],[5,'5 Minuten'],[6,'6 Minuten (0,1 h)'],[10,'10 Minuten'],[15,'15 Minuten'],[30,'30 Minuten']].map(([v,n])=>`<option value="${v}"${S.round===v?' selected':''}>${n}</option>`).join('')}</select></div></div>`}
   else if(tab==='labels'){const all=[...new Set([...allTags(),...Object.keys(S.labels)])].sort((a,b)=>a.localeCompare(b));
     const used=t=>DB.spaces.reduce((a,x)=>a+x.notes.filter(n=>n.tags.includes(t)).length,0);
     body=`<div class="panel"><h3>Labels</h3><p>Labels gelten für alle Spaces. Hier legst du ihre Farbe fest, benennst sie um oder entfernst sie. Umbenennen und Löschen wirkt auf alle Notizen.</p>
@@ -45,8 +44,7 @@ function renderSettings(el){const S=DB.settings,tab=ui.gtab;let body='';
     $('#sDailySp',el).onchange=e=>{S.daily.space=e.target.value;save(true);toast('Gespeichert')};
     on('sDailySave',()=>{S.daily.tpl=$('#sDailyTpl',el).value;save(true);toast('Vorlage für Tagesnotizen gespeichert')});
     on('sDailyReset',()=>{$('#sDailyTpl',el).value=DAILY_TPL;S.daily.tpl=DAILY_TPL;save(true);toast('Standardvorlage wiederhergestellt')});
-    $('#sRound',el).onchange=e=>{S.round=+e.target.value;save(true);toast('Gespeichert')};
-    on('sJiraSave',()=>{let v=$('#sJira',el).value.trim();if(v&&!/^https?:\/\//i.test(v)){toast('Bitte eine Adresse mit https:// eingeben');return}S.jiraUrl=v;save();render();toast(v?'Jira-Verknüpfung gespeichert':'Jira-Verknüpfung ausgeschaltet')})}
+    $('#sRound',el).onchange=e=>{S.round=+e.target.value;save(true);toast('Gespeichert')};}
   else if(tab==='tpl'){$$('.tpl-row',el).forEach(r=>{const t=S.templates.find(x=>x.id===r.dataset.tid);
       $('[data-edit]',r).onclick=()=>editTpl(t);$('[data-up]',r).onclick=()=>{moveArr(S.templates,t,-1);save(true);renderContent()};$('[data-down]',r).onclick=()=>{moveArr(S.templates,t,1);save(true);renderContent()};
       $('[data-del]',r).onclick=()=>{const snap=JSON.stringify(DB);S.templates=S.templates.filter(x=>x!==t);save(true);renderContent();toast('Vorlage gelöscht',{undo:snap})}});
