@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.1.1
+- Der Kalender auf „Heute & Termine“ steht jetzt ohne Rahmen über die ganze Breite und füllt die Seite. Die Tage sind deutlich grösser und zeigen mehr Termine.
+- Die Termine des gewählten Tages und die Listen „Überfällig“, „Heute“ usw. stehen darunter.
+
 ## 2.1.0 · Kalender
 - **Monatskalender auf „Heute & Termine“:** Am PC steht er rechts neben den Terminen, auf dem Handy und auf schmalen Fenstern oben.
   - Jeder Tag zeigt seine Termine mit Uhrzeit, in der Farbe der Notiz oder ihrer Priorität. Erledigte Termine sind durchgestrichen.

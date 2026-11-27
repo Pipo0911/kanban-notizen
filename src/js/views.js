@@ -25,7 +25,7 @@ function renderToday(el){const t=today(),end=addDays(t,7),L=[];
   for(const[name,list,cls]of secs){if(!list.length)continue;any=true;
     html+=`<div class="sec-title${cls?' '+cls:''}">${name}<span class="badge soft">${list.length}</span></div><div class="wall">${list.map(x=>cardHTML(x.s,x.n,{showSpace:true,showCol:true,wall:true})).join('')}</div>`}
   if(!any)html+='<div class="empty-big today-empty">Keine Termine in den nächsten 7 Tagen und nichts angeheftet. Termine setzt du im Editor einer Notiz oder direkt im Kalender.</div>';
-  el.innerHTML=`<div class="scroll wall-wrap" id="bw">${kpi}<div class="today-grid"><div class="today-main">${html}</div><aside class="today-cal" id="tCal"></aside></div></div>`;
+  el.innerHTML=`<div class="scroll wall-wrap" id="bw">${kpi}<section class="today-cal" id="tCal" aria-label="Kalender"></section><div class="today-main">${html}</div></div>`;
   bindCards(el);drawCal($('#tCal',el))}
 
 /* ============ Kalender auf „Heute & Termine“ ============ */
@@ -45,7 +45,7 @@ function drawCal(box){if(!box)return;const t=today();
   const[y,m]=ui.calM.split('-').map(Number),first=`${ui.calM}-01`,start=addDays(first,-((dow(first)+6)%7)),end=addDays(start,41);
   const items=calItems(start,end),daily=new Set(),ds=dailySpaceId();
   for(const{n}of allNotes())if(n.daily&&n.daily>=start&&n.daily<=end&&!n.archived)daily.add(n.daily);
-  const phone=isPhone(),max=phone?4:3;let g='';
+  const phone=isPhone(),max=phone?4:Math.max(3,Math.floor((innerHeight-330)/6/20)-1);let g='';
   for(let w=0;w<6;w++){const wk=addDays(start,w*7);g+=`<div class="cal-kw">${isoWeek(wk)}</div>`;
     for(let i=0;i<7;i++){const d=addDays(wk,i),L=items[d]||[],cls=['cal-d'];
       if(d.slice(0,7)!==ui.calM)cls.push('out');if(d===t)cls.push('today');if(d===ui.calD)cls.push('sel');if(i>4)cls.push('we');if(L.some(x=>!x.done&&!x.rep&&d<t))cls.push('late');
