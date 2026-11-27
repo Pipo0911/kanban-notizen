@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.2.0 · App-Sperre
+- **Login mit PIN oder Passwort:** Unter Einstellungen → Allgemein → **App-Sperre** richtest du eine PIN (4 bis 12 Ziffern) oder ein Passwort ein. Danach fragt Notara bei jedem Öffnen danach, bevor deine Notizen sichtbar sind.
+- **Automatisch sperren:** nach 1, 5, 15, 30 oder 60 Minuten ohne Eingabe, oder nur beim Öffnen der App. Das gilt auch, wenn die App im Hintergrund oder unten rechts im Infobereich war.
+- **Sofort sperren:** mit „Sperren“ unten in der Seitenleiste oder „Jetzt sperren“ in den Einstellungen.
+- Die Sperre gilt pro Gerät. PC, iPhone und iPad können eine eigene PIN haben.
+- Nach 5 Fehlversuchen musst du kurz warten, bei jedem weiteren Fehlversuch länger.
+- **PIN vergessen?** Dann lässt sich die Sperre nur aufheben, indem Notara auf diesem Gerät zurückgesetzt wird. Mit eingerichtetem Sync holst du die Notizen danach per QR-Code wieder zurück.
+- Gespeichert wird nur ein verschlüsselter Prüfwert, nie die PIN selbst. Die Sperre schützt vor neugierigen Blicken. Die Notizdatei wird dadurch nicht verschlüsselt.
+
 ## 2.1.2
 - Die Jira-Verknüpfung wurde entfernt, aus den Einstellungen und aus der App. Vorgangsschlüssel wie „SUP-123“ erscheinen wieder als normaler Text.
 

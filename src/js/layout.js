@@ -37,7 +37,7 @@ function renderSide(){const v=DB.ui.view,g=GLOBAL_VIEWS.includes(v),ct=countToda
   ${syncNavHTML()}${updNav()}
   <button class="nav-item${v==='trash'?' on':''}" data-act="view" data-v="trash">${SVG.trash}<span class="sp-n">Papierkorb</span>${DB.trash.length?`<span class="sp-c">${DB.trash.length}</span>`:''}</button>
   <button class="nav-item${v==='settings'?' on':''}" data-act="view" data-v="settings">${SVG.gear}<span>Einstellungen</span></button>
-  <button class="nav-item" data-act="help">${SVG.key}<span>Tastenkürzel</span></button></div>`;bindTree()}
+  <button class="nav-item" data-act="help">${SVG.key}<span>Tastenkürzel</span></button>${lockCfg()?`<button class="nav-item" data-act="lock" title="Notara sperren">${LOCK_IC}<span>Sperren</span></button>`:''}</div>`;bindTree()}
 function treeHTML(parent,depth,g){let h='';const pad=d=>`padding-left:${8+d*16}px`;
   const actChain=new Set(folderChain((sp()||{}).folder).map(f=>f.id));
   DB.folders.filter(f=>f.parent===parent).forEach(f=>{const cnt=folderSpaces(f.id).reduce((a,x)=>a+live(x).filter(n=>!isDoneCol(x,n.colId)).length,0);

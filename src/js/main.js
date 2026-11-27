@@ -2,7 +2,7 @@
 /* Notara · Globale Ereignisse und Start */
 'use strict';
 /* ============ Globale Ereignisse ============ */
-const ACTIONS={newSpace:()=>createSpace(''),newFolder:()=>createFolder(''),addMenu:a=>{const[x,y]=menuAt(a);addMenu(x,y,'')},view:a=>setView(a.dataset.v),create:()=>createNote(sp().id),menu:()=>$('.app').classList.toggle('menu-open'),
+const ACTIONS={lock:()=>lockNow(),newSpace:()=>createSpace(''),newFolder:()=>createFolder(''),addMenu:a=>{const[x,y]=menuAt(a);addMenu(x,y,'')},view:a=>setView(a.dataset.v),create:()=>createNote(sp().id),menu:()=>$('.app').classList.toggle('menu-open'),
   clearF:()=>{ui.filters=blankF();renderFbar();renderContent()},addCol:()=>addCol(),palette:()=>openPalette(),help:()=>showHelp(),
   checkUpdate:()=>checkUpdate(true),installUpdate:()=>installUpdate(),
   backupNow:()=>backupAll(),syncNow:()=>syncNow(true),daily:()=>openDaily(today()),openNote:a=>openNote(a.dataset.nsid,a.dataset.nid),
@@ -29,5 +29,5 @@ document.addEventListener('keydown',e=>{
   else if(['1','2','3','4'].includes(e.key))setView(SPACE_VIEWS[+e.key-1])});
 /* ============ Start ============ */
 {const u=loadUi();DB=normDB({ui:u.ui,active:u.active})}
-applyTheme();render();setStatus('Lade Notizen …');if(WEB)document.documentElement.classList.add('web');if(STANDALONE)document.documentElement.classList.add('standalone');
+applyTheme();render();lockBoot();setStatus('Lade Notizen …');if(WEB)document.documentElement.classList.add('web');if(STANDALONE)document.documentElement.classList.add('standalone');
 tauriInit().then(async()=>{await syncStart();await deskLoad();remindStart()});
