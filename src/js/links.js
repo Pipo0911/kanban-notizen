@@ -82,6 +82,7 @@ function linkAC(ta,n,sid,onPick){let pop=null,items=[],sel=0,start=-1;
 
 /* ---------- Tagesnotiz ---------- */
 const dailyTitle=d=>`Tagesnotiz ${WDL[dow(d)]}, ${fmtDate(d)}`;
+const dailySpaceId=()=>{const s=spaceById(DB.settings.daily.space)||DB.spaces.find(x=>x.name==='Tagesnotizen');return s?s.id:''};
 function dailySpace(){const S=DB.settings.daily;let s=spaceById(S.space);
   if(!s){s=DB.spaces.find(x=>x.name==='Tagesnotizen');
     if(!s){s=makeSpace('Tagesnotizen','#1f8fbf','leer','Eine Notiz pro Tag – öffnen mit der Taste D.');s.columns[0].name='Tage';s.folder='';s.sort='manual';DB.spaces.push(s)}

@@ -1,5 +1,16 @@
 # Änderungen
 
+## 2.1.0 · Kalender
+- **Monatskalender auf „Heute & Termine“:** Am PC steht er rechts neben den Terminen, auf dem Handy und auf schmalen Fenstern oben.
+  - Jeder Tag zeigt seine Termine mit Uhrzeit, in der Farbe der Notiz oder ihrer Priorität. Erledigte Termine sind durchgestrichen.
+  - **Wiederholungen** wie „jede Woche“ erscheinen gestrichelt an den kommenden Tagen.
+  - Ein **blauer Punkt** zeigt, dass an diesem Tag eine Tagesnotiz existiert.
+  - Kalenderwochen links, Wochenende hervorgehoben, Überfälliges rot.
+  - **Tag antippen:** Unten erscheinen alle Termine dieses Tages, dazu „+ Termin“ und „Tagesnotiz“.
+  - **Doppelklick** auf einen Tag legt direkt einen Termin an.
+  - **Termin verschieben:** Am PC ziehst du ihn auf einen anderen Tag, mit Rückgängig.
+  - Mit ‹ › blätterst du durch die Monate, „Heute“ springt zurück.
+
 ## 2.0.2 · Tagesnotiz korrigiert
 - **Direkt losschreiben:** Beim Öffnen der Tagesnotiz (Taste D) steht der Cursor jetzt gleich unter „Fokus heute“. Vorher lag der Fokus auf dem Knopf „Vortag“: Tippen ging ins Leere, und Enter sprang einen Tag zurück.
 - Bei bestehenden Notizen ist kein Knopf mehr vorausgewählt, der versehentlich ausgelöst werden kann.
