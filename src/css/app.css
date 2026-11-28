@@ -989,3 +989,12 @@ html.locked .app,html.locked #toast,html.locked #banner,html.locked dialog:not(#
 .dh-it{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center;border:1px solid var(--border);border-radius:8px;padding:8px;cursor:pointer}
 .dh-it .pg-mini{grid-column:1/-1}
 .pg-bar button sub,.pg-bar button sup{font-size:.65em;line-height:0}
+/* Word-Funktionen */
+.pg-edit hr{border:0;border-top:1.5px solid #c9d1dd;margin:8px 0}
+.pg-minibar{position:absolute;z-index:30;display:flex;align-items:center;gap:1px;padding:3px;background:var(--surface);border:1px solid var(--border);border-radius:9px;box-shadow:var(--shadow-l)}
+.pg-minibar[hidden]{display:none}
+.pg-minibar button{border:0;background:none;border-radius:6px;min-width:28px;height:28px;padding:0 5px;color:var(--text);font-size:13px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.pg-minibar button:hover{background:var(--hover)}
+.pg-minibar sup{font-size:.7em}
+.pg-minibar .sep{width:1px;align-self:stretch;background:var(--border);margin:3px 3px}
+.pg-minibar .mb-fg{border-bottom:3px solid #d64545;line-height:1}

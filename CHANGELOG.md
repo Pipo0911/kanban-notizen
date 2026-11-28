@@ -1,5 +1,23 @@
 # Änderungen
 
+## 2.5.0 · Word-Funktionen im Textkasten
+- **Automatisch formatieren beim Tippen, wie in Word:**
+  - „- “ oder „* “ ergibt eine Aufzählung, „1. “ eine Nummerierung.
+  - „[] “ ergibt ein Kästchen ☐, „# “, „## “ und „### “ ergeben Überschriften, „> “ ein Zitat.
+  - „---“ + Enter ergibt eine Linie, „```“ + Enter einen Code-Block.
+- **AutoKorrektur:** -> → ·  => ⇒ ·  ... … ·  -- – ·  (c) © ·  :) 🙂
+- **Tab** rückt in Listen ein, Umschalt+Tab rückt aus. Ausserhalb von Listen setzt Tab einen Abstand.
+- **Mini-Symbolleiste** über markiertem Text, wie in Word: Grösse −/+, F, K, U, Textfarbe, Markieren, Aufzählung, Link, Formatierung löschen.
+- **Einfügen mit Formatierung** aus Word, Outlook oder dem Browser: Fett, Farben, Schrift, Tabellen und Überschriften bleiben erhalten. Strg+Umschalt+V fügt nur den Text ein.
+- **Tastenkürzel wie in Word:**
+  - Strg+Umschalt+F/K/U für fett, kursiv und unterstrichen (zusätzlich zu Strg+B/I/U).
+  - Strg+E/L/R/J für die Ausrichtung.
+  - Strg+Umschalt+L für eine Aufzählung.
+  - Strg+> und Strg+< für eine grössere und kleinere Schrift.
+  - Strg+Alt+1/2/3 für Überschriften.
+  - Strg+Leertaste entfernt die Zeichenformatierung.
+  - Strg+= für tiefgestellt, Strg+Umschalt+= für hochgestellt.
+
 ## 2.4.0 · Notizbücher wie OneNote
 - **Menüband wie in OneNote** mit den Reitern Start, Einfügen, Zeichnen und Seite. Rückgängig und Wiederholen stehen immer oben rechts.
 - **Start:**

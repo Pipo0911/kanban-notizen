@@ -18,7 +18,7 @@ function normPage(p){p=p&&typeof p==='object'?p:{};
     .filter(x=>(x.t!=='img'||x.src)&&(x.t!=='file'||x.fid));
   const ink=arr(p.ink).filter(s=>s&&typeof s.p==='string'&&s.p.length<200000).map(s=>({id:okId(s.id)?String(s.id):uid(),c:/^#[0-9a-f]{6}$/i.test(s.c)?s.c:'#1d1f24',w:num(s.w,3,1,60),a:Math.max(.1,Math.min(1,+s.a||1)),p:s.p}));
   return{bg:PAGE_BG.some(b=>b[0]===p.bg)?p.bg:'plain',items,ink}}
-const OK_TAGS=new Set(['B','STRONG','I','EM','U','S','STRIKE','BR','DIV','P','UL','OL','LI','H1','H2','H3','SPAN','A','CODE','PRE','INPUT','MARK','BLOCKQUOTE','TABLE','THEAD','TBODY','TR','TH','TD','SUB','SUP']);
+const OK_TAGS=new Set(['B','STRONG','I','EM','U','S','STRIKE','BR','DIV','P','UL','OL','LI','H1','H2','H3','SPAN','A','CODE','PRE','INPUT','MARK','BLOCKQUOTE','TABLE','THEAD','TBODY','TR','TH','TD','SUB','SUP','HR']);
 const PG_FONTS=[['','Standard'],['Calibri, Carlito, sans-serif','Calibri'],['Arial, Helvetica, sans-serif','Arial'],['"Segoe UI", system-ui, sans-serif','Segoe UI'],['Georgia, serif','Georgia'],['"Times New Roman", Times, serif','Times New Roman'],['Consolas, "Courier New", monospace','Consolas'],['"Segoe Print", "Comic Sans MS", cursive','Handschrift']];
 const PG_SIZES=[8,9,10,11,12,14,16,18,20,24,28,32,36,48,72];
 const PG_STYLES=[['div','Normal'],['h1','Überschrift 1'],['h2','Überschrift 2'],['h3','Überschrift 3'],['blockquote','Zitat'],['pre','Code']];
@@ -166,7 +166,8 @@ function mountPage(host,n,onChange,opt={}){
     ed.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();ed.blur();return}
       const sn=selNode(),pre=sn&&sn.closest('pre'),cell=sn&&sn.closest('td,th');
       if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();e.stopPropagation();insLink();return}
-      if((e.ctrlKey||e.metaKey)&&e.key==='1'){e.preventDefault();e.stopPropagation();toggleTag('check');return}
+      if((e.ctrlKey||e.metaKey)&&e.key==='1'&&!e.altKey){e.preventDefault();e.stopPropagation();toggleTag('check');return}
+      if(wordKeys(e,ed,pre,cell))return;
       if(pre&&e.key==='Enter'){e.preventDefault();if(e.ctrlKey||e.shiftKey||e.metaKey)leavePre(pre);else document.execCommand('insertLineBreak');return}
       if(pre&&e.key==='Tab'){e.preventDefault();document.execCommand('insertText',false,'  ');return}
       if(cell&&e.key==='Tab'){e.preventDefault();const cells=$$('td,th',cell.closest('table'));let i=cells.indexOf(cell)+(e.shiftKey?-1:1);
@@ -175,7 +176,9 @@ function mountPage(host,n,onChange,opt={}){
     ed.addEventListener('click',e=>{if(e.target.tagName==='INPUT'){const c=e.target;setTimeout(()=>{c.checked?c.setAttribute('checked',''):c.removeAttribute('checked');it.html=cleanHTML(ed.innerHTML);changed()},0)}});
     ed.addEventListener('paste',e=>{const files=[...(e.clipboardData&&e.clipboardData.files||[])].filter(f=>/^image\//.test(f.type));
       e.preventDefault();if(files.length){addImgs(files,{x:it.x,y:it.y+d.offsetHeight+16});return}
-      const txt=(e.clipboardData&&e.clipboardData.getData('text/plain'))||'';document.execCommand('insertText',false,txt)})}
+      const html=e.clipboardData&&e.clipboardData.getData('text/html'),txt=(e.clipboardData&&e.clipboardData.getData('text/plain'))||'';
+      const inPre=selNode()&&selNode().closest('pre');
+      if(html&&!plainPaste&&!inPre){document.execCommand('insertHTML',false,pasteHTML(html))}else document.execCommand('insertText',false,txt);plainPaste=false;inputOf(ed)})}
   const addText=(x,y,html='')=>{pushUndo();const it={id:uid(),t:'text',x:Math.max(0,x-8),y:Math.max(0,y-14),w:isPhone()?Math.min(300,cv.offsetWidth-x-10):360,html};
     pg.items.push(it);const d=itemEl(it);cv.appendChild(d);$('#pgHint',host).hidden=true;const ed=$('.pg-edit',d);ed.focus();fit();return it};
   async function addImgs(files,at){for(const f of files){if(!/^image\//.test(f.type))continue;
@@ -333,6 +336,62 @@ function mountPage(host,n,onChange,opt={}){
   const attIn=$('#pgAttIn',host);$('#pgAtt',host).onclick=()=>attIn.click();
   attIn.onchange=()=>{const at=freeSpot();addFiles([...attIn.files],at);attIn.value='';requestAnimationFrame(()=>{sc.scrollTop=Math.max(0,at.y-80)})};
 
+  /* ---------- Word-Funktionen im Textkasten ---------- */
+  let plainPaste=false;
+  const blockOf=(n2,ed)=>{let b=n2;while(b&&b!==ed&&!/^(DIV|P|LI|H1|H2|H3|BLOCKQUOTE|TD|TH|PRE)$/.test(b.tagName))b=b.parentElement;return b||ed};
+  const textBefore=(blk)=>{const s2=getSelection();if(!s2.rangeCount)return'';const r=document.createRange();r.setStart(blk,0);r.setEnd(s2.anchorNode,s2.anchorOffset);return r.toString()};
+  /* die letzten n Zeichen vor dem Cursor markieren (nur innerhalb eines Textknotens) */
+  const selBack=n=>{const s2=getSelection(),an=s2.anchorNode,o=s2.anchorOffset;if(!an||an.nodeType!==3||o<n)return false;const r=document.createRange();r.setStart(an,o-n);r.setEnd(an,o);s2.removeAllRanges();s2.addRange(r);return true};
+  const AUTOCORR=[['->','→'],['<-','←'],['=>','⇒'],['<=>','⇔'],['(c)','©'],['(r)','®'],['(tm)','™'],['...','…'],['--','–'],[':-)','🙂'],[':)','🙂'],['<3','❤️']];
+  function wordKeys(e,ed,pre,cell){const mod=e.ctrlKey||e.metaKey,k=e.key,kl=k.toLowerCase();
+    const stop=()=>{e.preventDefault();e.stopPropagation();return true},cmd=(c,v)=>{document.execCommand(c,false,v);inputOf(ed);ctx();return stop()};
+    if(mod&&e.shiftKey&&kl==='v'){plainPaste=true;return false}
+    if(mod&&!e.altKey){
+      if(e.shiftKey&&kl==='f')return cmd('bold');if(e.shiftKey&&kl==='k')return cmd('italic');if(e.shiftKey&&kl==='u')return cmd('underline');
+      if(!e.shiftKey&&kl==='e')return cmd('justifyCenter');if(!e.shiftKey&&kl==='l')return cmd('justifyLeft');if(!e.shiftKey&&kl==='r')return cmd('justifyRight');if(!e.shiftKey&&kl==='j')return cmd('justifyFull');
+      if(e.shiftKey&&kl==='l')return cmd('insertUnorderedList');if(e.shiftKey&&(kl==='n'))return cmd('insertOrderedList');
+      if(k==='>'||(e.shiftKey&&k==='.')||k===']'){stepSize(1);return stop()}if(k==='<'||(e.shiftKey&&k===',')||k==='['){stepSize(-1);return stop()}
+      if(k===' '){document.execCommand('removeFormat');inputOf(ed);return stop()}
+      if(k==='='||k==='+')return cmd(e.shiftKey||k==='+'?'superscript':'subscript');
+      if(k==='m')return cmd(e.shiftKey?'outdent':'indent')}
+    if(mod&&e.altKey&&/^[0-3]$/.test(k))return cmd('formatBlock',k==='0'?'div':'h'+k);
+    if(pre||mod||e.altKey)return false;
+    const n2=selNode();if(!n2)return false;const blk=blockOf(n2,ed),li=n2.closest('li');
+    /* Tab: in Listen einrücken, sonst Tabulator */
+    if(k==='Tab'&&!cell){if(li)return cmd(e.shiftKey?'outdent':'indent');if(e.shiftKey)return cmd('outdent');document.execCommand('insertText',false,'    ');inputOf(ed);return stop()}
+    const s2=getSelection();if(!s2.isCollapsed)return false;
+    /* Leertaste: Aufzählung, Nummerierung, Aufgabe, Überschrift, Zitat, Code wie in Word; AutoKorrektur */
+    if(k===' '&&!cell){const tb=textBefore(blk).replace(/ /g,' ');
+      const auto=[[/^[-*•]$/,()=>document.execCommand('insertUnorderedList')],[/^(1|a)[.)]$/i,()=>document.execCommand('insertOrderedList')],[/^\[ ?\]$/,()=>document.execCommand('insertHTML',false,'<input type="checkbox">&nbsp;')],
+        [/^#{1,3}$/,m=>document.execCommand('formatBlock',false,'h'+m.length)],[/^>$/,()=>document.execCommand('formatBlock',false,'blockquote')]];
+      if(!li)for(const[re,fn]of auto){if(re.test(tb)&&selBack(tb.length)){document.execCommand('delete');fn(tb);inputOf(ed);ctx();return stop()}}
+      for(const[a,b2]of AUTOCORR){if(tb.endsWith(a)&&(a!=='--'||/\S--$/.test(tb))&&selBack(a.length)){document.execCommand('insertText',false,b2);break}}
+      return false}
+    /* Enter: --- wird zur Linie, ``` zum Code-Block */
+    if(k==='Enter'&&!e.shiftKey&&!cell){const tb=textBefore(blk).trim();
+      if(/^(---|___|\*\*\*)$/.test(tb)&&selBack(textBefore(blk).length)){document.execCommand('delete');document.execCommand('insertHTML',false,'<hr><div><br></div>');inputOf(ed);return stop()}
+      if(tb==='```'&&selBack(textBefore(blk).length)){document.execCommand('delete');insCode();return stop()}}
+    return false}
+  /* Mini-Symbolleiste über markiertem Text, wie in Word */
+  if(getComputedStyle(host).position==='static')host.style.position='relative';
+  const mini=document.createElement('div');mini.className='pg-minibar';mini.hidden=true;
+  mini.innerHTML=`<button type="button" data-mb="smaller" title="Schrift kleiner (Strg+<)">A<sup>−</sup></button><button type="button" data-mb="bigger" title="Schrift grösser (Strg+>)">A<sup>+</sup></button><i class="sep"></i>
+    <button type="button" data-mb="bold" title="Fett"><b>F</b></button><button type="button" data-mb="italic" title="Kursiv"><i>K</i></button><button type="button" data-mb="underline" title="Unterstrichen"><u>U</u></button>
+    <button type="button" data-mb="fore" title="Textfarbe"><b class="mb-fg">A</b></button><button type="button" data-mb="hilite" title="Markieren">${PG_IC.mark}</button><i class="sep"></i>
+    <button type="button" data-mb="insertUnorderedList" title="Aufzählung">${PG_IC.ul}</button><button type="button" data-mb="link" title="Link (Strg+K)">${PG_IC.link}</button><button type="button" data-mb="clear" title="Formatierung löschen">${PG_IC.clear}</button>`;
+  host.appendChild(mini);
+  $$('[data-mb]',mini).forEach(b=>{b.addEventListener('pointerdown',e=>e.preventDefault());b.onclick=()=>{const k=b.dataset.mb,n2=selNode();if(!n2)return;const ed=n2.closest('.pg-edit');
+    if(k==='bigger'||k==='smaller')stepSize(k==='bigger'?1:-1);else if(k==='fore'||k==='hilite')applyColor(k,k==='fore'?st.fg:st.hl);
+    else if(k==='link'){insLink();mini.hidden=true;return}else if(k==='clear')document.execCommand('removeFormat');else document.execCommand(k);inputOf(ed);placeMini()}});
+  function placeMini(){const s2=getSelection(),n2=selNode();if(!n2||s2.isCollapsed||!s2.rangeCount||!cv.contains(n2)){mini.hidden=true;return}
+    const r=s2.getRangeAt(0).getBoundingClientRect(),h=host.getBoundingClientRect();if(!r.width&&!r.height){mini.hidden=true;return}
+    mini.hidden=false;$('.mb-fg',mini).style.borderBottomColor=st.fg;const w=mini.offsetWidth;
+    mini.style.left=Math.max(4,Math.min(h.width-w-4,r.left-h.left+r.width/2-w/2))+'px';const top=r.top-h.top-mini.offsetHeight-8;mini.style.top=(top<($('.pg-ribbon',host).offsetHeight)?r.bottom-h.top+8:top)+'px'}
+  let mt=0;const onMini=()=>{clearTimeout(mt);mt=setTimeout(placeMini,120)};
+  host.addEventListener('mouseup',onMini);host.addEventListener('keyup',e=>{if(e.shiftKey||e.key==='Shift')onMini();else mini.hidden=true});
+  sc.addEventListener('scroll',()=>{mini.hidden=true});
+  document.addEventListener('selectionchange',()=>{if(host.isConnected&&getSelection().isCollapsed)mini.hidden=true});
+
   /* ---------- Menüband: Reiter ---------- */
   const rib=$('.pg-ribbon',host);
   const showTab=t=>{rib.dataset.tab=t;$$('[data-rtab]',host).forEach(b=>b.classList.toggle('on',b.dataset.rtab===t));try{localStorage.setItem('kanban-notizen-ribbon',t)}catch(e){}
@@ -346,10 +405,13 @@ function mountPage(host,n,onChange,opt={}){
   ['pgFont','pgSize','pgStyle'].forEach(id=>{const el=$('#'+id,host);el.addEventListener('pointerdown',keepSel);el.addEventListener('focus',()=>{if(!fmtRange)keepSel()})});
   $('#pgFont',host).onchange=e=>{const ed=backSel();if(!ed){toast('Erst Text auswählen oder in einen Textkasten klicken');return}
     document.execCommand('styleWithCSS',false,true);document.execCommand('fontName',false,e.target.value||PG_FONTS[0][0]);document.execCommand('styleWithCSS',false,false);inputOf(ed);fmtRange=null};
-  $('#pgSize',host).onchange=e=>{const v=e.target.value,ed=backSel();if(!v||!ed){if(!ed)toast('Erst Text auswählen oder in einen Textkasten klicken');return}
-    document.execCommand('styleWithCSS',false,false);document.execCommand('fontSize',false,'7');
+  function applySize(v,ed){document.execCommand('styleWithCSS',false,false);document.execCommand('fontSize',false,'7');
     $$('font[size="7"]',ed).forEach(f=>{const sp=document.createElement('span');sp.style.fontSize=v+'pt';sp.append(...f.childNodes);f.replaceWith(sp)});
-    $$('span',ed).forEach(x=>{if(/xxx-large/.test(x.style.fontSize))x.style.fontSize=v+'pt'});inputOf(ed);fmtRange=null};
+    $$('span',ed).forEach(x=>{if(/xxx-large/.test(x.style.fontSize))x.style.fontSize=v+'pt'});inputOf(ed)}
+  function stepSize(k){const n2=selNode();if(!n2)return;const ed=n2.closest('.pg-edit'),pt=Math.round(parseFloat(getComputedStyle(n2).fontSize)*.75);
+    const v=k>0?PG_SIZES.find(x=>x>pt)||PG_SIZES[PG_SIZES.length-1]:[...PG_SIZES].reverse().find(x=>x<pt)||PG_SIZES[0];applySize(v,ed);ctx()}
+  $('#pgSize',host).onchange=e=>{const v=e.target.value,ed=backSel();if(!v||!ed){if(!ed)toast('Erst Text auswählen oder in einen Textkasten klicken');return}
+    applySize(v,ed);fmtRange=null};
   $('#pgStyle',host).onchange=e=>{const v=e.target.value;e.target.value='';const ed=backSel();if(!v)return;if(!ed){toast('Erst in einen Textkasten klicken');return}
     if(v==='pre'){insCode()}else document.execCommand('formatBlock',false,v);inputOf(ed);fmtRange=null};
   /* Auswahlfelder zeigen Schrift und Grösse an der Cursorposition */
@@ -512,3 +574,15 @@ function printPageHTML(x){const pg=x.page,{W,H}=pageBox(pg),k=Math.min(1,700/W);
   const ink=`<svg class="pp-ink" width="${W}" height="${H}">${pg.ink.map(s=>`<path d="${strokePath(s.p)}" stroke="${s.c}" stroke-width="${s.w}" stroke-opacity="${s.a}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}</svg>`;
   return`<section class="pp"><h1>${esc(x.title||'Ohne Titel')}</h1>${x.date?`<div class="pmeta">${esc(x.date)}</div>`:''}<div class="pp-wrap" style="height:${Math.ceil(H*k)+10}px"><div class="pp-can" style="width:${W}px;height:${H}px;transform:scale(${k.toFixed(4)})">${items}${ink}</div></div></section>`}
 function printPages(list){doPrint(list.map(printPageHTML).join(''))}
+
+/* HTML aus der Zwischenablage (z. B. aus Word oder dem Web) bereinigen: Formatierung behalten, Ballast entfernen */
+function pasteHTML(html){html=String(html).replace(/<!--[\s\S]*?-->/g,'');const t=document.createElement('template');t.innerHTML=html;
+  t.content.querySelectorAll('style,script,meta,link,title,xml,head,noscript,iframe,object,svg,img,video,audio,canvas,button,select,textarea,form').forEach(x=>x.remove());
+  t.content.querySelectorAll('*').forEach(el=>{const tn=el.tagName;
+    if(/^O:P$/i.test(tn)){el.replaceWith(document.createTextNode(el.textContent||''));return}
+    if(tn==='FONT'){const sp=document.createElement('span');if(el.getAttribute('color'))sp.style.color=el.getAttribute('color');if(el.getAttribute('face'))sp.style.fontFamily=el.getAttribute('face');sp.append(...el.childNodes);el.replaceWith(sp);return}
+    if(/^(P|DIV)$/.test(tn)&&/MsoList/.test(el.className||''))el.style.marginLeft='24px';
+    if(tn==='H4'||tn==='H5'||tn==='H6'){const h=document.createElement('h3');h.append(...el.childNodes);el.replaceWith(h)}
+    if(el.style&&/bold|[6-9]00/.test(el.style.fontWeight||'')&&tn==='SPAN'){const b=document.createElement('b');b.append(...el.childNodes);el.append(b)}
+    if(el.style&&el.style.fontStyle==='italic'&&tn==='SPAN'){const i=document.createElement('i');i.append(...el.childNodes);el.append(i)}});
+  return cleanHTML(t.innerHTML).replace(/(<p>(\s|&nbsp;)*<\/p>\s*){2,}/g,'<p><br></p>')}
