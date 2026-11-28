@@ -48,6 +48,9 @@ const cleanObj=n=>{const o={};for(const k in n)if(k[0]!=='_')o[k]=n[k];return o}
 function syncItems(){const m=new Map(),put=(id,kind,v)=>m.set(id,{kind,v,h:hsh(JSON.stringify(v))});
   put('folders','folders',DB.folders);
   for(const[fid,b]of Object.entries(DB.boards))put('wb:'+fid,'wb',b);
+  put('books','books',DB.books);
+  for(const[pid,x]of Object.entries(DB.dpages))put('dpage:'+pid,'dpage',x);
+  for(const[fid,x]of Object.entries(DB.files))put('file:'+fid,'file',x);
   const st=Object.assign({},DB.settings);DEVICE_SETTINGS.forEach(k=>delete st[k]);put('settings','settings',st);
   DB.spaces.forEach((s,k)=>{const{notes,...r}=s;put('space:'+s.id,'space',Object.assign({},r,{pos:k}));
     notes.forEach(n=>put('note:'+n.id,'note',Object.assign(cleanObj(n),{sid:s.id})))});
@@ -63,7 +66,8 @@ function syncRebuild(L){const vals=[...L.values()];
   const settings=Object.assign({},g('settings')||DB.settings);DEVICE_SETTINGS.forEach(k=>settings[k]=DB.settings[k]);
   const history={};for(const[id,x]of L)if(x.kind==='hist'&&Array.isArray(x.v))history[id.slice(5)]=x.v;
   const boards={};for(const[id,x]of L)if(x.kind==='wb')boards[id.slice(3)]=x.v;
-  DB=normDB({boards,folders:g('folders')||[],spaces,settings,trash:vals.filter(x=>x.kind==='trash').map(x=>x.v).sort((a,b)=>String(b.deletedAt).localeCompare(String(a.deletedAt))),history,active:DB.active,ui:DB.ui});
+  const dpages={},files={};for(const[id,x]of L){if(x.kind==='dpage')dpages[id.slice(6)]=x.v;else if(x.kind==='file')files[id.slice(5)]=x.v}
+  DB=normDB({boards,books:g('books')||[],dpages,files,folders:g('folders')||[],spaces,settings,trash:vals.filter(x=>x.kind==='trash').map(x=>x.v).sort((a,b)=>String(b.deletedAt).localeCompare(String(a.deletedAt))),history,active:DB.active,ui:DB.ui});
   applyTheme()}
 /* Bei einem Konflikt geht die unterlegene Fassung einer Notiz in den Versionsverlauf */
 function keepAsVersion(L,noteId,v){if(!v)return;const id='hist:'+noteId,cur=L.get(id),l=cur?[...cur.v]:[];
@@ -80,6 +84,8 @@ async function syncNow(manual,force){if(!sy.cfg||!sy.key||!tv.loaded)return;if(s
       for(;;){const rows=await rpc('kn_pull',{p_token:sy.cfg.token,p_since:since,p_limit:300});
         for(const r of rows){since=Math.max(since,+r.rev);const cur=L.get(r.id),base=st[r.id];
           /* Whiteboard nur löschen, wenn auch die Kategorie weg ist (ältere App-Versionen kennen Whiteboards nicht) */
+          /* Notizbücher: Löschen nur übernehmen, wenn die Struktur die Seite auch nicht mehr kennt (ältere Versionen kennen sie nicht) */
+          if(r.deleted&&cur&&(r.id==='books'||r.id.startsWith('file:')||(r.id.startsWith('dpage:')&&JSON.stringify((L.get('books')||{}).v||[]).includes('"'+r.id.slice(6)+'"')))){delete st[r.id];continue}
           if(r.deleted&&r.id.startsWith('wb:')&&cur&&arr((L.get('folders')||{}).v).some(f=>f&&f.id===r.id.slice(3))){delete st[r.id];continue}
           if(r.deleted){if(cur&&cur.h===base){L.delete(r.id);any=true;pulled++}if(!cur||cur.h===base)delete st[r.id];continue}
           let v;try{v=await dec(r.data)}catch(e){throw new Error('Entschlüsseln fehlgeschlagen – stimmt das Sync-Passwort?')}
@@ -87,7 +93,7 @@ async function syncNow(manual,force){if(!sy.cfg||!sy.key||!tv.loaded)return;if(s
           if(cur&&cur.h===rh){st[r.id]=rh;continue}
           if(!cur||cur.h===base){L.set(r.id,{kind:r.kind,v,h:rh});st[r.id]=rh;applied.add(r.id);any=true;pulled++;continue}
           /* Konflikt: beide Geräte haben geändert */
-          if((r.kind==='note'||r.kind==='wb')&&String(cur.v.updated||'')>String(v.updated||'')){if(r.kind==='note')keepAsVersion(L,r.id.slice(5),v);st[r.id]=rh;any=true}
+          if((r.kind==='note'||r.kind==='wb'||r.kind==='dpage')&&String(cur.v.updated||'')>String(v.updated||'')){if(r.kind==='note')keepAsVersion(L,r.id.slice(5),v);st[r.id]=rh;any=true}
           else{if(r.kind==='note')keepAsVersion(L,r.id.slice(5),cur.v);L.set(r.id,{kind:r.kind,v,h:rh});st[r.id]=rh;applied.add(r.id);any=true;pulled++}}
         if(rows.length<300)break}
       sy.cfg.lastRev=since;

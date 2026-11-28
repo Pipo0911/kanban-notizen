@@ -101,7 +101,9 @@ function normDB(d){
   const fids=new Set(fl.map(f=>f.id));fl.forEach(f=>{if(!fids.has(f.parent)||f.parent===f.id)f.parent=''});
   fl.forEach(f=>{let p=f.parent;const seen=new Set([f.id]);let g=0;while(p&&g++<100){if(seen.has(p)){f.parent='';break}seen.add(p);p=(fl.find(x=>x.id===p)||{}).parent}});
   spaces.forEach(s=>{if(!fids.has(s.folder))s.folder=''});
-  const out={v:5,folders:fl,boards:normBoards(d.boards,fids),spaces,settings:normSettings(d.settings),trash:normTrash(d.trash),history:normHistory(d.history),active:d.active,ui:ui0};
+  const books=normBooks(d.books),dpages=normDPages(d.dpages,docPageIds(books));
+  const out={v:5,folders:fl,boards:normBoards(d.boards,fids),books,dpages,spaces,settings:normSettings(d.settings),trash:normTrash(d.trash),history:normHistory(d.history),active:d.active,ui:ui0};
+  out.files=normFiles(d.files,[out.spaces,out.trash,out.history,out.dpages]);
   if(!spaces.some(s=>s.id===out.settings.daily.space))out.settings.daily.space='';
   if(!spaces.some(s=>s.id===out.active))out.active=spaces[0].id;
   return out}
@@ -113,4 +115,4 @@ function normTrash(t){return arr(t).filter(e=>e&&e.note&&typeof e.note==='object
 function normHistory(h){const o={};if(!h||typeof h!=='object')return o;
   for(const[k,v]of Object.entries(h)){if(!okId(k))continue;const l=arr(v).filter(x=>x&&!isNaN(Date.parse(x.at))).map(x=>({at:x.at,title:String(x.title||''),body:String(x.body||''),checklist:arr(x.checklist).filter(c=>c&&typeof c.text==='string').map(c=>({text:c.text,done:!!c.done})),...(x.page&&typeof x.page==='object'?{page:x.page}:{})})).slice(-HISTORY_MAX);if(l.length)o[k]=l}
   return o}
-function payload(){return{app:'kanban-notizen',v:5,saved:now(),folders:DB.folders,boards:DB.boards,spaces:DB.spaces,settings:DB.settings,trash:DB.trash,history:DB.history}}
+function payload(){return{app:'kanban-notizen',v:5,saved:now(),folders:DB.folders,boards:DB.boards,books:DB.books,dpages:DB.dpages,files:DB.files,spaces:DB.spaces,settings:DB.settings,trash:DB.trash,history:DB.history}}

@@ -14,7 +14,7 @@ const UIKEY='kanban-notizen-ui';
 const tInvoke=(c,a)=>TAURI.core.invoke(c,a);
 function loadUi(){try{return JSON.parse(localStorage.getItem(UIKEY)||'{}')}catch(e){return{}}}
 function saveUi(){try{localStorage.setItem(UIKEY,JSON.stringify({ui:DB.ui,active:DB.active}))}catch(e){}}
-function fileFields(d){return{boards:d.boards,folders:d.folders,spaces:d.spaces,settings:d.settings,trash:d.trash,history:d.history}}
+function fileFields(d){return{books:d.books,dpages:d.dpages,files:d.files,boards:d.boards,folders:d.folders,spaces:d.spaces,settings:d.settings,trash:d.trash,history:d.history}}
 function applyFileData(d){DB=normDB(Object.assign(fileFields(d),{active:DB.active,ui:DB.ui}));applyTheme();render()}
 async function tauriInfo(){const i=await tInvoke('data_info');tv.path=i.path;tv.isDefault=i.is_default;return i}
 async function tauriLoad(){const i=await tauriInfo();const txt=await tInvoke('load_data');
@@ -46,7 +46,7 @@ window.addEventListener('focus',checkFileChanged);
 window.addEventListener('beforeunload',()=>{if(tv.dirty)tauriWrite()});
 function setStatus(t,err){statusMsg=t;statusErr=!!err;const el=$('#status');if(el){el.textContent=t;el.className='status'+(statusErr?' err':'')}}
 /* Beschäftigt = gerade wird etwas bearbeitet; dann keine fremden Änderungen übernehmen */
-const busy=()=>$('#dlg').open||$('#dlg2').open||!!$('.inline-form')||!!drag||Date.now()-(window.__pgTouch||0)<4000||!!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#bkMain,.wb-it.editing'));
+const busy=()=>$('#dlg').open||$('#dlg2').open||!!$('.inline-form')||!!drag||Date.now()-(window.__pgTouch||0)<4000||!!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#bkMain,#docMain,.wb-it.editing'));
 const jsonFilter=[{name:'Notara',extensions:['json']}];
 async function tauriNewFile(){const p=await TAURI.dialog.save({defaultPath:'kanban-notizen.json',filters:jsonFilter});if(!p)return;
   await tInvoke('set_data_path',{path:p});await tauriInfo();await tauriWrite();render();toast('Notizen werden jetzt hier gespeichert: '+tv.path)}

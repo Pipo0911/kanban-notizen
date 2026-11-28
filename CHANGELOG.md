@@ -1,5 +1,20 @@
 # Änderungen
 
+## 2.3.0 · Notizbücher zum Dokumentieren
+- **Notizbücher wie in OneNote:** Neuer Bereich „Notizbücher“ in der Seitenleiste, unabhängig von den Boards.
+  - **Aufbau:** Notizbuch → farbige Abschnitte links → Seiten und Unterseiten → die Seite selbst.
+  - **Seiten:** frei platzierbarer Text, Bilder, Zeichnungen mit Stift oder Apple Pencil, Titel und Erstelldatum wie in OneNote.
+  - **Abschnitte und Seiten** (⋯ oder Rechtsklick): umbenennen, einfärben, verschieben, einrücken und ausrücken, in andere Abschnitte oder Notizbücher verschieben, löschen (mit Rückgängig).
+  - **Export:** Ein Notizbuch lässt sich als Markdown-Datei exportieren.
+  - Die Suche (Strg+K) findet auch Seiten in Notizbüchern.
+  - Auf dem iPhone geht es Schritt für Schritt: Abschnitte → Seiten → Seite.
+- **Neu auf allen Seiten** (auch auf Seiten in Boards):
+  - **Tabellen:** einfügen und bearbeiten: Zeile oder Spalte hinzufügen und löschen, Kopfzeile, Tab springt zur nächsten Zelle.
+  - **Code-Blöcke** für Befehle und Code, in Monospace-Schrift, mit „Kopieren“-Knopf. Tab rückt ein, Strg+Enter verlässt den Block.
+  - **Links:** Web-Adressen oder Verweise auf andere Notizbuch-Seiten (Strg+K im Text). „Öffnen“ oder Strg+Klick folgt dem Link.
+  - **Anhänge:** PDF, Word, Excel usw. bis 5 MB anhängen, mit 📎 Datei oder per Hineinziehen. Auf dem PC öffnet ↗ die Datei direkt im passenden Programm, ↓ speichert sie.
+- Notizbücher und Anhänge werden wie Notizen verschlüsselt synchronisiert.
+
 ## 2.2.0 · App-Sperre
 - **Login mit PIN oder Passwort:** Unter Einstellungen → Allgemein → **App-Sperre** richtest du eine PIN (4 bis 12 Ziffern) oder ein Passwort ein. Danach fragt Notara bei jedem Öffnen danach, bevor deine Notizen sichtbar sind.
 - **Automatisch sperren:** nach 1, 5, 15, 30 oder 60 Minuten ohne Eingabe, oder nur beim Öffnen der App. Das gilt auch, wenn die App im Hintergrund oder unten rechts im Infobereich war.

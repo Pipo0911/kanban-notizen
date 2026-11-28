@@ -2,7 +2,7 @@
 /* Notara · Globale Ereignisse und Start */
 'use strict';
 /* ============ Globale Ereignisse ============ */
-const ACTIONS={lock:()=>lockNow(),newSpace:()=>createSpace(''),newFolder:()=>createFolder(''),addMenu:a=>{const[x,y]=menuAt(a);addMenu(x,y,'')},view:a=>setView(a.dataset.v),create:()=>createNote(sp().id),menu:()=>$('.app').classList.toggle('menu-open'),
+const ACTIONS={lock:()=>lockNow(),newBook:()=>createBook(),newSpace:()=>createSpace(''),newFolder:()=>createFolder(''),addMenu:a=>{const[x,y]=menuAt(a);addMenu(x,y,'')},view:a=>setView(a.dataset.v),create:()=>createNote(sp().id),menu:()=>$('.app').classList.toggle('menu-open'),
   clearF:()=>{ui.filters=blankF();renderFbar();renderContent()},addCol:()=>addCol(),palette:()=>openPalette(),help:()=>showHelp(),
   checkUpdate:()=>checkUpdate(true),installUpdate:()=>installUpdate(),
   backupNow:()=>backupAll(),syncNow:()=>syncNow(true),daily:()=>openDaily(today()),openNote:a=>openNote(a.dataset.nsid,a.dataset.nid),
@@ -10,6 +10,8 @@ const ACTIONS={lock:()=>lockNow(),newSpace:()=>createSpace(''),newFolder:()=>cre
 document.addEventListener('click',e=>{if(e.target.closest('dialog'))return;
   const tl=e.target.closest('[data-fadd],[data-fmenu],[data-smenu]');
   if(tl){e.stopPropagation();const[x,y]=menuAt(tl);if(tl.dataset.fadd)addMenu(x,y,tl.dataset.fadd);else if(tl.dataset.fmenu)folderMenu(folderById(tl.dataset.fmenu),x,y);else spaceMenu(spaceById(tl.dataset.smenu),x,y);return}
+  const bkm=e.target.closest('[data-bkmenu]');if(bkm){e.stopPropagation();const[x,y]=menuAt(bkm);const b=bookById(bkm.dataset.bkmenu);if(b)bookMenuDoc(b,x,y);return}
+  const bk=e.target.closest('[data-book]');if(bk){openBook(bk.dataset.book);$('.app').classList.remove('menu-open');return}
   const wbr=e.target.closest('[data-wb]');if(wbr){openWB(wbr.dataset.wb);return}
   const fo=e.target.closest('[data-folder]');if(fo){toggleFolder(fo.dataset.folder);return}
   const sb=e.target.closest('[data-space]');if(sb){goSpace(sb.dataset.space);return}

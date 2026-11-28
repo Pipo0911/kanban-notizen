@@ -33,6 +33,7 @@ function renderSide(){const v=DB.ui.view,g=GLOBAL_VIEWS.includes(v),ct=countToda
   <nav class="nav" id="tree">${treeHTML('',0,g)}
   <div class="sp-item add" data-act="newSpace" role="button" tabindex="0"><span class="sav dashed">+</span><span class="sp-n">Space erstellen</span></div>
   <div class="sp-item add" data-act="newFolder" role="button" tabindex="0"><span class="sav dashed" style="border-radius:50%">${SVG.folder}</span><span class="sp-n">Kategorie erstellen</span></div></nav>
+  ${booksSideHTML()}
   <div class="side-foot">
   ${syncNavHTML()}${updNav()}
   <button class="nav-item${v==='trash'?' on':''}" data-act="view" data-v="trash">${SVG.trash}<span class="sp-n">Papierkorb</span>${DB.trash.length?`<span class="sp-c">${DB.trash.length}</span>`:''}</button>
@@ -122,8 +123,8 @@ function timerPill(){const r=runningTimer();if(!r)return'';return`<span class="t
 function renderHead(){const v=DB.ui.view,h=$('#head');
   const st=`<span class="status${statusErr?' err':''}" id="status">${esc(statusMsg)}</span>`;
   const sb=`<button class="searchbtn" data-act="palette" title="Alles durchsuchen">${SVG.search}<span class="lbl">Suchen …</span><span class="spacer"></span><kbd>Strg K</kbd></button>`;
-  if(GLOBAL_VIEWS.includes(v)){const T={today:'Heute & Termine',time:'Zeiterfassung',trash:'Papierkorb',settings:'Einstellungen',wb:esc((folderById(DB.ui.wb)||{}).name||'Whiteboard')}[v];
-    h.innerHTML=`<div class="head-row" style="padding-bottom:12px"><button class="icon-btn menu-btn" data-act="menu" aria-label="Menü">☰</button><div class="ttl"><div class="crumb">${v==='wb'?'Whiteboard'+(folderChain(DB.ui.wb).length>1?' · '+folderChain(DB.ui.wb).slice(0,-1).map(f=>esc(f.name)).join(' › '):''):v==='today'?esc(new Date().toLocaleDateString('de-CH',{weekday:'long',day:'numeric',month:'long',year:'numeric'}))+' · KW '+isoWeek(today()):'Übersicht'}</div><h1>${T}</h1></div><span class="spacer"></span>${st}${timerPill()}${sb}${v==='today'?'<button class="btn primary" data-act="create" title="Taste N">+ Notiz</button>':''}</div>`;return}
+  if(GLOBAL_VIEWS.includes(v)){const T={today:'Heute & Termine',time:'Zeiterfassung',trash:'Papierkorb',settings:'Einstellungen',wb:esc((folderById(DB.ui.wb)||{}).name||'Whiteboard'),doc:esc((bookById((DB.ui.doc||{}).b)||DB.books[0]||{}).name||'Notizbücher')}[v];
+    h.innerHTML=`<div class="head-row" style="padding-bottom:12px"><button class="icon-btn menu-btn" data-act="menu" aria-label="Menü">☰</button><div class="ttl"><div class="crumb">${v==='doc'?'Notizbuch':v==='wb'?'Whiteboard'+(folderChain(DB.ui.wb).length>1?' · '+folderChain(DB.ui.wb).slice(0,-1).map(f=>esc(f.name)).join(' › '):''):v==='today'?esc(new Date().toLocaleDateString('de-CH',{weekday:'long',day:'numeric',month:'long',year:'numeric'}))+' · KW '+isoWeek(today()):'Übersicht'}</div><h1>${T}</h1></div><span class="spacer"></span>${st}${timerPill()}${sb}${v==='today'?'<button class="btn primary" data-act="create" title="Taste N">+ Notiz</button>':''}</div>`;return}
   const s=sp(),na=s.notes.filter(n=>n.archived).length;
   h.innerHTML=`<div class="head-row"><button class="icon-btn menu-btn" data-act="menu" aria-label="Menü">☰</button><span class="sav lg" style="background:${esc(s.color)}">${esc((s.name.trim()[0]||'?').toUpperCase())}</span><div class="ttl"><div class="crumb">${spacePath(s).length?spacePath(s).map(esc).join(' › '):'Space'}</div><h1>${esc(s.name)}</h1></div><span class="spacer"></span>${st}${timerPill()}${sb}<button class="btn primary" data-act="create" title="Taste N">+ Notiz</button></div>
   <nav class="tabs">${[['board','Board'],['book','Notizbuch'],['wall','Alle Notizen'],['archive','Archiv'+(na?`<span class="cnt">${na}</span>`:'')],['spacecfg','Einstellungen']].map(([k,n])=>`<button class="tab${v===k?' on':''}" data-act="view" data-v="${k}">${n}</button>`).join('')}</nav>`}
@@ -149,7 +150,8 @@ function renderContent(){const c=$('#content'),old=$('#bw'),v=DB.ui.view,key=v+(
   const sc=old&&old.dataset.k===key?{l:old.scrollLeft,t:old.scrollTop,cols:$$('.col-list',old).map(x=>x.scrollTop)}:null;
   if(v!=='book'&&typeof bookCtl!=='undefined'&&bookCtl)leaveBookPage();
   if(v!=='wb'&&wbCtl){wbCtl.destroy();wbCtl=null}
-  ({board:renderBoard,book:renderBook,wall:renderWall,archive:renderArchive,spacecfg:renderSpaceCfg,today:renderToday,time:renderTime,trash:renderTrash,settings:renderSettings,wb:renderWB}[v]||renderBoard)(c);
+  if(v!=='doc'&&(docCtl||docMounted))leaveDocPage();
+  ({board:renderBoard,book:renderBook,wall:renderWall,archive:renderArchive,spacecfg:renderSpaceCfg,today:renderToday,time:renderTime,trash:renderTrash,settings:renderSettings,wb:renderWB,doc:renderDoc}[v]||renderBoard)(c);
   const nw=$('#bw');if(nw){nw.dataset.k=key;if(sc){nw.scrollLeft=sc.l;nw.scrollTop=sc.t;$$('.col-list',nw).forEach((x,k)=>{if(sc.cols[k])x.scrollTop=sc.cols[k]})}}}
 function matches(s,n){const f=ui.filters;
   if(f.q){const q=f.q.trim().toLowerCase();if(q&&![n.title,n.body,n.tags.join(' '),n.checklist.map(c=>c.text).join(' ')].join('\n').toLowerCase().includes(q))return false}

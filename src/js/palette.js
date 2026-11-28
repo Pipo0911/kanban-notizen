@@ -12,14 +12,17 @@ function openPalette(){const d=$('#pal');let sel=0,items=[];
     {sec:'Befehle',i:'⏱',t:runningTimer()?'Zeiterfassung stoppen':'Zeiterfassung öffnen',run:()=>{const r=runningTimer();r?stopTimer(r.s,r.n):setView('time')}},
     {sec:'Gehe zu',i:'›',t:'Heute & Termine',run:()=>setView('today')},{sec:'Gehe zu',i:'›',t:'Zeiterfassung',run:()=>setView('time')},{sec:'Gehe zu',i:'›',t:'Papierkorb',run:()=>setView('trash')},{sec:'Gehe zu',i:'›',t:'Einstellungen',run:()=>setView('settings')},
     ...DB.spaces.map(x=>({sec:'Gehe zu',i:'›',t:'Space: '+spaceLabel(x),run:()=>goSpace(x.id)})),
-    {sec:'Befehle',i:'+',t:'Kategorie erstellen',run:()=>createFolder('')},
+    {sec:'Befehle',i:'+',t:'Kategorie erstellen',run:()=>createFolder('')},{sec:'Befehle',i:'+',t:'Notizbuch erstellen',run:()=>createBook()},
+    ...DB.books.map(b=>({sec:'Gehe zu',i:'›',t:'Notizbuch: '+b.name,run:()=>openBook(b.id)})),
     {sec:'Befehle',i:'↓',t:'Backup speichern',run:()=>backupAll()},{sec:'Befehle',i:'⎙',t:`Space „${s.name}“ drucken / PDF`,run:()=>printSpace(s)}]};
   const draw=()=>{const q=inp.value.trim().toLowerCase();
     const notes=[];for(const{s,n}of allNotes()){const hay=[n.title,n.body,n.tags.join(' '),n.checklist.map(c=>c.text).join(' ')].join('\n').toLowerCase();if(!q||hay.includes(q))notes.push({s,n,score:(n.title.toLowerCase().includes(q)?2:0)+(n.archived?-3:0)+(isDone(s,n)?-1:0)})}
     notes.sort((a,b)=>b.score-a.score||b.n.updated.localeCompare(a.n.updated));
+    const docs=[];if(q)for(const b of DB.books)for(const s of b.sections)for(const p of s.pages){const hay=(p.title+'\n'+((DB.dpages[p.id]||{}).body||'')).toLowerCase();if(hay.includes(q))docs.push({b,s,p,score:p.title.toLowerCase().includes(q)?2:0})}
+    docs.sort((a,b)=>b.score-a.score||b.p.updated.localeCompare(a.p.updated));
     const cm=cmds().filter(c=>!q||c.t.toLowerCase().includes(q));
     const favs=!q?favorites().slice(0,8).map(x=>({sec:'Favoriten',i:'★',t:noteLabel(x.n),sub:x.s.name,run:()=>openNote(x.s.id,x.n.id)})):[];
-    items=[...favs,...(q?notes.slice(0,30).map(x=>({sec:'Notizen',i:'▤',t:noteLabel(x.n),sub:spaceLabel(x.s)+(x.n.archived?' · Archiv':isDone(x.s,x.n)?' · erledigt':''),run:()=>openNote(x.s.id,x.n.id)})):[]),...cm.slice(0,q?8:20),...(!q?notes.slice(0,8).map(x=>({sec:'Zuletzt geändert',i:'▤',t:noteLabel(x.n),sub:x.s.name,run:()=>openNote(x.s.id,x.n.id)})):[])];
+    items=[...favs,...docs.slice(0,15).map(x=>({sec:'Notizbücher',i:'📓',t:x.p.title||'Ohne Titel',sub:x.b.name+' › '+x.s.name,run:()=>openDocPage(x.p.id)})),...(q?notes.slice(0,30).map(x=>({sec:'Notizen',i:'▤',t:noteLabel(x.n),sub:spaceLabel(x.s)+(x.n.archived?' · Archiv':isDone(x.s,x.n)?' · erledigt':''),run:()=>openNote(x.s.id,x.n.id)})):[]),...cm.slice(0,q?8:20),...(!q?notes.slice(0,8).map(x=>({sec:'Zuletzt geändert',i:'▤',t:noteLabel(x.n),sub:x.s.name,run:()=>openNote(x.s.id,x.n.id)})):[])];
     sel=Math.min(sel,Math.max(0,items.length-1));let last='';
     list.innerHTML=items.map((it,k)=>{const h=it.sec!==last?`<div class="pal-sec">${it.sec}</div>`:'';last=it.sec;return h+`<div class="pal-it${k===sel?' on':''}" data-k="${k}" role="option"><span class="pi">${it.i}</span><span class="pt">${esc(it.t)}</span>${it.sub?`<span class="ps">${esc(it.sub)}</span>`:''}</div>`}).join('')||'<div class="empty-big" style="padding:24px">Nichts gefunden.</div>';
     $$('.pal-it',list).forEach(x=>{x.onclick=()=>go(+x.dataset.k);x.onmousemove=()=>{if(sel!==+x.dataset.k){sel=+x.dataset.k;$$('.pal-it',list).forEach(y=>y.classList.toggle('on',y===x))}}})};

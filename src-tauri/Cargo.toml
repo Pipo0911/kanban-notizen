@@ -1,6 +1,6 @@
 [package]
 name = "kanban-notizen"
-version = "2.2.0"
+version = "2.3.0"
 description = "Notara – Notizen, Termine und Zeiterfassung als Desktop-App"
 authors = ["Philipp Seewer"]
 license-file = "../LICENSE"

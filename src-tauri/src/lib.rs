@@ -190,6 +190,85 @@ fn write_text_file(path: String, contents: String) -> Result<(), String> {
     fs::write(&p, contents.as_bytes()).map_err(err)
 }
 
+/// Text aus einem Header lesen. Header dürfen nur ASCII enthalten, darum kommt der Text hex-kodiert.
+fn hex_header(req: &tauri::ipc::Request<'_>, key: &str) -> Result<String, String> {
+    let h = req
+        .headers()
+        .get(key)
+        .and_then(|v| v.to_str().ok())
+        .ok_or_else(|| format!("{key} fehlt"))?;
+    let bytes = (0..h.len())
+        .step_by(2)
+        .map(|i| u8::from_str_radix(h.get(i..i + 2).unwrap_or("zz"), 16))
+        .collect::<Result<Vec<u8>, _>>()
+        .map_err(err)?;
+    String::from_utf8(bytes).map_err(err)
+}
+
+fn raw_body<'a>(req: &'a tauri::ipc::Request<'_>) -> Result<&'a [u8], String> {
+    match req.body() {
+        tauri::ipc::InvokeBody::Raw(b) => Ok(b.as_slice()),
+        _ => Err("Keine Daten erhalten".into()),
+    }
+}
+
+/// Öffnet eine Datei oder Web-Adresse mit dem Standardprogramm von Windows.
+fn open_with_system(target: &std::ffi::OsStr) -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        std::process::Command::new("explorer")
+            .arg(target)
+            .spawn()
+            .map_err(err)?;
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = target;
+    }
+    Ok(())
+}
+
+/// Speichert einen Anhang (Binärdaten) an den im Speichern-Dialog gewählten Ort.
+#[tauri::command]
+fn write_bin_file(request: tauri::ipc::Request<'_>) -> Result<(), String> {
+    let p = PathBuf::from(hex_header(&request, "x-path")?);
+    if let Some(dir) = p.parent() {
+        fs::create_dir_all(dir).map_err(err)?;
+    }
+    fs::write(&p, raw_body(&request)?).map_err(err)
+}
+
+/// Öffnet einen Anhang: in den Temp-Ordner schreiben und mit dem Standardprogramm öffnen.
+#[tauri::command]
+fn open_file(request: tauri::ipc::Request<'_>) -> Result<(), String> {
+    let name = hex_header(&request, "x-name")?;
+    let safe: String = name
+        .chars()
+        .map(|c| if "<>:\"/\\|?*".contains(c) || c.is_control() { '_' } else { c })
+        .collect();
+    let lower = safe.to_lowercase();
+    for ext in [".exe", ".msi", ".bat", ".cmd", ".com", ".scr", ".ps1", ".vbs", ".vbe", ".js", ".jse", ".wsf", ".wsh", ".hta", ".lnk", ".reg", ".cpl", ".jar"] {
+        if lower.ends_with(ext) {
+            return Err("Programme werden nicht geöffnet".into());
+        }
+    }
+    let dir = std::env::temp_dir().join("Notara");
+    fs::create_dir_all(&dir).map_err(err)?;
+    let p = dir.join(if safe.trim().is_empty() { "Datei".to_string() } else { safe });
+    fs::write(&p, raw_body(&request)?).map_err(err)?;
+    open_with_system(p.as_os_str())
+}
+
+/// Öffnet einen Link aus einer Seite im Standardbrowser (nur Web- und Mail-Adressen).
+#[tauri::command]
+fn open_url(url: String) -> Result<(), String> {
+    let l = url.to_lowercase();
+    if !(l.starts_with("https://") || l.starts_with("http://") || l.starts_with("mailto:")) {
+        return Err("Nur Web-Adressen".into());
+    }
+    open_with_system(std::ffi::OsStr::new(&url))
+}
+
 /// Öffnet den Ordner mit der Datendatei im Explorer.
 #[tauri::command]
 fn reveal_data(app: AppHandle) -> Result<(), String> {
@@ -306,6 +385,9 @@ pub fn run() {
             save_data,
             set_data_path,
             reveal_data,
+            write_bin_file,
+            open_file,
+            open_url,
             write_text_file,
             get_prefs,
             set_prefs
