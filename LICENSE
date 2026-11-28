@@ -53,4 +53,5 @@ Lizenzen; für sie gilt diese Lizenz nicht:
 
   - src/vendor/qrcode.js  - qrcode-generator, (c) Kazuhiko Arase, MIT License
   - src/vendor/jsqr.js    - jsQR, (c) Cosmo Wolfe, Apache License 2.0
+  - src/vendor/pdf.js, src/vendor/pdf.worker.js - PDF.js, (c) Mozilla Foundation, Apache License 2.0
   - Tauri und die Tauri-Plugins (Rust-Abhängigkeiten), MIT/Apache-2.0

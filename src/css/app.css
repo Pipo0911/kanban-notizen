@@ -933,3 +933,59 @@ html.locked .app,html.locked #toast,html.locked #banner,html.locked dialog:not(#
   .doc-head{padding:10px 12px 4px}.doc-title{font-size:22px}
   .doc.m-page .doc-main{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
 }
+
+/* ============ Menüband wie OneNote (Start, Einfügen, Zeichnen, Seite) ============ */
+.pg-ribbon{flex:none;background:var(--surface);border-bottom:1px solid var(--border)}
+.pg-tabs{display:flex;align-items:center;gap:2px;padding:4px 8px 0;border-bottom:1px solid var(--border)}
+.pg-tabs [data-rtab]{border:0;background:none;color:var(--text2);font-size:13px;padding:6px 12px 7px;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer}
+.pg-tabs [data-rtab]:hover{color:var(--text)}
+.pg-tabs [data-rtab].on{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.pg-tabs .spacer{flex:1}
+.pg-tabs #pgUndo,.pg-tabs #pgRedo{border:0;background:none;color:var(--text);font-size:16px;width:32px;height:28px;border-radius:6px;cursor:pointer}
+.pg-tabs #pgUndo:hover,.pg-tabs #pgRedo:hover{background:var(--hover)}
+.pg-ribbon .pg-bar{border-bottom:0}
+.pg-ribbon .pg-bar[data-rp]{display:none}
+.pg-ribbon[data-tab="start"] [data-rp="start"],.pg-ribbon[data-tab="insert"] [data-rp="insert"],.pg-ribbon[data-tab="draw"] [data-rp="draw"],.pg-ribbon[data-tab="view"] [data-rp="view"]{display:flex}
+.pg-ribbon .pg-ctxbar{border-top:1px solid var(--border);padding:4px 8px}
+.pg-ribbon .pg-ctxbar[hidden]{display:none}
+#pgFont{width:150px}#pgSize{width:76px}#pgStyle{width:150px}
+.pg-lbl{font-size:12.5px;color:var(--muted);margin:0 6px 0 2px}
+.pg-rec{color:#d64545;font-weight:700;font-variant-numeric:tabular-nums;margin:0 6px;animation:recblink 1.2s infinite}
+@keyframes recblink{50%{opacity:.45}}
+.pg-edit h1{font-size:1.6em}.pg-edit h2{font-size:1.3em}.pg-edit h3{font-size:1.1em}
+.pg-edit blockquote:not([style]){border-left:3px solid #c9d1dd;padding-left:10px;color:#4b5563;margin:4px 0}
+.pg-edit blockquote[style]{margin-top:0;margin-bottom:0}
+.pg-edit sub,.pg-edit sup{font-size:.75em}
+@media (max-width:700px){.pg-tabs [data-rtab]{padding:8px 10px}#pgFont{width:118px}#pgStyle{width:120px}}
+/* Drucken von Seiten */
+@media print{
+  #printArea .pp{break-after:page;page-break-after:always}
+  #printArea .pp:last-child{break-after:auto;page-break-after:auto}
+  #printArea .pp-wrap{position:relative;overflow:hidden}
+  #printArea .pp-can{position:relative;transform-origin:0 0}
+  #printArea .pp-it{position:absolute}
+  #printArea .pp-it img{width:100%;display:block}
+  #printArea .pp-it .pg-edit{border:0;padding:4px 6px;font-size:15px;line-height:1.5;color:#000}
+  #printArea .pp-ink{position:absolute;left:0;top:0;overflow:visible}
+  #printArea .pp-att{border:1px solid #bbb;border-radius:6px;padding:6px 8px;font-size:12px}
+  #printArea .pg-edit pre{background:#f1f3f6;color:#111;border:1px solid #ccd;border-radius:4px;padding:6px 8px;white-space:pre-wrap;font:10pt/1.4 Consolas,monospace}
+  #printArea .pg-edit table{border-collapse:collapse;width:100%}
+  #printArea .pg-edit td,#printArea .pg-edit th{border:1px solid #999;padding:3px 6px}
+}
+/* Notizbücher: Gruppen, Ziehen, Vorlagen, Markierungen, Versionen */
+.doc-adds{display:flex;border-top:1px solid var(--border)}.doc-adds .doc-add{border-top:0;flex:1}.doc-adds .doc-add+.doc-add{border-left:1px solid var(--border);flex:none}
+.doc-addp{display:flex;gap:0;padding:0 8px;width:100%;box-sizing:border-box}.doc-addp .doc-add.top{margin:10px 0 6px;width:auto;flex:1;border-radius:7px 0 0 7px}.doc-addp .doc-add.tpl{flex:none;border-radius:0 7px 7px 0;border-left:0;padding:7px 10px;text-align:center}
+.dg-h{display:flex;align-items:center;gap:6px;padding:7px 6px 7px 8px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:650;color:var(--text2)}
+.dg-h:hover{background:var(--hover)}.dg-h:hover .ds-more{opacity:1}
+.dg-tog{width:12px;font-size:11px;color:var(--muted)}.dg-ic{flex:none;color:var(--muted)}
+.ds-it.in-grp{margin-left:16px}
+.drop-before{box-shadow:inset 0 2px 0 var(--accent)}.drop-after{box-shadow:inset 0 -2px 0 var(--accent)}
+.drop-in{outline:2px dashed var(--accent);outline-offset:-2px;background:var(--accent-soft)!important}
+.dp-it[draggable],.ds-it[draggable]{-webkit-user-drag:element}
+.ts-g{margin:4px 0 14px}.ts-h{font-weight:700;margin-bottom:4px}
+.ts-it{display:flex;flex-direction:column;align-items:flex-start;gap:1px;width:100%;text-align:left;border:0;background:none;border-radius:6px;padding:6px 8px;color:var(--text);cursor:pointer}
+.ts-it:hover{background:var(--hover)}.ts-it small{color:var(--muted);font-size:11.5px}.ts-it.done span{text-decoration:line-through;opacity:.6}
+.dh-list{display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow:auto}
+.dh-it{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center;border:1px solid var(--border);border-radius:8px;padding:8px;cursor:pointer}
+.dh-it .pg-mini{grid-column:1/-1}
+.pg-bar button sub,.pg-bar button sup{font-size:.65em;line-height:0}

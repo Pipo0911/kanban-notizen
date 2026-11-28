@@ -1,5 +1,29 @@
 # Änderungen
 
+## 2.4.0 · Notizbücher wie OneNote
+- **Menüband wie in OneNote** mit den Reitern Start, Einfügen, Zeichnen und Seite. Rückgängig und Wiederholen stehen immer oben rechts.
+- **Start:**
+  - Schriftart und Schriftgrösse (8–72 pt), fett, kursiv, unterstrichen, durchgestrichen, Text- und Markierfarbe.
+  - Tief- und hochgestellt, Formatierung löschen.
+  - Aufzählung, Nummerierung, Einzug, Ausrichtung.
+  - Formatvorlagen: Normal, Überschrift 1–3, Zitat, Code.
+- **Markierungen (Tags):** ☐ Aufgabe (Strg+1), ⭐ Wichtig, ❓ Frage, 💡 Idee, 📌 Merken, ⚠️ Kritisch, 📞 Anrufen, 📅 Termin, 📚 Lernen, ✅ Erledigt.
+  - „Markierungen suchen“ listet alle markierten Zeilen eines Notizbuchs. Ein Klick springt zur Seite.
+- **Einfügen:**
+  - **PDF-Ausdruck:** Die Seiten eines PDFs kommen als Bilder auf die Seite. Unter „Zeichnen“ schreibst du direkt darauf. Das Original-PDF wird zusätzlich angehängt.
+  - **Bildschirmausschnitt (PC):** Bereich auswählen, das Bild kommt automatisch auf die Seite.
+  - **Audio:** Sprachnotizen aufnehmen (bis 20 Minuten) und direkt auf der Seite abspielen.
+  - Datum und Uhrzeit einfügen.
+- **Seite:**
+  - Drucken oder als PDF speichern, für eine Seite oder den ganzen Abschnitt.
+  - **Seitenversionen:** frühere Stände ansehen und wiederherstellen.
+  - Eigene **Vorlagen** speichern.
+- **Seitenvorlagen:** Mitschrift, Cornell-Notizen, Besprechung, Anleitung/Doku, Projekt, Lernzettel und eigene Vorlagen. Du findest sie mit ▾ neben „+ Seite hinzufügen“.
+- **Abschnittsgruppen:** Abschnitte in auf- und zuklappbare Gruppen zusammenfassen („+ Gruppe“).
+- **Ziehen und Ablegen:**
+  - Seiten umsortieren, als Unterseite ablegen (auf die Mitte einer Seite ziehen) oder in einen anderen Abschnitt ziehen.
+  - Abschnitte umsortieren, in Gruppen ziehen oder auf ein anderes Notizbuch in der Seitenleiste ziehen.
+
 ## 2.3.0 · Notizbücher zum Dokumentieren
 - **Notizbücher wie in OneNote:** Neuer Bereich „Notizbücher“ in der Seitenleiste, unabhängig von den Boards.
   - **Aufbau:** Notizbuch → farbige Abschnitte links → Seiten und Unterseiten → die Seite selbst.

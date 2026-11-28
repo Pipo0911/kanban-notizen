@@ -18,7 +18,11 @@ function normPage(p){p=p&&typeof p==='object'?p:{};
     .filter(x=>(x.t!=='img'||x.src)&&(x.t!=='file'||x.fid));
   const ink=arr(p.ink).filter(s=>s&&typeof s.p==='string'&&s.p.length<200000).map(s=>({id:okId(s.id)?String(s.id):uid(),c:/^#[0-9a-f]{6}$/i.test(s.c)?s.c:'#1d1f24',w:num(s.w,3,1,60),a:Math.max(.1,Math.min(1,+s.a||1)),p:s.p}));
   return{bg:PAGE_BG.some(b=>b[0]===p.bg)?p.bg:'plain',items,ink}}
-const OK_TAGS=new Set(['B','STRONG','I','EM','U','S','STRIKE','BR','DIV','P','UL','OL','LI','H1','H2','H3','SPAN','A','CODE','PRE','INPUT','MARK','BLOCKQUOTE','TABLE','THEAD','TBODY','TR','TH','TD']);
+const OK_TAGS=new Set(['B','STRONG','I','EM','U','S','STRIKE','BR','DIV','P','UL','OL','LI','H1','H2','H3','SPAN','A','CODE','PRE','INPUT','MARK','BLOCKQUOTE','TABLE','THEAD','TBODY','TR','TH','TD','SUB','SUP']);
+const PG_FONTS=[['','Standard'],['Calibri, Carlito, sans-serif','Calibri'],['Arial, Helvetica, sans-serif','Arial'],['"Segoe UI", system-ui, sans-serif','Segoe UI'],['Georgia, serif','Georgia'],['"Times New Roman", Times, serif','Times New Roman'],['Consolas, "Courier New", monospace','Consolas'],['"Segoe Print", "Comic Sans MS", cursive','Handschrift']];
+const PG_SIZES=[8,9,10,11,12,14,16,18,20,24,28,32,36,48,72];
+const PG_STYLES=[['div','Normal'],['h1','Überschrift 1'],['h2','Überschrift 2'],['h3','Überschrift 3'],['blockquote','Zitat'],['pre','Code']];
+const PG_TAGS=[['check','☐','Aufgabe (Strg+1)'],['imp','⭐','Wichtig'],['q','❓','Frage'],['idea','💡','Idee'],['pin','📌','Merken'],['warn','⚠️','Kritisch'],['call','📞','Anrufen'],['date','📅','Termin'],['learn','📚','Lernen'],['ok','✅','Erledigt']];
 const okHref=h=>/^(https?:\/\/|mailto:)/i.test(h||'')||/^#doc:[A-Za-z0-9_-]{1,64}$/.test(h||'');
 /* Nur harmloses HTML behalten (keine Skripte, Ereignisse, fremde Stile) */
 function cleanHTML(html){const t=document.createElement('template');t.innerHTML=String(html||'');
@@ -26,11 +30,13 @@ function cleanHTML(html){const t=document.createElement('template');t.innerHTML=
     if(!OK_TAGS.has(el.tagName)||(el.tagName==='INPUT'&&el.type!=='checkbox')){el.replaceWith(...(el.tagName==='INPUT'?[]:[document.createTextNode(el.textContent)]));continue}
     const keep={};if(el.tagName==='A'&&okHref(el.getAttribute('href')))keep.href=el.getAttribute('href');
     if(el.tagName==='INPUT'){keep.type='checkbox';if(el.hasAttribute('checked')||el.checked)keep.checked=''}
-    const bg=el.style&&el.style.backgroundColor,fg=el.style&&el.style.color;
+    const bg=el.style&&el.style.backgroundColor,fg=el.style&&el.style.color,ff=el.style&&el.style.fontFamily,fs=el.style&&el.style.fontSize,ta=el.style&&el.style.textAlign,ml=el.style&&el.style.marginLeft;
     for(const a of[...el.attributes])el.removeAttribute(a.name);
     for(const[k,v]of Object.entries(keep))el.setAttribute(k,v);
     if(el.tagName==='A'&&!/^#doc:/.test(keep.href||'')){el.setAttribute('target','_blank');el.setAttribute('rel','noopener')}
     if(bg&&/^(rgb|#)/.test(bg))el.style.backgroundColor=bg;if(fg&&/^(rgb|#)/.test(fg))el.style.color=fg;
+    if(ff&&/^[\w\s,"'-]{1,120}$/.test(ff))el.style.fontFamily=ff;if(fs&&/^\d{1,3}(\.\d+)?(pt|px)$/.test(fs))el.style.fontSize=fs;
+    if(ta&&/^(left|center|right|justify)$/.test(ta))el.style.textAlign=ta;if(ml&&/^\d{1,3}px$/.test(ml))el.style.marginLeft=ml;
     walk(el)}};
   walk(t.content);return t.innerHTML}
 /* Text der Seite für Suche, Karten-Vorschau und Links */
@@ -69,32 +75,45 @@ const penOnlyBtn=()=>HAS_TOUCH?`<button type="button" class="pen-only${penOnly()
 function stylusNoScroll(el,active){const h=e=>{if(active()&&[...e.changedTouches].some(t=>t.touchType==='stylus'))e.preventDefault()};
   el.addEventListener('touchstart',h,{passive:false});el.addEventListener('touchmove',h,{passive:false})}
 
-function mountPage(host,n,onChange){
+function mountPage(host,n,onChange,opt={}){
   if(!n.page)n.page=blankPage();const pg=n.page;
   const st={tool:'text',pen:PEN_COLORS[0],mark:MARK_COLORS[0],fg:'#d64545',hl:'#ffe14d',size:3,sel:null,undo:[],redo:[],last:{x:60,y:60}};
-  host.innerHTML=`<div class="pg-bar" role="toolbar" aria-label="Seite">
-      <div class="pg-grp" data-g="tools">
-        <button type="button" data-tool="text" title="Text: irgendwo hinklicken und schreiben">${PG_IC.text}<span>Text</span></button>
-        <button type="button" data-tool="pen" title="Stift">${PG_IC.pen}<span>Stift</span></button>
-        <button type="button" data-tool="mark" title="Textmarker">${PG_IC.mark}<span>Marker</span></button>
-        <button type="button" data-tool="erase" title="Radierer (Striche löschen)">${PG_IC.erase}<span>Radierer</span></button>
-      </div>
+  const rtab=(()=>{try{return localStorage.getItem('kanban-notizen-ribbon')||'start'}catch(e){return'start'}})();
+  const B=(attrs,ic,label,title)=>`<button type="button" ${attrs} title="${esc(title||label)}" aria-label="${esc(title||label)}">${ic}${label?`<span>${label}</span>`:''}</button>`;
+  host.innerHTML=`<div class="pg-ribbon">
+    <div class="pg-tabs" role="tablist">${[['start','Start'],['insert','Einfügen'],['draw','Zeichnen'],['view','Seite']].map(([k,l])=>`<button type="button" role="tab" data-rtab="${k}" class="${k===rtab?'on':''}">${l}</button>`).join('')}
+      <span class="spacer"></span><button type="button" id="pgUndo" title="Rückgängig (Strg+Z)" aria-label="Rückgängig">↶</button><button type="button" id="pgRedo" title="Wiederholen (Strg+Y)" aria-label="Wiederholen">↷</button></div>
+    <div class="pg-bar" data-rp="start" role="toolbar" aria-label="Start">
+      <div class="pg-grp" id="pgFmt">
+        <select id="pgFont" title="Schriftart" aria-label="Schriftart">${PG_FONTS.map(([v,l])=>`<option value="${esc(v)}">${l}</option>`).join('')}</select>
+        <select id="pgSize" title="Schriftgrösse" aria-label="Schriftgrösse"><option value="">Grösse</option>${PG_SIZES.map(v=>`<option value="${v}">${v}</option>`).join('')}</select></div>
+      <div class="pg-grp">${B('data-cmd="bold"','<b>F</b>','','Fett (Strg+B)')}${B('data-cmd="italic"','<i>K</i>','','Kursiv (Strg+I)')}${B('data-cmd="underline"','<u>U</u>','','Unterstrichen (Strg+U)')}${B('data-cmd="strikeThrough"','<s>ab</s>','','Durchgestrichen')}
+        <span class="pg-split"><button type="button" data-cmd="fore" title="Textfarbe" class="pg-fg"><b>A</b><i id="pgFgBar"></i></button><button type="button" class="pg-more" data-pick="fore" title="Textfarbe wählen" aria-label="Textfarbe wählen">▾</button></span><span class="pg-split"><button type="button" data-cmd="hilite" title="Markieren" class="pg-hl">${PG_IC.mark}<i id="pgHlBar"></i></button><button type="button" class="pg-more" data-pick="hilite" title="Markierfarbe wählen" aria-label="Markierfarbe wählen">▾</button></span>
+        ${B('data-cmd="subscript"','x<sub>2</sub>','','Tiefgestellt')}${B('data-cmd="superscript"','x<sup>2</sup>','','Hochgestellt')}${B('data-cmd="clear"',PG_IC.clear,'','Formatierung löschen')}</div>
+      <div class="pg-grp">${B('data-cmd="insertUnorderedList"',PG_IC.ul,'','Aufzählung')}${B('data-cmd="insertOrderedList"',PG_IC.ol,'','Nummerierung')}${B('data-cmd="outdent"',PG_IC.outdent,'','Einzug verkleinern')}${B('data-cmd="indent"',PG_IC.indent,'','Einzug vergrössern')}
+        ${B('data-cmd="justifyLeft"',PG_IC.al,'','Linksbündig')}${B('data-cmd="justifyCenter"',PG_IC.ac,'','Zentriert')}${B('data-cmd="justifyRight"',PG_IC.ar,'','Rechtsbündig')}</div>
+      <div class="pg-grp">${B('data-cmd="check"','☐','','Aufgabe (Strg+1)')}${B('id="pgTagBtn"',PG_IC.tag,'Markierungen','Markierung vor die Zeile setzen')}${opt.onFindTags?B('id="pgTagFind"',PG_IC.tagfind,'','Markierungen suchen'):''}</div>
+      <div class="pg-grp"><select id="pgStyle" title="Formatvorlagen" aria-label="Formatvorlagen"><option value="">Formatvorlagen</option>${PG_STYLES.map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select></div>
+    </div>
+    <div class="pg-bar" data-rp="insert" role="toolbar" aria-label="Einfügen">
+      <div class="pg-grp">${B('data-ins="table"',PG_IC.table,'Tabelle')}${B('data-ins="code"',PG_IC.code,'Code','Code-Block für Befehle und Code')}${B('data-ins="link"',PG_IC.link,'Link','Link oder Seitenlink (Strg+K)')}${B('data-ins="date"',PG_IC.date,'Datum','Datum und Uhrzeit einfügen')}</div>
+      <div class="pg-grp">${B('id="pgImg"',PG_IC.img,'Bild','Bild einfügen (oder Strg+V / hierher ziehen)')}${TAURI?B('id="pgClip"',PG_IC.clip,'Bildschirmausschnitt','Bildschirmausschnitt aufnehmen und einfügen'):''}${B('id="pgAtt"',PG_IC.att,'Datei','Datei anhängen (PDF, Word, … bis 5 MB)')}${B('id="pgPdf"',PG_IC.pdf,'PDF-Ausdruck','PDF-Seiten als Bilder auf die Seite legen – darauf kannst du schreiben')}${B('id="pgRec"',PG_IC.mic,'Audio','Audio aufnehmen')}</div>
+      <div class="pg-grp" id="pgRecBox" hidden></div>
+    </div>
+    <div class="pg-bar" data-rp="draw" role="toolbar" aria-label="Zeichnen">
+      <div class="pg-grp" data-g="tools">${B('data-tool="text"',PG_IC.text,'Eingabe','Text: irgendwo hinklicken und schreiben')}${B('data-tool="pen"',PG_IC.pen,'Stift')}${B('data-tool="mark"',PG_IC.mark,'Marker','Textmarker')}${B('data-tool="erase"',PG_IC.erase,'Radierer','Radierer (Striche löschen)')}</div>
       <div class="pg-grp pg-colors" id="pgColors"></div>
       <div class="pg-grp pg-sizes" id="pgSizes"></div><div class="pg-grp" id="pgPenOnly"></div>
-      <div class="pg-grp pg-fmt" id="pgFmt">
-        <button type="button" data-cmd="bold" title="Fett (Strg+B)"><b>B</b></button><button type="button" data-cmd="italic" title="Kursiv (Strg+I)"><i>I</i></button><button type="button" data-cmd="underline" title="Unterstrichen (Strg+U)"><u>U</u></button><button type="button" data-cmd="strikeThrough" title="Durchgestrichen"><s>S</s></button>
-        <button type="button" data-cmd="h" title="Überschrift">H</button><button type="button" data-cmd="insertUnorderedList" title="Aufzählung">•</button><button type="button" data-cmd="insertOrderedList" title="Nummerierung">1.</button><button type="button" data-cmd="check" title="Aufgabe ☐">☐</button><span class="pg-split"><button type="button" data-cmd="fore" title="Textfarbe" class="pg-fg"><b>A</b><i id="pgFgBar"></i></button><button type="button" class="pg-more" data-pick="fore" title="Textfarbe wählen" aria-label="Textfarbe wählen">▾</button></span><span class="pg-split"><button type="button" data-cmd="hilite" title="Markieren" class="pg-hl">${PG_IC.mark}<i id="pgHlBar"></i></button><button type="button" class="pg-more" data-pick="hilite" title="Markierfarbe wählen" aria-label="Markierfarbe wählen">▾</button></span>
-        <i class="sep"></i><button type="button" data-ins="table" title="Tabelle einfügen">${PG_IC.table}</button><button type="button" data-ins="code" title="Code-Block (für Befehle und Code)">${PG_IC.code}</button><button type="button" data-ins="link" title="Link oder Seitenlink (Strg+K)">${PG_IC.link}</button>
-      </div>
-      <div class="pg-grp pg-ctx" id="pgCtx" hidden></div>
-      <div class="pg-grp">
-        <button type="button" id="pgImg" title="Bild einfügen (oder Strg+V / hierher ziehen)">${PG_IC.img}<span>Bild</span></button><button type="button" id="pgAtt" title="Datei anhängen (PDF, Word, … bis 5 MB)">${PG_IC.att}<span>Datei</span></button>
-        <select id="pgBg" title="Papier" aria-label="Papier">${PAGE_BG.map(([k,l])=>`<option value="${k}"${pg.bg===k?' selected':''}>${l}</option>`).join('')}</select>
-        <button type="button" id="pgUndo" title="Rückgängig (Strg+Z)" aria-label="Rückgängig">↶</button><button type="button" id="pgRedo" title="Wiederholen (Strg+Y)" aria-label="Wiederholen">↷</button>
-      </div></div>
+    </div>
+    <div class="pg-bar" data-rp="view" role="toolbar" aria-label="Seite">
+      <div class="pg-grp"><label class="pg-lbl" for="pgBg">Papier</label><select id="pgBg" title="Papier" aria-label="Papier">${PAGE_BG.map(([k,l])=>`<option value="${k}"${pg.bg===k?' selected':''}>${l}</option>`).join('')}</select></div>
+      <div class="pg-grp">${B('id="pgPrint"',PG_IC.print,'Drucken / PDF','Seite drucken oder als PDF speichern')}${opt.onPrintSection?B('id="pgPrintSec"',PG_IC.print,'Abschnitt drucken','Alle Seiten des Abschnitts drucken oder als PDF speichern'):''}</div>
+      ${opt.onHistory||opt.onSaveTpl?`<div class="pg-grp">${opt.onHistory?B('id="pgHist"',PG_IC.hist,'Seitenversionen','Frühere Versionen der Seite'):''}${opt.onSaveTpl?B('id="pgTpl"',PG_IC.tpl,'Als Vorlage speichern','Diese Seite als Vorlage für neue Seiten speichern'):''}</div>`:''}
+    </div>
+    <div class="pg-bar pg-ctxbar" id="pgCtxBar" hidden><div class="pg-grp pg-ctx" id="pgCtx"></div></div></div>
     <div class="pg-scroll" id="pgScroll"><div class="pg-canvas bg-${pg.bg}" id="pgCanvas"><svg class="pg-ink" id="pgInk" xmlns="http://www.w3.org/2000/svg"></svg>
-      <div class="pg-hint" id="pgHint">Irgendwo hinklicken und losschreiben · Bilder mit Strg+V einfügen oder hierher ziehen · ✎ Stift zum Zeichnen</div></div></div>
-    <input type="file" id="pgFile" accept="image/*" multiple hidden><input type="file" id="pgAttIn" multiple hidden>`;
+      <div class="pg-hint" id="pgHint">Irgendwo hinklicken und losschreiben · Bilder mit Strg+V einfügen oder hierher ziehen · Zeichnen unter „Zeichnen“</div></div></div>
+    <input type="file" id="pgFile" accept="image/*" multiple hidden><input type="file" id="pgAttIn" multiple hidden><input type="file" id="pgPdfIn" accept="application/pdf,.pdf" hidden>`;
   const cv=$('#pgCanvas',host),sc=$('#pgScroll',host),svg=$('#pgInk',host);
   const changed=()=>{n.body=pageText(pg);onChange()};
   const snap=()=>({bg:pg.bg,items:pg.items.map(x=>({...x})),ink:pg.ink.map(x=>({...x}))});
@@ -131,7 +150,7 @@ function mountPage(host,n,onChange){
       dragWith(e,(dx,dy)=>{if(!moved&&Math.hypot(dx,dy)<4)return;if(!moved){moved=true;pushUndo()}it.x=Math.max(0,x0+dx);it.y=Math.max(0,y0+dy);d.style.left=it.x+'px';d.style.top=it.y+'px'},
         ()=>{if(moved){fit();changed()}else if(it.t!=='text')select(d)})};
     if(it.t==='file'){const body=$('.att',d);body.addEventListener('pointerdown',e=>{if(e.target.closest('[data-att]'))return;move(e)});
-      $$('[data-att]',d).forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();b.dataset.att==='open'?openAttachment(it):saveAttachment(it)}));
+      $$('[data-att]',d).forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const k=b.dataset.att;k==='play'?playAttachment(it,b):k==='open'?openAttachment(it):saveAttachment(it)}));
       body.addEventListener('dblclick',()=>openAttachment(it));
       $('.pg-del',d).addEventListener('click',e=>{e.stopPropagation();pushUndo();pg.items=pg.items.filter(x=>x!==it);d.remove();fit();changed()});return}
     $('.pg-rs',d).addEventListener('pointerdown',e=>{const w0=it.w;pushUndo();dragWith(e,dx=>{it.w=Math.max(it.t==='img'?40:120,w0+dx);d.style.width=it.w+'px'},()=>{fit();changed()})});
@@ -147,6 +166,7 @@ function mountPage(host,n,onChange){
     ed.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();ed.blur();return}
       const sn=selNode(),pre=sn&&sn.closest('pre'),cell=sn&&sn.closest('td,th');
       if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();e.stopPropagation();insLink();return}
+      if((e.ctrlKey||e.metaKey)&&e.key==='1'){e.preventDefault();e.stopPropagation();toggleTag('check');return}
       if(pre&&e.key==='Enter'){e.preventDefault();if(e.ctrlKey||e.shiftKey||e.metaKey)leavePre(pre);else document.execCommand('insertLineBreak');return}
       if(pre&&e.key==='Tab'){e.preventDefault();document.execCommand('insertText',false,'  ');return}
       if(cell&&e.key==='Tab'){e.preventDefault();const cells=$$('td,th',cell.closest('table'));let i=cells.indexOf(cell)+(e.shiftKey?-1:1);
@@ -197,7 +217,7 @@ function mountPage(host,n,onChange){
   /* ---------- Werkzeugleiste ---------- */
   const drawBar=()=>{$$('[data-tool]',host).forEach(b=>b.classList.toggle('on',b.dataset.tool===st.tool));
     const ink=st.tool==='pen'||st.tool==='mark';
-    $('#pgColors',host).hidden=!ink;$('#pgSizes',host).hidden=st.tool!=='pen';$('#pgFmt',host).hidden=st.tool!=='text';
+    $('#pgColors',host).hidden=!ink;$('#pgSizes',host).hidden=st.tool!=='pen';
     const cols=st.tool==='mark'?MARK_COLORS:PEN_COLORS,curc=st.tool==='mark'?st.mark:st.pen;
     const extra=!cols.includes(curc);
     $('#pgColors',host).innerHTML=cols.map(c=>`<button type="button" class="pg-sw${c===curc?' on':''}" data-c="${c}" style="background:${c}" aria-label="Farbe ${c}"></button>`).join('')+`<button type="button" class="pg-sw more${extra?' on':''}" id="pgColMore" style="${extra?'background:'+curc:''}" title="Weitere Farben …" aria-label="Weitere Farben"></button>`;
@@ -214,7 +234,7 @@ function mountPage(host,n,onChange){
   $$('[data-cmd]',host).forEach(b=>{b.addEventListener('pointerdown',e=>e.preventDefault());b.onclick=()=>{const a=document.activeElement;
     if(!a||!a.classList||!a.classList.contains('pg-edit')){toast('Erst in einen Textkasten klicken');return}
     const c=b.dataset.cmd;
-    if(c==='h'){const blk=document.queryCommandValue('formatBlock').toLowerCase();document.execCommand('formatBlock',false,blk==='h2'?'div':'h2')}
+    if(c==='clear'){document.execCommand('removeFormat');document.execCommand('formatBlock',false,'div');$$('[style*="font"]',a).forEach(e=>{if(getSelection().containsNode(e,true)){e.style.fontFamily='';e.style.fontSize=''}})}
     else if(c==='check')document.execCommand('insertHTML',false,'<input type="checkbox">&nbsp;');
     else if(c==='hilite'||c==='fore')applyColor(c,c==='fore'?st.fg:st.hl)
     else document.execCommand(c,false,null);
@@ -293,14 +313,14 @@ function mountPage(host,n,onChange){
       if(cell)h+=`<span class="pg-ctx-l">Tabelle</span><button type="button" data-tb="row" title="Zeile darunter einfügen">+ Zeile</button><button type="button" data-tb="col" title="Spalte rechts einfügen">+ Spalte</button><button type="button" data-tb="delrow" title="Zeile löschen">− Zeile</button><button type="button" data-tb="delcol" title="Spalte löschen">− Spalte</button><button type="button" data-tb="head" title="Erste Zeile als Kopfzeile ein/aus">Kopfzeile</button><button type="button" data-tb="del" title="Tabelle löschen">🗑</button>`;
       if(pre)h+=`<span class="pg-ctx-l">Code</span><button type="button" data-cx="copy" title="Code in die Zwischenablage kopieren">⧉ Kopieren</button><button type="button" data-cx="leave" title="Unter dem Code weiterschreiben (Strg+Enter)">↵ Verlassen</button>`;
       if(a)h+=`<span class="pg-ctx-l">Link</span><button type="button" data-cx="open" title="Link öffnen (Strg+Klick)">↗ Öffnen</button><button type="button" data-cx="unlink" title="Link entfernen">Entfernen</button>`}
-    g.hidden=!h;if(g.innerHTML!==h)g.innerHTML=h;if(!h)return;
+    syncFmt(n);const bar=$('#pgCtxBar',host);if(bar)bar.hidden=!h;if(g.innerHTML!==h)g.innerHTML=h;if(!h)return;
     $$('[data-tb]',g).forEach(b=>{b.onpointerdown=e=>e.preventDefault();b.onclick=()=>tblOp(b.dataset.tb)});
     $$('[data-cx]',g).forEach(b=>{b.onpointerdown=e=>e.preventDefault();b.onclick=()=>{const n2=selNode();if(!n2)return;const k=b.dataset.cx;
       if(k==='copy'){const t=n2.closest('pre').innerText.replace(/\n$/,'');(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Code kopiert'),()=>toast('Kopieren nicht möglich'))}
       else if(k==='leave')leavePre(n2.closest('pre'));
       else if(k==='open')openLink(n2.closest('a').getAttribute('href'));
       else if(k==='unlink'){const a=n2.closest('a'),ed=a.closest('.pg-edit');a.replaceWith(...a.childNodes);inputOf(ed);ctx()}}})}
-  const onSel=()=>{if(host.isConnected)ctx()};document.addEventListener('selectionchange',onSel);
+  let lastRange=null;const onSel=()=>{if(!host.isConnected)return;const n2=selNode();if(n2&&cv.contains(n2)){const s2=getSelection();if(s2.rangeCount)lastRange=s2.getRangeAt(0).cloneRange()}ctx()};document.addEventListener('selectionchange',onSel);
   $$('[data-ins]',host).forEach(b=>{b.addEventListener('pointerdown',e=>e.preventDefault());b.onclick=()=>{const k=b.dataset.ins;if(k==='table')insTable();else if(k==='code')insCode();else insLink()}});
   /* ---------- Dateien anhängen ---------- */
   async function addFiles(files,at){let any=false;
@@ -313,9 +333,95 @@ function mountPage(host,n,onChange){
   const attIn=$('#pgAttIn',host);$('#pgAtt',host).onclick=()=>attIn.click();
   attIn.onchange=()=>{const at=freeSpot();addFiles([...attIn.files],at);attIn.value='';requestAnimationFrame(()=>{sc.scrollTop=Math.max(0,at.y-80)})};
 
+  /* ---------- Menüband: Reiter ---------- */
+  const rib=$('.pg-ribbon',host);
+  const showTab=t=>{rib.dataset.tab=t;$$('[data-rtab]',host).forEach(b=>b.classList.toggle('on',b.dataset.rtab===t));try{localStorage.setItem('kanban-notizen-ribbon',t)}catch(e){}
+    if(t==='draw'){if(st.tool==='text'){st.tool='pen';drawBar()}}else if(st.tool!=='text'){st.tool='text';select(null);drawBar()}};
+  $$('[data-rtab]',host).forEach(b=>b.onclick=()=>showTab(b.dataset.rtab));
+  showTab(rtab==='draw'?'start':rtab);
+
+  /* ---------- Schriftart, Grösse, Formatvorlagen (Auswahl merken, weil das Auswahlfeld den Fokus nimmt) ---------- */
+  let fmtRange=null;const keepSel=()=>{const s2=getSelection();const n2=selNode();fmtRange=n2&&s2.rangeCount?s2.getRangeAt(0).cloneRange():null};
+  const backSel=()=>{if(!fmtRange&&lastRange&&lastRange.startContainer.isConnected)fmtRange=lastRange;if(!fmtRange)return null;const ed=(fmtRange.startContainer.nodeType===1?fmtRange.startContainer:fmtRange.startContainer.parentElement).closest('.pg-edit');if(!ed)return null;ed.focus();const s2=getSelection();s2.removeAllRanges();s2.addRange(fmtRange);return ed};
+  ['pgFont','pgSize','pgStyle'].forEach(id=>{const el=$('#'+id,host);el.addEventListener('pointerdown',keepSel);el.addEventListener('focus',()=>{if(!fmtRange)keepSel()})});
+  $('#pgFont',host).onchange=e=>{const ed=backSel();if(!ed){toast('Erst Text auswählen oder in einen Textkasten klicken');return}
+    document.execCommand('styleWithCSS',false,true);document.execCommand('fontName',false,e.target.value||PG_FONTS[0][0]);document.execCommand('styleWithCSS',false,false);inputOf(ed);fmtRange=null};
+  $('#pgSize',host).onchange=e=>{const v=e.target.value,ed=backSel();if(!v||!ed){if(!ed)toast('Erst Text auswählen oder in einen Textkasten klicken');return}
+    document.execCommand('styleWithCSS',false,false);document.execCommand('fontSize',false,'7');
+    $$('font[size="7"]',ed).forEach(f=>{const sp=document.createElement('span');sp.style.fontSize=v+'pt';sp.append(...f.childNodes);f.replaceWith(sp)});
+    $$('span',ed).forEach(x=>{if(/xxx-large/.test(x.style.fontSize))x.style.fontSize=v+'pt'});inputOf(ed);fmtRange=null};
+  $('#pgStyle',host).onchange=e=>{const v=e.target.value;e.target.value='';const ed=backSel();if(!v)return;if(!ed){toast('Erst in einen Textkasten klicken');return}
+    if(v==='pre'){insCode()}else document.execCommand('formatBlock',false,v);inputOf(ed);fmtRange=null};
+  /* Auswahlfelder zeigen Schrift und Grösse an der Cursorposition */
+  function syncFmt(n2){const f=$('#pgFont',host),z=$('#pgSize',host);if(!f||document.activeElement===f||document.activeElement===z)return;
+    if(!n2){f.value=PG_FONTS[0][0];z.value='';return}const cs=getComputedStyle(n2),fam=(cs.fontFamily.split(',')[0]||'').replace(/["']/g,'').trim().toLowerCase();
+    const m=PG_FONTS.find(([v])=>v&&v.split(',')[0].replace(/["']/g,'').trim().toLowerCase()===fam);f.value=m?m[0]:PG_FONTS[0][0];
+    const pt=Math.round(parseFloat(cs.fontSize)*.75);z.value=PG_SIZES.includes(pt)?String(pt):''}
+
+  /* ---------- Markierungen (Tags) wie in OneNote ---------- */
+  function lineBlock(){const n2=selNode();if(!n2)return null;const ed=n2.closest('.pg-edit');let b=n2;while(b&&b!==ed&&!/^(DIV|P|LI|H1|H2|H3|BLOCKQUOTE|TD|TH)$/.test(b.tagName))b=b.parentElement;
+    if(!b||b===ed){/* Text direkt im Kasten: in einen Absatz packen */document.execCommand('formatBlock',false,'div');const n3=selNode();b=n3&&n3.closest('div:not(.pg-edit),p,li,h1,h2,h3,blockquote,td,th')}return b}
+  function toggleTag(key){const ed=activeEdit();if(!ed)return;const b=lineBlock();if(!b)return;
+    if(key==='check'){const cb=b.querySelector(':scope > input[type=checkbox]');if(cb){cb.remove();if(b.firstChild&&b.firstChild.nodeType===3)b.firstChild.nodeValue=b.firstChild.nodeValue.replace(/^ /,'')}else b.insertAdjacentHTML('afterbegin','<input type="checkbox">&nbsp;');inputOf(ed);return}
+    const t=PG_TAGS.find(x=>x[0]===key);if(!t)return;const txt=b.textContent,cur=PG_TAGS.find(x=>x[0]!=='check'&&txt.startsWith(x[1]));
+    const strip=()=>{const w=document.createTreeWalker(b,NodeFilter.SHOW_TEXT);let tn;while((tn=w.nextNode())){if(tn.nodeValue.trim()){const re=new RegExp('^\\s*'+cur[1].replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s?');tn.nodeValue=tn.nodeValue.replace(re,'');break}}};
+    if(cur)strip();if(!cur||cur[0]!==key){const tn=document.createTextNode(t[1]+' ');const cb=b.querySelector(':scope > input[type=checkbox]');cb?cb.after(tn):b.prepend(tn)}
+    inputOf(ed)}
+  $('#pgTagBtn',host).addEventListener('pointerdown',e=>{e.preventDefault();keepSel()});
+  $('#pgTagBtn',host).onclick=e=>{const[x,y]=menuAt(e.currentTarget);showMenu(x,y,[{cap:'Markierung vor die Zeile'},...PG_TAGS.map(([k,i,l])=>({t:`${k==='check'?'☐':i}  ${l}`,run:()=>{backSel();toggleTag(k)}}))])};
+  const tf=$('#pgTagFind',host);if(tf)tf.onclick=()=>opt.onFindTags();
+
+  /* ---------- Einfügen: Datum, PDF-Ausdruck, Bildschirmausschnitt, Audio ---------- */
+  $('[data-ins="date"]',host).onclick=()=>{const ed=activeEdit();if(!ed)return;const d=new Date();document.execCommand('insertText',false,d.toLocaleDateString('de-CH',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+', '+d.toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit'}));inputOf(ed)};
+  const pdfIn=$('#pgPdfIn',host);$('#pgPdf',host).onclick=()=>pdfIn.click();
+  pdfIn.onchange=()=>{const f=pdfIn.files[0];pdfIn.value='';if(f)insertPdf(f)};
+  async function insertPdf(f){const btn=$('#pgPdf',host);btn.disabled=true;const old=btn.innerHTML;btn.innerHTML=`${PG_IC.pdf}<span>Lese PDF …</span>`;
+    try{await loadVendor('pdf');const lib=window.pdfjsLib;lib.GlobalWorkerOptions.workerSrc='vendor/pdf.worker.js';
+      const doc=await lib.getDocument({data:new Uint8Array(await f.arrayBuffer()),isEvalSupported:false,disableFontFace:false}).promise;
+      const N=Math.min(doc.numPages,40);if(doc.numPages>40)toast(`Nur die ersten 40 von ${doc.numPages} Seiten werden eingefügt`);
+      let at=freeSpot();pushUndo();
+      if(f.size<=ATT_MAX){const fid=await storeAttachment(f);if(fid){const it={id:uid(),t:'file',x:at.x,y:at.y,w:260,fid,name:f.name||'Dokument.pdf',size:f.size,mime:'application/pdf'};pg.items.push(it);cv.appendChild(itemEl(it));at={x:at.x,y:at.y+76}}}
+      const W=isPhone()?Math.max(300,sc.clientWidth-60):780;
+      for(let i=1;i<=N;i++){btn.innerHTML=`${PG_IC.pdf}<span>Seite ${i}/${N} …</span>`;const p2=await doc.getPage(i),vp0=p2.getViewport({scale:1}),k=Math.min(2,1500/vp0.width),vp=p2.getViewport({scale:k});
+        const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);const cx=c.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,c.width,c.height);
+        await p2.render({canvasContext:cx,viewport:vp}).promise;const src=c.toDataURL('image/jpeg',.8);
+        const it={id:uid(),t:'img',x:at.x,y:at.y,w:W,src};pg.items.push(it);cv.appendChild(itemEl(it));at={x:at.x,y:at.y+Math.round(W*c.height/c.width)+16}}
+      $('#pgHint',host).hidden=true;fit();changed();toast(`${N} PDF-Seite${N===1?'':'n'} eingefügt – unter „Zeichnen“ kannst du darauf schreiben`)}
+    catch(e){console.warn(e);toast('PDF konnte nicht gelesen werden')}
+    finally{btn.disabled=false;btn.innerHTML=old}}
+  const clipBtn=$('#pgClip',host);if(clipBtn)clipBtn.onclick=async()=>{
+    const sig=async()=>{try{const it=(await navigator.clipboard.read()).find(x=>x.types.some(t=>t.startsWith('image/')));if(!it)return'';const bl=await it.getType(it.types.find(t=>t.startsWith('image/')));return bl.size+':'+bl.type}catch(e){return'?'}};
+    const before=await sig();try{await TAURI.core.invoke('screen_clip')}catch(e){toast('Ausschnitt-Werkzeug konnte nicht gestartet werden');return}
+    toast('Bereich auswählen – das Bild kommt danach automatisch auf die Seite');const t0=Date.now();
+    const poll=async()=>{if(!host.isConnected||Date.now()-t0>90000)return;if(document.hasFocus()){
+        try{const items=await navigator.clipboard.read(),it=items.find(x=>x.types.some(t=>t.startsWith('image/')));
+          if(it){const ty=it.types.find(t=>t.startsWith('image/')),bl=await it.getType(ty);if(bl.size+':'+bl.type!==before){await addImgs([new File([bl],'Ausschnitt.png',{type:ty})],freeSpot());return}}}
+        catch(e){if(Date.now()-t0>3000){toast('Bild ist in der Zwischenablage – mit Strg+V einfügen');return}}}
+      setTimeout(poll,700)};setTimeout(poll,1200)};
+  let rec=null;$('#pgRec',host).onclick=async()=>{if(rec)return;
+    if(!navigator.mediaDevices||!window.MediaRecorder){toast('Audio-Aufnahme wird hier nicht unterstützt');return}
+    let stream;try{stream=await navigator.mediaDevices.getUserMedia({audio:true})}catch(e){toast('Kein Zugriff auf das Mikrofon');return}
+    const mime=['audio/webm;codecs=opus','audio/mp4','audio/webm'].find(m=>MediaRecorder.isTypeSupported(m))||'';
+    const mr=new MediaRecorder(stream,mime?{mimeType:mime,audioBitsPerSecond:32000}:{audioBitsPerSecond:32000}),chunks=[],t0=Date.now(),box=$('#pgRecBox',host);let cancel=false,iv=0;
+    rec={mr,stop:c=>{cancel=!!c;if(mr.state!=='inactive')mr.stop()}};
+    mr.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+    mr.onstop=async()=>{clearInterval(iv);stream.getTracks().forEach(t=>t.stop());box.hidden=true;box.innerHTML='';rec=null;if(cancel||!chunks.length)return;
+      const type=(mr.mimeType||mime||'audio/webm').split(';')[0],ext=type.includes('mp4')?'m4a':'webm',d=new Date();
+      const f=new File(chunks,`Aufnahme ${d.toLocaleDateString('de-CH')} ${d.toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit'}).replace(':','.')}.${ext}`,{type});addFiles([f],freeSpot())};
+    box.hidden=false;const tick=()=>{const s2=Math.floor((Date.now()-t0)/1000);box.innerHTML=`<span class="pg-rec">● ${String(Math.floor(s2/60)).padStart(2,'0')}:${String(s2%60).padStart(2,'0')}</span><button type="button" data-rs="stop">■ Stopp</button><button type="button" data-rs="x">Abbrechen</button>`;
+      $('[data-rs=stop]',box).onclick=()=>rec&&rec.stop();$('[data-rs=x]',box).onclick=()=>rec&&rec.stop(true);if(s2>=20*60&&rec)rec.stop()};
+    tick();iv=setInterval(tick,1000);mr.start(1000)};
+
+  /* ---------- Seite: Drucken, Versionen, Vorlage ---------- */
+  $('#pgPrint',host).onclick=()=>{flushEdit();printPages([{title:opt.title?opt.title():n.title||'',page:pg,date:opt.date?opt.date():''}])};
+  const ps=$('#pgPrintSec',host);if(ps)ps.onclick=()=>{flushEdit();opt.onPrintSection()};
+  const ph=$('#pgHist',host);if(ph)ph.onclick=()=>{flushEdit();opt.onHistory()};
+  const pt=$('#pgTpl',host);if(pt)pt.onclick=()=>{flushEdit();opt.onSaveTpl()};
+  function flushEdit(){const a=document.activeElement;if(a&&a.classList&&a.classList.contains('pg-edit'))a.blur()}
+
   drawBar();drawAll();
   const ro=new ResizeObserver(()=>fit());ro.observe(sc);
-  return{destroy:()=>{ro.disconnect();host.removeEventListener('paste',onPaste,true);document.removeEventListener('selectionchange',onSel)},
+  return{destroy:()=>{ro.disconnect();host.removeEventListener('paste',onPaste,true);document.removeEventListener('selectionchange',onSel);if(rec)rec.stop(true)},
     focusText:()=>{st.tool='text';drawBar();const first=pg.items.filter(x=>x.t==='text').sort((a,b)=>a.y-b.y||a.x-b.x)[0];
       if(first){const e=$(`[data-id="${first.id}"] .pg-edit`,cv);if(e){e.focus();const r=document.createRange();r.selectNodeContents(e);r.collapse(false);const sl=getSelection();sl.removeAllRanges();sl.addRange(r)}}else addText(48,48)},
     flush:()=>{const a=document.activeElement;if(a&&a.classList&&a.classList.contains('pg-edit'))a.blur()}}}
@@ -331,6 +437,23 @@ function pageMiniHTML(pg){if(!pg||!(pg.items.length||pg.ink.length))return'<div 
   const ink=`<svg width="${W}" height="${H}" viewBox="${x0} ${y0} ${W} ${H}">${pg.ink.map(s=>`<path d="${strokePath(s.p)}" stroke="${s.c}" stroke-width="${s.w}" stroke-opacity="${s.a}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}</svg>`;
   return`<div class="pg-mini bg-${pg.bg}" style="height:${Math.min(170,Math.round(H*k))}px"><div class="pg-mini-in" style="width:${W}px;height:${H}px;transform:scale(${k.toFixed(4)})">${items}${ink}</div></div>`}
 const PG_IC={
+  clear:'<svg width="16" height="16" viewBox="0 0 16 16"><path d="M4 3.5h8M8 3.5L6 12.5M3 13.5l10-10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+  ul:'<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="3" cy="4" r="1.2" fill="currentColor"/><circle cx="3" cy="8" r="1.2" fill="currentColor"/><circle cx="3" cy="12" r="1.2" fill="currentColor"/><path d="M6 4h8M6 8h8M6 12h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+  ol:'<svg width="16" height="16" viewBox="0 0 16 16"><text x="1" y="5.5" font-size="5" fill="currentColor" font-family="sans-serif">1</text><text x="1" y="9.5" font-size="5" fill="currentColor" font-family="sans-serif">2</text><text x="1" y="13.5" font-size="5" fill="currentColor" font-family="sans-serif">3</text><path d="M6 4h8M6 8h8M6 12h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+  outdent:'<svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 3h12M7 6.5h7M7 9.5h7M2 13h12M4.5 6L2 8l2.5 2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  indent:'<svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 3h12M7 6.5h7M7 9.5h7M2 13h12M2 6l2.5 2L2 10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  al:'<svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 3h12M2 6.5h8M2 10h12M2 13.5h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+  ac:'<svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 3h12M4 6.5h8M2 10h12M4 13.5h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+  ar:'<svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 3h12M6 6.5h8M2 10h12M6 13.5h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+  tag:'<svg width="16" height="16" viewBox="0 0 16 16"><rect x="1.8" y="2.8" width="7" height="7" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 6.3l1.5 1.5 2.6-3" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M11.5 7.5l1.1 2.2 2.4.3-1.8 1.6.5 2.4-2.2-1.2-2.2 1.2.5-2.4-1.8-1.6 2.4-.3z" fill="#f5b400"/></svg>',
+  tagfind:'<svg width="16" height="16" viewBox="0 0 16 16"><rect x="1.8" y="2.3" width="6" height="6" rx="1" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="10.5" cy="10.5" r="3" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M12.7 12.7L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+  date:'<svg width="16" height="16" viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="11" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2 6.5h12M5.5 1.8v2.4M10.5 1.8v2.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+  clip:'<svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 5V2.5h2.5M11.5 2.5H14V5M14 11v2.5h-2.5M4.5 13.5H2V11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5.5 6.5h5v3h-5z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-dasharray="1.5 1.2"/></svg>',
+  pdf:'<svg width="16" height="16" viewBox="0 0 16 16"><path d="M4 1.8h5.2L12.5 5v9.2H4z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M9 1.8V5h3.5" fill="none" stroke="currentColor" stroke-width="1.3"/><text x="4.6" y="12" font-size="4.2" font-weight="700" fill="#d64545" font-family="sans-serif">PDF</text></svg>',
+  mic:'<svg width="16" height="16" viewBox="0 0 16 16"><rect x="5.5" y="1.8" width="5" height="8" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+  print:'<svg width="16" height="16" viewBox="0 0 16 16"><path d="M4.5 6V2h7v4M4.5 11.5H2.5V6h11v5.5h-2M4.5 9.5h7v4.5h-7z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>',
+  hist:'<svg width="16" height="16" viewBox="0 0 16 16"><path d="M2.5 8a5.5 5.5 0 1 0 1.6-3.9M2.5 2.5v2.8h2.8M8 5v3.2l2.2 1.4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  tpl:'<svg width="16" height="16" viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2 5.5h12M6 5.5V14" stroke="currentColor" stroke-width="1.3"/></svg>',
   table:'<svg width="16" height="16" viewBox="0 0 16 16"><rect x="2" y="2.5" width="12" height="11" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2 6.2h12M2 9.8h12M6.2 2.5v11M9.8 2.5v11" stroke="currentColor" stroke-width="1.1"/></svg>',
   code:'<svg width="16" height="16" viewBox="0 0 16 16"><path d="M5.5 4.5L2 8l3.5 3.5M10.5 4.5L14 8l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   link:'<svg width="16" height="16" viewBox="0 0 16 16"><path d="M6.8 9.2l2.4-2.4M6 5.5l1.3-1.3a2.6 2.6 0 0 1 3.7 3.7L9.7 9.2M10 10.5l-1.3 1.3a2.6 2.6 0 0 1-3.7-3.7L6.3 6.8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
@@ -347,7 +470,7 @@ const fmtSize=b=>b<1024?b+' B':b<1048576?Math.round(b/1024)+' KB':(b/1048576).to
 const attExt=n=>((String(n).match(/\.([a-z0-9]{1,5})$/i)||[])[1]||'').toUpperCase();
 const attColor=x=>({PDF:'#d64545',DOC:'#2f5bd3',DOCX:'#2f5bd3',XLS:'#1e9e5a',XLSX:'#1e9e5a',CSV:'#1e9e5a',PPT:'#e6862a',PPTX:'#e6862a',ZIP:'#8a4fd6',TXT:'#646b76',MD:'#646b76'})[x]||'#646b76';
 function attHTML(it){const f=DB.files&&DB.files[it.fid],x=attExt(it.name);
-  return`<div class="att${f?'':' missing'}" title="${esc(it.name)}${f?'':' – wird noch synchronisiert'}"><span class="att-ic" style="--c:${attColor(x)}">${esc(x||'DATEI')}</span><span class="att-t"><b>${esc(it.name)}</b><small>${fmtSize(it.size)}${f?'':' · nicht verfügbar'}</small></span><span class="att-b"><button type="button" data-att="open" title="Öffnen">↗</button><button type="button" data-att="save" title="Speichern unter …">↓</button></span></div>`}
+  return`<div class="att${f?'':' missing'}" title="${esc(it.name)}${f?'':' – wird noch synchronisiert'}"><span class="att-ic" style="--c:${attColor(x)}">${esc(x||'DATEI')}</span><span class="att-t"><b>${esc(it.name)}</b><small>${fmtSize(it.size)}${f?'':' · nicht verfügbar'}</small></span><span class="att-b">${/^audio\//.test(it.mime)&&f?'<button type="button" data-att="play" title="Abspielen">▶</button>':''}<button type="button" data-att="open" title="Öffnen">↗</button><button type="button" data-att="save" title="Speichern unter …">↓</button></span></div>`}
 const readDataURL=f=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(f)});
 async function storeAttachment(f){if(f.size>ATT_MAX){toast(`„${f.name}“ ist zu gross (max. 5 MB)`);return null}
   try{const u=await readDataURL(f),fid=uid();DB.files[fid]={name:String(f.name||'Datei').slice(0,200),mime:String(f.type||'').slice(0,100),size:f.size,data:u.slice(u.indexOf(',')+1),created:now()};return fid}
@@ -372,3 +495,20 @@ function openLink(href){if(!href)return;const m=/^#doc:([A-Za-z0-9_-]+)$/.exec(h
   if(!/^(https?:|mailto:)/i.test(href))return;
   if(TAURI){TAURI.core.invoke('open_url',{url:href}).catch(e=>toast('Öffnen fehlgeschlagen: '+e));return}
   window.open(href,'_blank','noopener')}
+
+/* Audio-Anhang direkt abspielen */
+let attAudio=null;
+function playAttachment(it,btn){if(attAudio&&attAudio.it===it.id){attAudio.a.pause();URL.revokeObjectURL(attAudio.u);attAudio=null;btn.textContent='▶';return}
+  if(attAudio){attAudio.a.pause();URL.revokeObjectURL(attAudio.u);if(attAudio.btn)attAudio.btn.textContent='▶';attAudio=null}
+  const b=attBytes(it);if(!b)return;const u=URL.createObjectURL(new Blob([b],{type:it.mime})),a=new Audio(u);attAudio={a,u,it:it.id,btn};btn.textContent='❚❚';
+  a.onended=()=>{btn.textContent='▶';URL.revokeObjectURL(u);attAudio=null};a.play().catch(()=>{toast('Abspielen nicht möglich');btn.textContent='▶';attAudio=null})}
+
+/* ---------- Seiten drucken / als PDF speichern ---------- */
+function pageBox(pg){let W=200,H=80;
+  for(const it of pg.items){W=Math.max(W,it.x+it.w);H=Math.max(H,it.y+(it.t==='img'?it.w*1.42:it.t==='file'?60:Math.max(30,htmlToText(it.html).split('\n').length*26+20)))}
+  for(const s of pg.ink)for(const q of s.p.split(' ')){const[x,y]=q.split(',').map(Number);W=Math.max(W,x+10);H=Math.max(H,y+10)}return{W,H}}
+function printPageHTML(x){const pg=x.page,{W,H}=pageBox(pg),k=Math.min(1,700/W);
+  const items=pg.items.map(it=>`<div class="pp-it" style="left:${it.x}px;top:${it.y}px;width:${it.w}px">${it.t==='img'?`<img src="${it.src}" alt="">`:it.t==='file'?`<div class="pp-att">📎 ${esc(it.name)} <small>(${fmtSize(it.size)})</small></div>`:`<div class="pg-edit">${cleanHTML(it.html)}</div>`}</div>`).join('');
+  const ink=`<svg class="pp-ink" width="${W}" height="${H}">${pg.ink.map(s=>`<path d="${strokePath(s.p)}" stroke="${s.c}" stroke-width="${s.w}" stroke-opacity="${s.a}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}</svg>`;
+  return`<section class="pp"><h1>${esc(x.title||'Ohne Titel')}</h1>${x.date?`<div class="pmeta">${esc(x.date)}</div>`:''}<div class="pp-wrap" style="height:${Math.ceil(H*k)+10}px"><div class="pp-can" style="width:${W}px;height:${H}px;transform:scale(${k.toFixed(4)})">${items}${ink}</div></div></section>`}
+function printPages(list){doPrint(list.map(printPageHTML).join(''))}

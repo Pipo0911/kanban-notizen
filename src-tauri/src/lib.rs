@@ -259,6 +259,12 @@ fn open_file(request: tauri::ipc::Request<'_>) -> Result<(), String> {
     open_with_system(p.as_os_str())
 }
 
+/// Startet das Windows-Ausschnitt-Werkzeug; das Bild landet in der Zwischenablage.
+#[tauri::command]
+fn screen_clip() -> Result<(), String> {
+    open_with_system(std::ffi::OsStr::new("ms-screenclip:"))
+}
+
 /// Öffnet einen Link aus einer Seite im Standardbrowser (nur Web- und Mail-Adressen).
 #[tauri::command]
 fn open_url(url: String) -> Result<(), String> {
@@ -388,6 +394,7 @@ pub fn run() {
             write_bin_file,
             open_file,
             open_url,
+            screen_clip,
             write_text_file,
             get_prefs,
             set_prefs
